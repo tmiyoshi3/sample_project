@@ -80,7 +80,7 @@ export class ProductDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private productService: ProductService
+    private productService: ProductService,
   ) {}
 
   ngOnInit(): void {
@@ -129,17 +129,18 @@ export class ProductDetailComponent implements OnInit {
       this.productImages = product.images.map((img, i) => ({
         id: img.id || i + 1,
         url: img.fileName || '/assets/images/no-image.png',
-        altText:
-          product.name + (img.primary ? ' - メイン画像' : ' - サブ画像'),
+        altText: product.name + (img.primary ? ' - メイン画像' : ' - サブ画像'),
         isPrimary: img.primary || false,
       }));
     } else {
-      this.productImages = [{
-        id: 0,
-        url: '/assets/images/no-image.png',
-        altText: '画像なし - No Image',
-        isPrimary: true,
-      }];
+      this.productImages = [
+        {
+          id: 0,
+          url: '/assets/images/no-image.png',
+          altText: '画像なし - No Image',
+          isPrimary: true,
+        },
+      ];
     }
   }
 
@@ -149,9 +150,7 @@ export class ProductDetailComponent implements OnInit {
         id: doc.id || i + 1,
         fileName: doc.fileName || 'unknown',
         filePath: doc.filePath || '',
-        fileType: doc.fileName?.endsWith('.pdf')
-          ? 'application/pdf'
-          : 'application/octet-stream',
+        fileType: doc.fileName?.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream',
         fileSize: 0,
         uploadedBy: '-',
         uploadedAt: '',
@@ -165,8 +164,8 @@ export class ProductDetailComponent implements OnInit {
     this.productService.getProducts({ page: 0, size: 5 }).subscribe({
       next: (result) => {
         this.alternativeProducts = result.content
-          .filter(p => p.id !== this.productId)
-          .map(p => ({
+          .filter((p) => p.id !== this.productId)
+          .map((p) => ({
             id: p.id,
             sku: p.sku,
             name: p.name,

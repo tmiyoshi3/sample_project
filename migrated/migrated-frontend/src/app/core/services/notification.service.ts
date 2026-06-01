@@ -15,11 +15,11 @@ export class NotificationService implements OnDestroy {
     timer(0, 60000)
       .pipe(
         switchMap(() =>
-          this.http.get<{ unreadCount: number }>('/api/notifications/unread-count').pipe(
-            catchError(() => of({ unreadCount: 0 }))
-          )
+          this.http
+            .get<{ unreadCount: number }>('/api/notifications/unread-count')
+            .pipe(catchError(() => of({ unreadCount: 0 }))),
         ),
-        takeUntil(this.destroy$)
+        takeUntil(this.destroy$),
       )
       .subscribe((result) => {
         this.notificationCount = result.unreadCount;

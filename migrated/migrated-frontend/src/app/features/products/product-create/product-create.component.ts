@@ -9,10 +9,9 @@ import { switchMap, catchError } from 'rxjs/operators';
 @Component({
   selector: 'app-product-create',
   templateUrl: './product-create.component.html',
-  styleUrls: ['./product-create.component.scss']
+  styleUrls: ['./product-create.component.scss'],
 })
 export class ProductCreateComponent implements OnInit {
-
   currentStep = 0;
 
   steps = [
@@ -20,7 +19,7 @@ export class ProductCreateComponent implements OnInit {
     { title: '価格・在庫', description: '価格、単位、発注点' },
     { title: '仕様', description: '製品仕様の詳細' },
     { title: '画像・資料', description: '画像・ドキュメント' },
-    { title: '確認', description: '入力内容の最終確認' }
+    { title: '確認', description: '入力内容の最終確認' },
   ];
 
   basicForm!: FormGroup;
@@ -33,7 +32,7 @@ export class ProductCreateComponent implements OnInit {
   statusOptions = [
     { value: 'ACTIVE', label: '有効' },
     { value: 'INACTIVE', label: '無効' },
-    { value: 'PENDING', label: '保留' }
+    { value: 'PENDING', label: '保留' },
   ];
 
   skuExists = false;
@@ -50,13 +49,13 @@ export class ProductCreateComponent implements OnInit {
     { value: 'BROCHURE', label: 'カタログ' },
     { value: 'MANUAL', label: 'マニュアル' },
     { value: 'DRAWING', label: '図面' },
-    { value: 'OTHER', label: 'その他' }
+    { value: 'OTHER', label: 'その他' },
   ];
 
   constructor(
     private fb: FormBuilder,
     private productService: ProductService,
-    private router: Router
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -72,7 +71,7 @@ export class ProductCreateComponent implements OnInit {
       description: ['', [Validators.maxLength(2000)]],
       categoryId: [null, [Validators.required]],
       manufacturerId: [null, [Validators.required]],
-      status: ['ACTIVE', [Validators.required]]
+      status: ['ACTIVE', [Validators.required]],
     });
 
     this.pricingForm = this.fb.group({
@@ -81,12 +80,12 @@ export class ProductCreateComponent implements OnInit {
       minimumOrderQuantity: [1, [Validators.required, Validators.min(1)]],
       leadTimeDays: [7, [Validators.required, Validators.min(1)]],
       weight: [null, [Validators.min(0)]],
-      dimensions: ['']
+      dimensions: [''],
     });
 
     this.specForm = this.fb.group({
       specifications: this.fb.array([]),
-      notes: ['']
+      notes: [''],
     });
 
     this.addSpecificationRow();
@@ -94,15 +93,23 @@ export class ProductCreateComponent implements OnInit {
 
   private loadCategories(): void {
     this.productService.getCategories().subscribe(
-      (categories) => { this.categories = categories; },
-      (error) => { console.error('カテゴリ取得エラー:', error); }
+      (categories) => {
+        this.categories = categories;
+      },
+      (error) => {
+        console.error('カテゴリ取得エラー:', error);
+      },
     );
   }
 
   private loadManufacturers(): void {
     this.productService.getManufacturers().subscribe(
-      (data) => { this.manufacturers = data; },
-      (error) => { console.error('メーカー取得エラー:', error); }
+      (data) => {
+        this.manufacturers = data;
+      },
+      (error) => {
+        console.error('メーカー取得エラー:', error);
+      },
     );
   }
 
@@ -113,7 +120,7 @@ export class ProductCreateComponent implements OnInit {
   addSpecificationRow(): void {
     const row = this.fb.group({
       key: ['', [Validators.required]],
-      value: ['', [Validators.required]]
+      value: ['', [Validators.required]],
     });
     this.specificationRows.push(row);
   }
@@ -139,7 +146,7 @@ export class ProductCreateComponent implements OnInit {
       (error) => {
         console.error('SKU重複チェックエラー:', error);
         this.skuCheckLoading = false;
-      }
+      },
     );
   }
 
@@ -204,7 +211,7 @@ export class ProductCreateComponent implements OnInit {
   }
 
   getCategoryName(id: number): string {
-    const category = this.categories.find(c => c.id === Number(id));
+    const category = this.categories.find((c) => c.id === Number(id));
     return category ? category.name : '-';
   }
 
@@ -214,7 +221,7 @@ export class ProductCreateComponent implements OnInit {
   }
 
   getStatusLabel(status: string): string {
-    const option = this.statusOptions.find(o => o.value === status);
+    const option = this.statusOptions.find((o) => o.value === status);
     return option ? option.label : status;
   }
 
@@ -222,9 +229,9 @@ export class ProductCreateComponent implements OnInit {
     return this.specificationRows.controls
       .map((control: AbstractControl) => ({
         key: control.get('key')?.value || '',
-        value: control.get('value')?.value || ''
+        value: control.get('value')?.value || '',
       }))
-      .filter(spec => spec.key && spec.value);
+      .filter((spec) => spec.key && spec.value);
   }
 
   formatCurrency(amount: number): string {
@@ -242,7 +249,7 @@ export class ProductCreateComponent implements OnInit {
         this.pendingImages.push({
           file,
           preview: e.target?.result as string,
-          isPrimary: this.pendingImages.length === 0
+          isPrimary: this.pendingImages.length === 0,
         });
       };
       reader.readAsDataURL(file);
@@ -259,7 +266,7 @@ export class ProductCreateComponent implements OnInit {
   }
 
   setPrimaryImage(index: number): void {
-    this.pendingImages.forEach((img, i) => img.isPrimary = i === index);
+    this.pendingImages.forEach((img, i) => (img.isPrimary = i === index));
   }
 
   onDocumentSelected(event: Event): void {
@@ -290,7 +297,7 @@ export class ProductCreateComponent implements OnInit {
     this.errorMessage = '';
 
     const specs: any = {};
-    this.getSpecificationsForReview().forEach(spec => {
+    this.getSpecificationsForReview().forEach((spec) => {
       specs[spec.key] = spec.value;
     });
 
@@ -298,50 +305,57 @@ export class ProductCreateComponent implements OnInit {
       ...this.basicForm.value,
       ...this.pricingForm.value,
       specifications: JSON.stringify(specs),
-      notes: this.specForm.get('notes')?.value || ''
+      notes: this.specForm.get('notes')?.value || '',
     };
 
-    this.productService.createProduct(productData).pipe(
-      switchMap((created) => {
-        const uploads: any[] = [];
+    this.productService
+      .createProduct(productData)
+      .pipe(
+        switchMap((created) => {
+          const uploads: any[] = [];
 
-        this.pendingImages.forEach(img => {
-          uploads.push(
-            this.productService.uploadImage(created.id, img.file, img.isPrimary).pipe(
-              catchError(err => { console.error('画像アップロードエラー:', err); return of(null); })
-            )
-          );
-        });
+          this.pendingImages.forEach((img) => {
+            uploads.push(
+              this.productService.uploadImage(created.id, img.file, img.isPrimary).pipe(
+                catchError((err) => {
+                  console.error('画像アップロードエラー:', err);
+                  return of(null);
+                }),
+              ),
+            );
+          });
 
-        this.pendingDocuments.forEach(doc => {
-          uploads.push(
-            this.productService.uploadDocument(created.id, doc.file, doc.docType).pipe(
-              catchError(err => { console.error('ドキュメントアップロードエラー:', err); return of(null); })
-            )
-          );
-        });
+          this.pendingDocuments.forEach((doc) => {
+            uploads.push(
+              this.productService.uploadDocument(created.id, doc.file, doc.docType).pipe(
+                catchError((err) => {
+                  console.error('ドキュメントアップロードエラー:', err);
+                  return of(null);
+                }),
+              ),
+            );
+          });
 
-        if (uploads.length > 0) {
-          return forkJoin(uploads).pipe(
-            switchMap(() => of(created))
-          );
-        }
-        return of(created);
-      })
-    ).subscribe(
-      (created) => {
-        this.isSubmitting = false;
-        this.successMessage = '製品が正常に登録されました。';
-        setTimeout(() => {
-          this.router.navigate(['/products', created.id]);
-        }, 2000);
-      },
-      (error) => {
-        console.error('製品登録エラー:', error);
-        this.isSubmitting = false;
-        this.errorMessage = '製品の登録に失敗しました。入力内容を確認してください。';
-      }
-    );
+          if (uploads.length > 0) {
+            return forkJoin(uploads).pipe(switchMap(() => of(created)));
+          }
+          return of(created);
+        }),
+      )
+      .subscribe(
+        (created) => {
+          this.isSubmitting = false;
+          this.successMessage = '製品が正常に登録されました。';
+          setTimeout(() => {
+            this.router.navigate(['/products', created.id]);
+          }, 2000);
+        },
+        (error) => {
+          console.error('製品登録エラー:', error);
+          this.isSubmitting = false;
+          this.errorMessage = '製品の登録に失敗しました。入力内容を確認してください。';
+        },
+      );
   }
 
   cancel(): void {

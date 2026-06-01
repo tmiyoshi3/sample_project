@@ -1,7 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CategoryResponse, ChangeLogResponse, ManufacturerOption, PageResult, ProductBundle, ProductDetailResponse, ProductResponse } from '../models/product.model';
+import {
+  CategoryResponse,
+  ChangeLogResponse,
+  ManufacturerOption,
+  PageResult,
+  ProductBundle,
+  ProductDetailResponse,
+  ProductResponse,
+} from '../models/product.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
@@ -21,7 +29,8 @@ export class ProductService {
     if (params.size != null) httpParams = httpParams.set('size', params.size.toString());
     if (params.keyword) httpParams = httpParams.set('keyword', params.keyword);
     if (params.categoryId) httpParams = httpParams.set('categoryId', params.categoryId.toString());
-    if (params.manufacturerId) httpParams = httpParams.set('manufacturerId', params.manufacturerId.toString());
+    if (params.manufacturerId)
+      httpParams = httpParams.set('manufacturerId', params.manufacturerId.toString());
     if (params.status) httpParams = httpParams.set('status', params.status);
     if (params.sort) httpParams = httpParams.set('sort', params.sort);
     return this.http.get<PageResult<ProductResponse>>('/api/products', { params: httpParams });
@@ -43,11 +52,18 @@ export class ProductService {
     return this.http.get<CategoryResponse[]>('/api/products/categories');
   }
 
-  createCategory(data: { name: string; description: string; parentId: number | null }): Observable<CategoryResponse> {
+  createCategory(data: {
+    name: string;
+    description: string;
+    parentId: number | null;
+  }): Observable<CategoryResponse> {
     return this.http.post<CategoryResponse>('/api/products/categories', data);
   }
 
-  updateCategory(id: number, data: { name: string; description: string; parentId: number | null }): Observable<CategoryResponse> {
+  updateCategory(
+    id: number,
+    data: { name: string; description: string; parentId: number | null },
+  ): Observable<CategoryResponse> {
     return this.http.put<CategoryResponse>(`/api/products/categories/${id}`, data);
   }
 

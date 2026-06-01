@@ -2,7 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, AbstractControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductService } from '../services/product.service';
-import { CategoryResponse, ManufacturerOption, ProductDetailResponse } from '../models/product.model';
+import {
+  CategoryResponse,
+  ManufacturerOption,
+  ProductDetailResponse,
+} from '../models/product.model';
 
 interface ExistingImage {
   id: number;
@@ -19,10 +23,9 @@ interface ExistingDocument {
 @Component({
   selector: 'app-product-edit',
   templateUrl: './product-edit.component.html',
-  styleUrls: ['./product-edit.component.scss']
+  styleUrls: ['./product-edit.component.scss'],
 })
 export class ProductEditComponent implements OnInit {
-
   productId!: number;
   product: ProductDetailResponse | null = null;
   isLoading = true;
@@ -40,7 +43,7 @@ export class ProductEditComponent implements OnInit {
     { value: 'ACTIVE', label: '有効' },
     { value: 'INACTIVE', label: '無効' },
     { value: 'DISCONTINUED', label: '廃番' },
-    { value: 'PENDING', label: '保留' }
+    { value: 'PENDING', label: '保留' },
   ];
 
   skuExists = false;
@@ -58,7 +61,7 @@ export class ProductEditComponent implements OnInit {
     { value: 'BROCHURE', label: 'カタログ' },
     { value: 'MANUAL', label: 'マニュアル' },
     { value: 'DRAWING', label: '図面' },
-    { value: 'OTHER', label: 'その他' }
+    { value: 'OTHER', label: 'その他' },
   ];
 
   newDocType = 'DATASHEET';
@@ -67,7 +70,7 @@ export class ProductEditComponent implements OnInit {
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private productService: ProductService
+    private productService: ProductService,
   ) {}
 
   ngOnInit(): void {
@@ -92,25 +95,33 @@ export class ProductEditComponent implements OnInit {
       leadTimeDays: [7, [Validators.required, Validators.min(1)]],
       weight: [null, [Validators.min(0)]],
       dimensions: [''],
-      notes: ['']
+      notes: [''],
     });
 
     this.specForm = this.fb.group({
-      specifications: this.fb.array([])
+      specifications: this.fb.array([]),
     });
   }
 
   private loadCategories(): void {
     this.productService.getCategories().subscribe(
-      (categories) => { this.categories = categories; },
-      (error) => { console.error('カテゴリ取得エラー:', error); }
+      (categories) => {
+        this.categories = categories;
+      },
+      (error) => {
+        console.error('カテゴリ取得エラー:', error);
+      },
     );
   }
 
   private loadManufacturers(): void {
     this.productService.getManufacturers().subscribe(
-      (data) => { this.manufacturers = data; },
-      (error) => { console.error('メーカー取得エラー:', error); }
+      (data) => {
+        this.manufacturers = data;
+      },
+      (error) => {
+        console.error('メーカー取得エラー:', error);
+      },
     );
   }
 
@@ -127,7 +138,7 @@ export class ProductEditComponent implements OnInit {
         console.error('製品データ取得エラー:', error);
         this.errorMessage = '製品データの取得に失敗しました。';
         this.isLoading = false;
-      }
+      },
     );
   }
 
@@ -145,7 +156,7 @@ export class ProductEditComponent implements OnInit {
       leadTimeDays: product.leadTimeDays,
       weight: product.weight,
       dimensions: product.dimensions,
-      notes: product.notes
+      notes: product.notes,
     });
 
     this.populateSpecifications(product.specifications || '');
@@ -154,14 +165,14 @@ export class ProductEditComponent implements OnInit {
       this.existingImages = product.images.map((img: any) => ({
         id: img.id,
         url: img.fileName || '/assets/images/no-image.png',
-        isPrimary: img.primary || false
+        isPrimary: img.primary || false,
       }));
     }
     if (product.documents) {
       this.existingDocuments = product.documents.map((doc: any) => ({
         id: doc.id,
         fileName: doc.fileName || 'unknown',
-        filePath: doc.filePath || ''
+        filePath: doc.filePath || '',
       }));
     }
   }
@@ -173,11 +184,13 @@ export class ProductEditComponent implements OnInit {
     try {
       if (specJson) {
         const specs = JSON.parse(specJson);
-        Object.keys(specs).forEach(key => {
-          specArray.push(this.fb.group({
-            key: [key, [Validators.required]],
-            value: [specs[key], [Validators.required]]
-          }));
+        Object.keys(specs).forEach((key) => {
+          specArray.push(
+            this.fb.group({
+              key: [key, [Validators.required]],
+              value: [specs[key], [Validators.required]],
+            }),
+          );
         });
       }
     } catch (e) {
@@ -196,7 +209,7 @@ export class ProductEditComponent implements OnInit {
   addSpecificationRow(): void {
     const row = this.fb.group({
       key: ['', [Validators.required]],
-      value: ['', [Validators.required]]
+      value: ['', [Validators.required]],
     });
     this.specificationRows.push(row);
   }
@@ -225,7 +238,7 @@ export class ProductEditComponent implements OnInit {
       (error) => {
         console.error('SKU重複チェックエラー:', error);
         this.skuCheckLoading = false;
-      }
+      },
     );
   }
 
@@ -264,7 +277,7 @@ export class ProductEditComponent implements OnInit {
 
     const productData = {
       ...this.editForm.value,
-      specifications: JSON.stringify(specs)
+      specifications: JSON.stringify(specs),
     };
 
     this.productService.updateProduct(this.productId, productData).subscribe(
@@ -279,7 +292,7 @@ export class ProductEditComponent implements OnInit {
         console.error('製品更新エラー:', error);
         this.isSubmitting = false;
         this.errorMessage = '製品の更新に失敗しました。入力内容を確認してください。';
-      }
+      },
     );
   }
 
@@ -296,7 +309,7 @@ export class ProductEditComponent implements OnInit {
         this.existingImages.push({
           id: result.id,
           url: result.url,
-          isPrimary: result.isPrimary
+          isPrimary: result.isPrimary,
         });
         this.imageUploading = false;
       },
@@ -304,7 +317,7 @@ export class ProductEditComponent implements OnInit {
         console.error('画像アップロードエラー:', error);
         this.errorMessage = '画像のアップロードに失敗しました。';
         this.imageUploading = false;
-      }
+      },
     );
     input.value = '';
   }
@@ -318,7 +331,7 @@ export class ProductEditComponent implements OnInit {
       (error) => {
         console.error('画像削除エラー:', error);
         this.errorMessage = '画像の削除に失敗しました。';
-      }
+      },
     );
   }
 
@@ -334,7 +347,7 @@ export class ProductEditComponent implements OnInit {
         this.existingDocuments.push({
           id: result.id,
           fileName: result.fileName,
-          filePath: result.filePath
+          filePath: result.filePath,
         });
         this.docUploading = false;
       },
@@ -342,7 +355,7 @@ export class ProductEditComponent implements OnInit {
         console.error('ドキュメントアップロードエラー:', error);
         this.errorMessage = 'ドキュメントのアップロードに失敗しました。';
         this.docUploading = false;
-      }
+      },
     );
     input.value = '';
   }
@@ -356,7 +369,7 @@ export class ProductEditComponent implements OnInit {
       (error) => {
         console.error('ドキュメント削除エラー:', error);
         this.errorMessage = 'ドキュメントの削除に失敗しました。';
-      }
+      },
     );
   }
 

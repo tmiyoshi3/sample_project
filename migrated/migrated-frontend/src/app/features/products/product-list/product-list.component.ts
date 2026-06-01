@@ -36,14 +36,22 @@ export class ProductListComponent implements OnInit {
 
   loading = false;
 
-  readonly columnHeaders = ['SKU', '製品名', 'カテゴリ', 'メーカー', '単価', 'ステータス', '在庫数'];
+  readonly columnHeaders = [
+    'SKU',
+    '製品名',
+    'カテゴリ',
+    'メーカー',
+    '単価',
+    'ステータス',
+    '在庫数',
+  ];
   readonly sortableColumns: Record<string, string> = {
     SKU: 'sku',
-    '製品名': 'name',
-    'カテゴリ': 'categoryName',
-    'メーカー': 'manufacturerName',
-    '単価': 'unitPrice',
-    'ステータス': 'status',
+    製品名: 'name',
+    カテゴリ: 'categoryName',
+    メーカー: 'manufacturerName',
+    単価: 'unitPrice',
+    ステータス: 'status',
   };
 
   constructor(
@@ -139,7 +147,12 @@ export class ProductListComponent implements OnInit {
   }
 
   get isFilterActive(): boolean {
-    return !!(this.keyword || this.selectedCategoryId || this.selectedManufacturerId || this.selectedStatus);
+    return !!(
+      this.keyword ||
+      this.selectedCategoryId ||
+      this.selectedManufacturerId ||
+      this.selectedStatus
+    );
   }
 
   onSortChange(headerLabel: string): void {
@@ -215,11 +228,16 @@ export class ProductListComponent implements OnInit {
 
   getStatusClass(status: string): string {
     switch (status) {
-      case 'ACTIVE': return 'status-active';
-      case 'INACTIVE': return 'status-inactive';
-      case 'DISCONTINUED': return 'status-discontinued';
-      case 'PENDING': return 'status-pending';
-      default: return '';
+      case 'ACTIVE':
+        return 'status-active';
+      case 'INACTIVE':
+        return 'status-inactive';
+      case 'DISCONTINUED':
+        return 'status-discontinued';
+      case 'PENDING':
+        return 'status-pending';
+      default:
+        return '';
     }
   }
 }

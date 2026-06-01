@@ -8,12 +8,10 @@
 </div>
 
 <div class="category-container" *ngIf="!isLoading">
-
   <div class="success-banner" *ngIf="successMessage">{{ successMessage }}</div>
   <div class="error-banner" *ngIf="errorMessage">{{ errorMessage }}</div>
 
   <div class="category-layout">
-
     <div class="tree-panel">
       <div class="panel-header">
         <h3 class="panel-title">カテゴリ一覧</h3>
@@ -21,13 +19,13 @@
       </div>
 
       <div class="tree-list" *ngIf="flattenedTree.length > 0">
-        <div class="tree-item"
-             *ngFor="let node of flattenedTree"
-             [ngStyle]="getIndentStyle(node.level)"
-             [class.editing]="editingCategoryId === node.category.id">
-
-          <button class="btn-toggle" (click)="toggleExpand(node)"
-                  *ngIf="node.children.length > 0">
+        <div
+          class="tree-item"
+          *ngFor="let node of flattenedTree"
+          [ngStyle]="getIndentStyle(node.level)"
+          [class.editing]="editingCategoryId === node.category.id"
+        >
+          <button class="btn-toggle" (click)="toggleExpand(node)" *ngIf="node.children.length > 0">
             {{ node.expanded ? '▼' : '▶' }}
           </button>
           <span class="toggle-spacer" *ngIf="node.children.length === 0"></span>
@@ -40,16 +38,28 @@
           <div class="tree-item-actions">
             <button class="btn-icon" title="上へ移動" (click)="moveUp(node)">↑</button>
             <button class="btn-icon" title="下へ移動" (click)="moveDown(node)">↓</button>
-            <button class="btn-icon" title="子カテゴリを追加" (click)="startCreate(node.category.id)">+</button>
-            <button class="btn-icon" title="編集" (click)="startEdit(node.category)">&#9998;</button>
-            <button class="btn-icon btn-icon-danger" title="削除" (click)="confirmDelete(node.category)">&#10005;</button>
+            <button
+              class="btn-icon"
+              title="子カテゴリを追加"
+              (click)="startCreate(node.category.id)"
+            >
+              +
+            </button>
+            <button class="btn-icon" title="編集" (click)="startEdit(node.category)">
+              &#9998;
+            </button>
+            <button
+              class="btn-icon btn-icon-danger"
+              title="削除"
+              (click)="confirmDelete(node.category)"
+            >
+              &#10005;
+            </button>
           </div>
         </div>
       </div>
 
-      <div class="empty-state" *ngIf="flattenedTree.length === 0">
-        カテゴリが登録されていません
-      </div>
+      <div class="empty-state" *ngIf="flattenedTree.length === 0">カテゴリが登録されていません</div>
     </div>
 
     <div class="edit-panel" *ngIf="editMode">
@@ -60,18 +70,28 @@
       <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()" class="category-form">
         <div class="form-group">
           <label class="form-label">カテゴリ名 <span class="required">*</span></label>
-          <input type="text" formControlName="name" class="form-input"
-                 placeholder="カテゴリ名を入力">
-          <span class="form-error"
-                *ngIf="categoryForm.get('name')?.touched && categoryForm.get('name')?.errors">
+          <input
+            type="text"
+            formControlName="name"
+            class="form-input"
+            placeholder="カテゴリ名を入力"
+          />
+          <span
+            class="form-error"
+            *ngIf="categoryForm.get('name')?.touched && categoryForm.get('name')?.errors"
+          >
             カテゴリ名は必須です
           </span>
         </div>
 
         <div class="form-group">
           <label class="form-label">説明</label>
-          <textarea formControlName="description" class="form-textarea" rows="3"
-                    placeholder="カテゴリの説明"></textarea>
+          <textarea
+            formControlName="description"
+            class="form-textarea"
+            rows="3"
+            placeholder="カテゴリの説明"
+          ></textarea>
         </div>
 
         <div class="form-group">
@@ -89,7 +109,6 @@
         </div>
       </form>
     </div>
-
   </div>
 </div>
 

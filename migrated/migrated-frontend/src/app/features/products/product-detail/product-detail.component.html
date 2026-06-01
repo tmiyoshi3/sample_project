@@ -11,13 +11,14 @@
 </div>
 
 <div class="detail-container" *ngIf="!isLoading && product">
-
   <!-- ヘッダー部分 -->
   <div class="detail-header">
     <div class="header-info">
       <div class="product-title-row">
         <h2 class="product-name">{{ product.name }}</h2>
-        <span class="status-badge" [ngClass]="getStatusClass(product.status)">{{ getStatusLabel(product.status) }}</span>
+        <span class="status-badge" [ngClass]="getStatusClass(product.status)">{{
+          getStatusLabel(product.status)
+        }}</span>
       </div>
       <div class="product-meta">
         <span class="meta-item">SKU: {{ product.sku }}</span>
@@ -34,17 +35,18 @@
 
   <!-- タブナビゲーション -->
   <div class="tab-navigation">
-    <button *ngFor="let tab of tabs; let i = index"
-            class="tab-button"
-            [class.active]="activeTab === i"
-            (click)="switchTab(i)">
+    <button
+      *ngFor="let tab of tabs; let i = index"
+      class="tab-button"
+      [class.active]="activeTab === i"
+      (click)="switchTab(i)"
+    >
       {{ tab.label }}
     </button>
   </div>
 
   <!-- タブコンテンツ -->
   <div class="tab-content">
-
     <!-- 基本情報タブ -->
     <div class="tab-panel" *ngIf="activeTab === 0">
       <div class="info-grid">
@@ -134,7 +136,10 @@
               <span class="stock-value available">{{ totalAvailable }}</span>
             </div>
           </div>
-          <table class="data-table" *ngIf="product.inventoryItems && product.inventoryItems.length > 0">
+          <table
+            class="data-table"
+            *ngIf="product.inventoryItems && product.inventoryItems.length > 0"
+          >
             <thead>
               <tr>
                 <th>倉庫</th>
@@ -198,11 +203,14 @@
     <!-- 画像タブ -->
     <div class="tab-panel" *ngIf="activeTab === 2">
       <div class="image-grid" *ngIf="productImages.length > 0">
-        <div class="image-card" *ngFor="let img of productImages"
-             [class.primary]="img.isPrimary">
+        <div class="image-card" *ngFor="let img of productImages" [class.primary]="img.isPrimary">
           <div class="image-wrapper">
-            <img [src]="img.url" [alt]="img.altText" class="product-image"
-                 onerror="this.src='/assets/images/no-image.png'">
+            <img
+              [src]="img.url"
+              [alt]="img.altText"
+              class="product-image"
+              onerror="this.src='/assets/images/no-image.png'"
+            />
             <span class="primary-badge" *ngIf="img.isPrimary">メイン</span>
           </div>
           <p class="image-alt">{{ img.altText }}</p>
@@ -292,7 +300,8 @@
           <div class="document-info">
             <span class="document-name">{{ doc.fileName }}</span>
             <span class="document-meta">
-              {{ formatFileSize(doc.fileSize) }} | {{ doc.uploadedBy }} | {{ formatDate(doc.uploadedAt) }}
+              {{ formatFileSize(doc.fileSize) }} | {{ doc.uploadedBy }} |
+              {{ formatDate(doc.uploadedAt) }}
             </span>
           </div>
           <div class="document-actions">
@@ -331,9 +340,7 @@
         <p class="empty-message">変更履歴はありません</p>
       </div>
     </div>
-
   </div>
-
 </div>
 
 <!-- 削除確認ダイアログ -->

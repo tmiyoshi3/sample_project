@@ -93,7 +93,10 @@ export class DashboardService {
     return this.http.get<CategorySpendingItem[]>('/api/dashboard/category-spending');
   }
 
-  getPurchaseOrders(page: number = 0, size: number = 100): Observable<PageResult<PurchaseOrderResponse>> {
+  getPurchaseOrders(
+    page: number = 0,
+    size: number = 100,
+  ): Observable<PageResult<PurchaseOrderResponse>> {
     const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
     return this.http.get<PageResult<PurchaseOrderResponse>>('/api/purchase-orders', { params });
   }
@@ -107,7 +110,11 @@ export class DashboardService {
     return this.http.get<BudgetDto[]>('/api/budgets', { params });
   }
 
-  getRequisitions(page: number = 0, size: number = 100, status?: string): Observable<PageResult<PurchaseRequisitionDto>> {
+  getRequisitions(
+    page: number = 0,
+    size: number = 100,
+    status?: string,
+  ): Observable<PageResult<PurchaseRequisitionDto>> {
     let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
     if (status) {
       params = params.set('status', status);

@@ -42,7 +42,9 @@
         <span class="card-icon icon-approval">&#x2705;</span>
       </div>
       <div class="card-body">
-        <div class="card-main-value" [class.has-pending]="pendingApprovals > 0">{{ pendingApprovals }}</div>
+        <div class="card-main-value" [class.has-pending]="pendingApprovals > 0">
+          {{ pendingApprovals }}
+        </div>
         <div class="card-description">承認が必要なタスク</div>
       </div>
     </div>
@@ -56,12 +58,16 @@
       <div class="card-body">
         <div class="card-main-value">{{ budgetUtilization }}%</div>
         <div class="budget-bar">
-          <div class="budget-bar-fill"
-               [style.width.%]="budgetUtilization"
-               [class.budget-warning]="budgetUtilization > 80 && budgetUtilization <= 95"
-               [class.budget-danger]="budgetUtilization > 95"></div>
+          <div
+            class="budget-bar-fill"
+            [style.width.%]="budgetUtilization"
+            [class.budget-warning]="budgetUtilization > 80 && budgetUtilization <= 95"
+            [class.budget-danger]="budgetUtilization > 95"
+          ></div>
         </div>
-        <div class="budget-detail">{{ formatCurrency(budgetSpent) }} / {{ formatCurrency(budgetTotal) }}</div>
+        <div class="budget-detail">
+          {{ formatCurrency(budgetSpent) }} / {{ formatCurrency(budgetTotal) }}
+        </div>
       </div>
     </div>
   </section>
@@ -120,7 +126,11 @@
             </tr>
           </thead>
           <tbody>
-            <tr class="clickable-row" *ngFor="let order of recentOrders" (click)="navigateToOrder(order.id)">
+            <tr
+              class="clickable-row"
+              *ngFor="let order of recentOrders"
+              (click)="navigateToOrder(order.id)"
+            >
               <td class="order-number">{{ order.orderNumber }}</td>
               <td>{{ order.supplierName }}</td>
               <td>{{ formatDate(order.orderDate) }}</td>
@@ -147,21 +157,34 @@
       </div>
       <div class="panel-body">
         <div class="alert-list" *ngIf="lowStockItems.length > 0">
-          <div class="alert-item" *ngFor="let item of lowStockItems" (click)="navigateToProduct(item.productId)">
+          <div
+            class="alert-item"
+            *ngFor="let item of lowStockItems"
+            (click)="navigateToProduct(item.productId)"
+          >
             <div class="alert-item-info">
               <span class="alert-product-name">{{ item.productName }}</span>
               <span class="alert-product-sku">{{ item.productSku }}</span>
             </div>
             <div class="alert-item-stock">
               <div class="stock-values">
-                <span class="current-stock" [class.critical]="item.quantityOnHand <= item.minimumStock / 2">現在: {{ item.quantityOnHand }}</span>
+                <span
+                  class="current-stock"
+                  [class.critical]="item.quantityOnHand <= item.minimumStock / 2"
+                  >現在: {{ item.quantityOnHand }}</span
+                >
                 <span class="minimum-stock">最低: {{ item.minimumStock }}</span>
               </div>
               <div class="stock-bar">
-                <div class="stock-bar-fill"
-                     [style.width.%]="(item.quantityOnHand / item.minimumStock) * 100"
-                     [class.stock-critical]="item.quantityOnHand <= item.minimumStock * 0.3"
-                     [class.stock-warning]="item.quantityOnHand > item.minimumStock * 0.3 && item.quantityOnHand <= item.minimumStock"></div>
+                <div
+                  class="stock-bar-fill"
+                  [style.width.%]="(item.quantityOnHand / item.minimumStock) * 100"
+                  [class.stock-critical]="item.quantityOnHand <= item.minimumStock * 0.3"
+                  [class.stock-warning]="
+                    item.quantityOnHand > item.minimumStock * 0.3 &&
+                    item.quantityOnHand <= item.minimumStock
+                  "
+                ></div>
               </div>
             </div>
           </div>

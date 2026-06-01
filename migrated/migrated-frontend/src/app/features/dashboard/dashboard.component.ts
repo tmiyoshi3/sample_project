@@ -66,7 +66,7 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private dashboardService: DashboardService,
-    private router: Router
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -101,9 +101,10 @@ export class DashboardComponent implements OnInit {
         const totalCategorySpending = data.reduce((sum, cat) => sum + cat.totalAmount, 0);
         this.categorySpending = data.map((cat) => ({
           ...cat,
-          percentage: totalCategorySpending > 0
-            ? Math.round((cat.totalAmount / totalCategorySpending) * 100)
-            : 0,
+          percentage:
+            totalCategorySpending > 0
+              ? Math.round((cat.totalAmount / totalCategorySpending) * 100)
+              : 0,
         }));
       },
       error: () => {
@@ -142,9 +143,8 @@ export class DashboardComponent implements OnInit {
       next: (budgets) => {
         this.budgetTotal = budgets.reduce((sum, b) => sum + b.totalAmount, 0);
         this.budgetSpent = budgets.reduce((sum, b) => sum + b.usedAmount, 0);
-        this.budgetUtilization = this.budgetTotal > 0
-          ? Math.round((this.budgetSpent / this.budgetTotal) * 100)
-          : 0;
+        this.budgetUtilization =
+          this.budgetTotal > 0 ? Math.round((this.budgetSpent / this.budgetTotal) * 100) : 0;
       },
       error: () => {},
     });

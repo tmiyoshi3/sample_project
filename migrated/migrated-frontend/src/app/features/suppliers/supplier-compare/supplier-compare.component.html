@@ -1,0 +1,136 @@
+<app-page-header title="サプライヤー比較" description="サプライヤーを並べて比較評価します">
+</app-page-header>
+
+<app-loading-spinner *ngIf="isLoading"></app-loading-spinner>
+
+<div class="error-banner" *ngIf="errorMessage">
+  <span>{{ errorMessage }}</span>
+  <button class="btn-back" (click)="navigateToList()">一覧に戻る</button>
+</div>
+
+<div class="compare-container" *ngIf="!isLoading">
+  <div class="compare-header">
+    <button class="btn-secondary" (click)="navigateToList()">← 一覧に戻る</button>
+  </div>
+
+  <div class="compare-table-wrapper" *ngIf="reports.length >= 2">
+    <div class="compare-row header-row">
+      <div class="row-label header-label">サプライヤー</div>
+      <div class="row-value supplier-header" *ngFor="let r of reports">
+        <div class="supplier-card">
+          <h4 class="supplier-name" (click)="navigateToSupplier(r)">{{ r.supplierName }}</h4>
+          <span class="supplier-code">{{ r.supplierCode }}</span>
+          <app-status-badge [status]="r.status"></app-status-badge>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-row highlight-row">
+      <div class="row-label">総合評価</div>
+      <div class="row-value" *ngFor="let r of reports">
+        <div class="overall-rating">
+          <span class="rating-value">{{ getAverageRating(r).toFixed(1) }}</span>
+          <span class="rating-stars">{{ getRatingStars(getAverageRating(r)) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-section-header">評価詳細</div>
+
+    <div class="compare-row">
+      <div class="row-label">品質評価</div>
+      <div class="row-value" *ngFor="let r of reports">
+        <div class="rating-bar-wrapper">
+          <span class="metric-number">{{ getAverageScore(r, 'qualityScore').toFixed(1) }}</span>
+          <div class="metric-bar">
+            <div
+              class="metric-bar-fill"
+              [style.width.%]="getRatingBarWidth(getAverageScore(r, 'qualityScore'))"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="row-label">納期評価</div>
+      <div class="row-value" *ngFor="let r of reports">
+        <div class="rating-bar-wrapper">
+          <span class="metric-number">{{ getAverageScore(r, 'deliveryScore').toFixed(1) }}</span>
+          <div class="metric-bar">
+            <div
+              class="metric-bar-fill"
+              [style.width.%]="getRatingBarWidth(getAverageScore(r, 'deliveryScore'))"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="row-label">価格評価</div>
+      <div class="row-value" *ngFor="let r of reports">
+        <div class="rating-bar-wrapper">
+          <span class="metric-number">{{ getAverageScore(r, 'priceScore').toFixed(1) }}</span>
+          <div class="metric-bar">
+            <div
+              class="metric-bar-fill"
+              [style.width.%]="getRatingBarWidth(getAverageScore(r, 'priceScore'))"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="row-label">サービス評価</div>
+      <div class="row-value" *ngFor="let r of reports">
+        <div class="rating-bar-wrapper">
+          <span class="metric-number">{{ getAverageScore(r, 'serviceScore').toFixed(1) }}</span>
+          <div class="metric-bar">
+            <div
+              class="metric-bar-fill"
+              [style.width.%]="getRatingBarWidth(getAverageScore(r, 'serviceScore'))"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-section-header">発注実績・パフォーマンス</div>
+
+    <div class="compare-row">
+      <div class="row-label">総発注数</div>
+      <div class="row-value" *ngFor="let r of reports">
+        <span class="metric-text">{{ r.totalOrders }}</span>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="row-label">総発注金額</div>
+      <div class="row-value" *ngFor="let r of reports">
+        <span class="metric-text metric-currency">{{ formatCurrency(r.totalAmount) }}</span>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="row-label">有効契約数</div>
+      <div class="row-value" *ngFor="let r of reports">
+        <span class="metric-text">{{ r.activeContractCount }}</span>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="row-label">完了率</div>
+      <div class="row-value" *ngFor="let r of reports">
+        <span class="metric-text">{{ r.completionRate.toFixed(1) }}%</span>
+      </div>
+    </div>
+  </div>
+
+  <app-empty-state
+    *ngIf="reports.length < 2 && !errorMessage"
+    message="比較するには2社以上のサプライヤーを選択してください"
+  >
+  </app-empty-state>
+</div>

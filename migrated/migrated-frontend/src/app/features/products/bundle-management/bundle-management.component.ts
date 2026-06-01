@@ -28,7 +28,10 @@ export class BundleManagementComponent implements OnInit {
   successMessage = '';
   errorMessage = '';
 
-  constructor(private fb: FormBuilder, private productService: ProductService) {}
+  constructor(
+    private fb: FormBuilder,
+    private productService: ProductService,
+  ) {}
 
   ngOnInit(): void {
     this.initForm();
@@ -141,7 +144,7 @@ export class BundleManagementComponent implements OnInit {
       .filter(
         (p) =>
           p.name.toLowerCase().includes(keyword) ||
-          (p.sku && p.sku.toLowerCase().includes(keyword))
+          (p.sku && p.sku.toLowerCase().includes(keyword)),
       )
       .slice(0, 10);
   }
@@ -153,7 +156,7 @@ export class BundleManagementComponent implements OnInit {
 
   addProductToBundle(product: ProductResponse): void {
     const existingIndex = this.items.controls.findIndex(
-      (ctrl) => ctrl.get('productId')!.value === product.id
+      (ctrl) => ctrl.get('productId')!.value === product.id,
     );
     if (existingIndex >= 0) {
       const existing = this.items.at(existingIndex);
@@ -191,7 +194,7 @@ export class BundleManagementComponent implements OnInit {
     }
     this.calculatedTotalPrice = totalPrice;
     const discountPct = this.bundleForm.get('discountPercentage')!.value || 0;
-    this.calculatedDiscountAmount = Math.floor(totalPrice * discountPct / 100);
+    this.calculatedDiscountAmount = Math.floor((totalPrice * discountPct) / 100);
     this.calculatedBundlePrice = totalPrice - this.calculatedDiscountAmount;
   }
 

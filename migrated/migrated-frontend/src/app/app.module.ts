@@ -12,12 +12,16 @@ import { ProductCreateComponent } from './features/products/product-create/produ
 import { ProductEditComponent } from './features/products/product-edit/product-edit.component';
 import { CategoryManagementComponent } from './features/products/category-management/category-management.component';
 import { BundleManagementComponent } from './features/products/bundle-management/bundle-management.component';
+import { SupplierListComponent } from './features/suppliers/supplier-list/supplier-list.component';
+import { SupplierCompareComponent } from './features/suppliers/supplier-compare/supplier-compare.component';
 import { HeaderComponent } from './core/layout/header.component';
 import { SidebarComponent } from './core/layout/sidebar.component';
 import { FooterComponent } from './core/layout/footer.component';
 import { PageHeaderComponent } from './shared/components/page-header/page-header.component';
 import { FormFieldComponent } from './shared/components/form-field/form-field.component';
 import { LoadingSpinnerComponent } from './shared/components/loading-spinner/loading-spinner.component';
+import { StatusBadgeComponent } from './shared/components/status-badge/status-badge.component';
+import { EmptyStateComponent } from './shared/components/empty-state/empty-state.component';
 
 function initializeKeycloak(keycloak: KeycloakService) {
   return () =>
@@ -46,6 +50,8 @@ function initializeKeycloak(keycloak: KeycloakService) {
     ProductCreateComponent,
     ProductEditComponent,
     BundleManagementComponent,
+    SupplierListComponent,
+    SupplierCompareComponent,
     HeaderComponent,
     SidebarComponent,
     FooterComponent,
@@ -61,6 +67,8 @@ function initializeKeycloak(keycloak: KeycloakService) {
     PageHeaderComponent,
     FormFieldComponent,
     LoadingSpinnerComponent,
+    StatusBadgeComponent,
+    EmptyStateComponent,
   ],
   providers: [
     {

@@ -8,6 +8,8 @@ import { ProductCreateComponent } from './features/products/product-create/produ
 import { ProductEditComponent } from './features/products/product-edit/product-edit.component';
 import { CategoryManagementComponent } from './features/products/category-management/category-management.component';
 import { BundleManagementComponent } from './features/products/bundle-management/bundle-management.component';
+import { SupplierListComponent } from './features/suppliers/supplier-list/supplier-list.component';
+import { SupplierCompareComponent } from './features/suppliers/supplier-compare/supplier-compare.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
@@ -19,7 +21,10 @@ const routes: Routes = [
   { path: 'products/bundles', component: BundleManagementComponent, canActivate: [AuthGuard] },
   { path: 'products/:id/edit', component: ProductEditComponent, canActivate: [AuthGuard] },
   { path: 'products/:id', component: ProductDetailComponent, canActivate: [AuthGuard] },
-  { path: 'suppliers', component: DashboardComponent, canActivate: [AuthGuard] },
+  { path: 'suppliers/compare', component: SupplierCompareComponent, canActivate: [AuthGuard] },
+  { path: 'suppliers/new', component: DashboardComponent, canActivate: [AuthGuard] },
+  { path: 'suppliers/:id', component: DashboardComponent, canActivate: [AuthGuard] },
+  { path: 'suppliers', component: SupplierListComponent, canActivate: [AuthGuard] },
   { path: 'procurement', component: DashboardComponent, canActivate: [AuthGuard] },
   { path: 'procurement/requisitions', component: DashboardComponent, canActivate: [AuthGuard] },
   { path: 'procurement/orders', component: DashboardComponent, canActivate: [AuthGuard] },

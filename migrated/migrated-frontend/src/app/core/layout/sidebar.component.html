@@ -1,6 +1,11 @@
 <nav class="sidebar" [class.collapsed]="collapsed">
   <ul class="nav-list">
-    <li *ngFor="let item of menuItems" class="nav-item" [class.active]="isActive(item.route)" [title]="item.label">
+    <li
+      *ngFor="let item of menuItems"
+      class="nav-item"
+      [class.active]="isActive(item.route)"
+      [title]="item.label"
+    >
       <a [routerLink]="item.route">
         <span class="nav-icon">{{ item.icon }}</span>
         <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>

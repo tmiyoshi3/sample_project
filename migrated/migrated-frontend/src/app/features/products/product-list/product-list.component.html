@@ -2,8 +2,12 @@
   <div class="page-header">
     <h1>製品カタログ</h1>
     <div class="action-bar">
-      <button class="btn btn-secondary" (click)="navigateTo('/products/categories')">カテゴリ管理</button>
-      <button class="btn btn-secondary" (click)="navigateTo('/products/bundles')">バンドル管理</button>
+      <button class="btn btn-secondary" (click)="navigateTo('/products/categories')">
+        カテゴリ管理
+      </button>
+      <button class="btn btn-secondary" (click)="navigateTo('/products/bundles')">
+        バンドル管理
+      </button>
       <button class="btn btn-export" (click)="exportCsv()">CSV出力</button>
       <button class="btn btn-primary" (click)="navigateTo('/products/new')">+ 新規登録</button>
     </div>
@@ -49,84 +53,98 @@
 
   <div class="result-count">{{ totalElements }}件中 {{ startItem }}〜{{ endItem }}件を表示</div>
 
-  <div *ngIf="products.length === 0 && !loading" class="empty-state">
-    該当する製品がありません
-  </div>
+  <div *ngIf="products.length === 0 && !loading" class="empty-state">該当する製品がありません</div>
 
   <div *ngIf="products.length > 0" class="table-wrapper">
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th
-          *ngFor="let header of columnHeaders"
-          [class.sortable]="isSortable(header)"
-          (click)="onSortChange(header)"
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th
+            *ngFor="let header of columnHeaders"
+            [class.sortable]="isSortable(header)"
+            (click)="onSortChange(header)"
+          >
+            {{ header }}
+            <span *ngIf="getSortIcon(header)" class="sort-icon">{{ getSortIcon(header) }}</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let product of products; let i = index"
+          class="data-row"
+          (click)="onProductClick(product)"
         >
-          {{ header }}
-          <span *ngIf="getSortIcon(header)" class="sort-icon">{{ getSortIcon(header) }}</span>
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr
-        *ngFor="let product of products; let i = index"
-        class="data-row"
-        (click)="onProductClick(product)"
-      >
-        <td>{{ product.sku }}</td>
-        <td>{{ product.name }}</td>
-        <td>{{ product.categoryName }}</td>
-        <td>{{ product.manufacturerName }}</td>
-        <td>{{ formatPrice(product.unitPrice) }}</td>
-        <td>
-          <span [class]="'status-badge ' + getStatusClass(product.status)">
-            {{ getStatusLabel(product.status) }}
-          </span>
-        </td>
-        <td>{{ product.stockQuantity }}</td>
-      </tr>
-    </tbody>
-  </table>
+          <td>{{ product.sku }}</td>
+          <td>{{ product.name }}</td>
+          <td>{{ product.categoryName }}</td>
+          <td>{{ product.manufacturerName }}</td>
+          <td>{{ formatPrice(product.unitPrice) }}</td>
+          <td>
+            <span [class]="'status-badge ' + getStatusClass(product.status)">
+              {{ getStatusLabel(product.status) }}
+            </span>
+          </td>
+          <td>{{ product.stockQuantity }}</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <div *ngIf="totalPages > 1" class="pagination">
-    <div class="pagination-info">{{ totalElements }}件中 {{ startItem }}〜{{ endItem }}件を表示</div>
+    <div class="pagination-info">
+      {{ totalElements }}件中 {{ startItem }}〜{{ endItem }}件を表示
+    </div>
     <div class="pagination-controls">
       <button
         class="page-btn"
         title="最初のページ"
         [disabled]="currentPage === 0"
         (click)="onPageChange(0)"
-      >«</button>
+      >
+        «
+      </button>
       <button
         class="page-btn"
         title="前のページ"
         [disabled]="currentPage === 0"
         (click)="onPageChange(currentPage - 1)"
-      >‹</button>
+      >
+        ‹
+      </button>
       <button
         *ngFor="let p of pageNumbers"
         class="page-btn"
         [class.active]="p - 1 === currentPage"
         (click)="onPageChange(p - 1)"
-      >{{ p }}</button>
+      >
+        {{ p }}
+      </button>
       <button
         class="page-btn"
         title="次のページ"
         [disabled]="currentPage >= totalPages - 1"
         (click)="onPageChange(currentPage + 1)"
-      >›</button>
+      >
+        ›
+      </button>
       <button
         class="page-btn"
         title="最後のページ"
         [disabled]="currentPage >= totalPages - 1"
         (click)="onPageChange(totalPages - 1)"
-      >»</button>
+      >
+        »
+      </button>
     </div>
-    <div class="pagination-summary">全 {{ totalElements }} 件中 {{ startItem }} - {{ endItem }} 件を表示</div>
+    <div class="pagination-summary">
+      全 {{ totalElements }} 件中 {{ startItem }} - {{ endItem }} 件を表示
+    </div>
   </div>
 
   <div *ngIf="totalPages <= 1 && products.length > 0" class="pagination">
-    <div class="pagination-info">{{ totalElements }}件中 {{ startItem }}〜{{ endItem }}件を表示</div>
+    <div class="pagination-info">
+      {{ totalElements }}件中 {{ startItem }}〜{{ endItem }}件を表示
+    </div>
   </div>
 </div>

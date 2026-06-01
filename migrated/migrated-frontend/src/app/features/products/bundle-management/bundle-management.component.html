@@ -1,7 +1,7 @@
 <div class="bundle-container">
   <!-- Success/Error banners -->
-  <div class="success-banner" *ngIf="successMessage">{{successMessage}}</div>
-  <div class="error-banner" *ngIf="errorMessage">{{errorMessage}}</div>
+  <div class="success-banner" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="error-banner" *ngIf="errorMessage">{{ errorMessage }}</div>
 
   <!-- List view (hidden when editMode is set) -->
   <div *ngIf="!editMode">
@@ -12,9 +12,9 @@
       <div class="bundle-card" *ngFor="let bundle of bundles">
         <div class="bundle-header">
           <div class="bundle-title-area">
-            <h3 class="bundle-name">{{bundle.name}}</h3>
+            <h3 class="bundle-name">{{ bundle.name }}</h3>
             <span class="bundle-status" [ngClass]="'status-' + bundle.status.toLowerCase()">
-              {{getStatusLabel(bundle.status)}}
+              {{ getStatusLabel(bundle.status) }}
             </span>
           </div>
           <div class="bundle-actions">
@@ -22,25 +22,25 @@
             <button class="btn-delete" (click)="confirmDelete(bundle)">削除</button>
           </div>
         </div>
-        <p class="bundle-description">{{bundle.description}}</p>
+        <p class="bundle-description">{{ bundle.description }}</p>
         <div class="bundle-products">
           <div class="product-chip" *ngFor="let p of bundle.products">
-            <span class="chip-name">{{p.productName}}</span>
-            <span class="chip-qty">&times; {{p.quantity}}</span>
+            <span class="chip-name">{{ p.productName }}</span>
+            <span class="chip-qty">&times; {{ p.quantity }}</span>
           </div>
         </div>
         <div class="bundle-pricing">
           <div class="pricing-item">
             <span class="pricing-label">定価合計</span>
-            <span class="pricing-value original">{{formatPrice(bundle.totalPrice)}}</span>
+            <span class="pricing-value original">{{ formatPrice(bundle.totalPrice) }}</span>
           </div>
           <div class="pricing-item">
             <span class="pricing-label">割引</span>
-            <span class="pricing-value discount">{{bundle.discountPercentage}}%</span>
+            <span class="pricing-value discount">{{ bundle.discountPercentage }}%</span>
           </div>
           <div class="pricing-item">
             <span class="pricing-label">バンドル価格</span>
-            <span class="pricing-value bundle-price">{{formatPrice(bundle.bundlePrice)}}</span>
+            <span class="pricing-value bundle-price">{{ formatPrice(bundle.bundlePrice) }}</span>
           </div>
         </div>
       </div>
@@ -49,13 +49,31 @@
 
   <!-- Edit/Create form -->
   <div class="edit-panel" *ngIf="editMode">
-    <h3 class="panel-title">{{editMode === 'create' ? 'バンドル作成' : 'バンドル編集'}}</h3>
+    <h3 class="panel-title">{{ editMode === 'create' ? 'バンドル作成' : 'バンドル編集' }}</h3>
     <form [formGroup]="bundleForm" class="bundle-form">
       <div class="form-group">
-        <label class="form-label" for="bundleName">バンドル名 <span class="required">*</span></label>
-        <input id="bundleName" type="text" class="form-input" formControlName="name" placeholder="バンドル名を入力" />
-        <div class="validation-error" *ngIf="bundleForm.get('name')!.touched && bundleForm.get('name')!.hasError('required')">バンドル名は必須です。</div>
-        <div class="validation-error" *ngIf="bundleForm.get('name')!.touched && bundleForm.get('name')!.hasError('maxlength')">バンドル名は200文字以内で入力してください。</div>
+        <label class="form-label" for="bundleName"
+          >バンドル名 <span class="required">*</span></label
+        >
+        <input
+          id="bundleName"
+          type="text"
+          class="form-input"
+          formControlName="name"
+          placeholder="バンドル名を入力"
+        />
+        <div
+          class="validation-error"
+          *ngIf="bundleForm.get('name')!.touched && bundleForm.get('name')!.hasError('required')"
+        >
+          バンドル名は必須です。
+        </div>
+        <div
+          class="validation-error"
+          *ngIf="bundleForm.get('name')!.touched && bundleForm.get('name')!.hasError('maxlength')"
+        >
+          バンドル名は200文字以内で入力してください。
+        </div>
       </div>
 
       <div class="form-group">
@@ -69,31 +87,65 @@
 
       <div class="form-group">
         <label class="form-label" for="bundleDescription">説明</label>
-        <textarea id="bundleDescription" class="form-input" formControlName="description" rows="3" placeholder="バンドルの説明を入力"></textarea>
-        <div class="validation-error" *ngIf="bundleForm.get('description')!.touched && bundleForm.get('description')!.hasError('maxlength')">説明は1000文字以内で入力してください。</div>
+        <textarea
+          id="bundleDescription"
+          class="form-input"
+          formControlName="description"
+          rows="3"
+          placeholder="バンドルの説明を入力"
+        ></textarea>
+        <div
+          class="validation-error"
+          *ngIf="
+            bundleForm.get('description')!.touched &&
+            bundleForm.get('description')!.hasError('maxlength')
+          "
+        >
+          説明は1000文字以内で入力してください。
+        </div>
       </div>
 
       <div class="form-group">
         <label class="form-label" for="bundleDiscount">割引率 (%)</label>
-        <input id="bundleDiscount" type="number" class="form-input" formControlName="discountPercentage" min="0" max="100" />
+        <input
+          id="bundleDiscount"
+          type="number"
+          class="form-input"
+          formControlName="discountPercentage"
+          min="0"
+          max="100"
+        />
       </div>
 
       <!-- Product search -->
       <div class="form-group product-search">
         <label class="form-label">構成製品の追加</label>
-        <input type="text" class="form-input" [(ngModel)]="productSearchKeyword" [ngModelOptions]="{standalone: true}" (input)="searchProducts()" placeholder="製品名またはSKUで検索" />
+        <input
+          type="text"
+          class="form-input"
+          [(ngModel)]="productSearchKeyword"
+          [ngModelOptions]="{ standalone: true }"
+          (input)="searchProducts()"
+          placeholder="製品名またはSKUで検索"
+        />
         <div class="search-dropdown" *ngIf="searchResults.length > 0">
-          <div class="search-result-item" *ngFor="let result of searchResults" (click)="addProductToBundle(result)">
-            <span class="result-sku">{{result.sku}}</span>
-            <span class="result-name">{{result.name}}</span>
-            <span class="result-price">{{formatPrice(result.unitPrice!)}}</span>
+          <div
+            class="search-result-item"
+            *ngFor="let result of searchResults"
+            (click)="addProductToBundle(result)"
+          >
+            <span class="result-sku">{{ result.sku }}</span>
+            <span class="result-name">{{ result.name }}</span>
+            <span class="result-price">{{ formatPrice(result.unitPrice!) }}</span>
           </div>
         </div>
       </div>
 
       <!-- Items table -->
       <div class="items-section" formArrayName="items">
-        <div class="no-items" *ngIf="items.length === 0">構成製品がありません。上の検索欄から製品を追加してください。</div>
+        <div class="no-items" *ngIf="items.length === 0">
+          構成製品がありません。上の検索欄から製品を追加してください。
+        </div>
         <table class="items-table" *ngIf="items.length > 0">
           <thead>
             <tr>
@@ -107,15 +159,17 @@
           </thead>
           <tbody>
             <tr *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-              <td>{{item.get('productSku')!.value}}</td>
-              <td>{{item.get('productName')!.value}}</td>
-              <td>{{formatPrice(item.get('unitPrice')!.value)}}</td>
+              <td>{{ item.get('productSku')!.value }}</td>
+              <td>{{ item.get('productName')!.value }}</td>
+              <td>{{ formatPrice(item.get('unitPrice')!.value) }}</td>
               <td>
                 <input type="number" class="quantity-input" formControlName="quantity" min="1" />
               </td>
-              <td>{{formatPrice(item.get('unitPrice')!.value * item.get('quantity')!.value)}}</td>
+              <td>{{ formatPrice(item.get('unitPrice')!.value * item.get('quantity')!.value) }}</td>
               <td>
-                <button type="button" class="btn-remove-item" (click)="removeProductFromBundle(i)">&times;</button>
+                <button type="button" class="btn-remove-item" (click)="removeProductFromBundle(i)">
+                  &times;
+                </button>
               </td>
             </tr>
           </tbody>
@@ -126,15 +180,17 @@
       <div class="price-calculation">
         <div class="price-row">
           <span class="price-label">定価合計</span>
-          <span class="price-value">{{formatPrice(calculatedTotalPrice)}}</span>
+          <span class="price-value">{{ formatPrice(calculatedTotalPrice) }}</span>
         </div>
         <div class="price-row discount-row">
-          <span class="price-label">割引額 ({{bundleForm.get('discountPercentage')!.value || 0}}%)</span>
-          <span class="price-value">-{{formatPrice(calculatedDiscountAmount)}}</span>
+          <span class="price-label"
+            >割引額 ({{ bundleForm.get('discountPercentage')!.value || 0 }}%)</span
+          >
+          <span class="price-value">-{{ formatPrice(calculatedDiscountAmount) }}</span>
         </div>
         <div class="price-row total-row">
           <span class="price-label">バンドル価格</span>
-          <span class="price-value">{{formatPrice(calculatedBundlePrice)}}</span>
+          <span class="price-value">{{ formatPrice(calculatedBundlePrice) }}</span>
         </div>
       </div>
 
@@ -151,7 +207,7 @@
     <div class="dialog-overlay" (click)="cancelDelete()"></div>
     <div class="dialog-content">
       <div class="dialog-body">
-        <p>「{{deletingBundle?.name}}」を削除してもよろしいですか？</p>
+        <p>「{{ deletingBundle?.name }}」を削除してもよろしいですか？</p>
       </div>
       <div class="dialog-footer">
         <button class="btn-outline" (click)="cancelDelete()">キャンセル</button>

@@ -741,6 +741,80 @@ export interface ProductEditPageAdapter {
   getCurrentUrl(): string;
 }
 
+// ============================================================
+// F-04: サプライヤー — サプライヤー一覧画面
+// ============================================================
+
+export interface SupplierListPageAdapter {
+  readonly page: Page;
+
+  navigateToSupplierList(): Promise<void>;
+  waitForSupplierListLoad(): Promise<void>;
+
+  // 検索
+  fillSearchKeyword(keyword: string): Promise<void>;
+  clearSearchKeyword(): Promise<void>;
+
+  // ステータスフィルタ
+  selectStatus(statusLabel: string): Promise<void>;
+  getStatusSelectValue(): Promise<string>;
+
+  // 評価フィルタ
+  selectMinRating(label: string): Promise<void>;
+
+  // フィルタリセット
+  isResetButtonVisible(): Promise<boolean>;
+  clickResetButton(): Promise<void>;
+
+  // テーブル
+  getTableRowCount(): Promise<number>;
+  isTableVisible(): Promise<boolean>;
+  getColumnHeaders(): Promise<string[]>;
+  getSupplierCodeInRow(rowIndex: number): Promise<string>;
+  getSupplierNameInRow(rowIndex: number): Promise<string>;
+  getSupplierStatusInRow(rowIndex: number): Promise<string>;
+  getSupplierRatingInRow(rowIndex: number): Promise<string>;
+  getSupplierEmailInRow(rowIndex: number): Promise<string>;
+  getSupplierPhoneInRow(rowIndex: number): Promise<string>;
+  findRowIndexByCode(code: string): Promise<number>;
+  findRowIndexByName(name: string): Promise<number>;
+  clickSupplierRow(name: string): Promise<void>;
+
+  // 件数表示
+  getResultCountText(): Promise<string>;
+
+  // 空状態
+  isEmptyStateVisible(): Promise<boolean>;
+  getEmptyStateMessage(): Promise<string>;
+
+  // 比較チェックボックス
+  clickCompareCheckbox(supplierName: string): Promise<void>;
+  isCompareCheckboxChecked(supplierName: string): Promise<boolean>;
+  isCompareCheckboxDisabled(supplierName: string): Promise<boolean>;
+  areUnselectedCheckboxesDisabled(): Promise<boolean>;
+  areUnselectedCheckboxesEnabled(): Promise<boolean>;
+
+  // 比較ボタン
+  getCompareButtonLabel(): Promise<string>;
+  isCompareButtonDisabled(): Promise<boolean>;
+  isCompareButtonEnabled(): Promise<boolean>;
+  clickCompareButton(): Promise<void>;
+
+  // 比較画面
+  isComparePageVisible(): Promise<boolean>;
+  isSupplierInCompare(supplierName: string): Promise<boolean>;
+  isCompareRatingVisible(): Promise<boolean>;
+  isCompareOrderHistoryVisible(): Promise<boolean>;
+
+  // 新規登録ボタン
+  isNewButtonVisible(): Promise<boolean>;
+  isNewButtonEnabled(): Promise<boolean>;
+  clickNewButton(): Promise<void>;
+
+  // URL
+  getCurrentUrl(): string;
+}
+
 export interface OrderRow {
   orderNumber: string;
   supplier: string;

@@ -13,6 +13,7 @@ import type {
   BundleManagementPageAdapter,
   ProductCreatePageAdapter,
   ProductEditPageAdapter,
+  SupplierListPageAdapter,
 } from './types.js';
 import { CurrentLoginPageAdapter, CurrentPasswordResetPageAdapter } from './current/F-01/login.adapter.js';
 import { MigratedLoginPageAdapter, MigratedPasswordResetPageAdapter } from './migrated/F-01/login.adapter.js';
@@ -38,6 +39,8 @@ import { CurrentProductCreatePageAdapter } from './current/F-03/product-create.a
 import { MigratedProductCreatePageAdapter } from './migrated/F-03/product-create.adapter.js';
 import { CurrentProductEditPageAdapter } from './current/F-03/product-edit.adapter.js';
 import { MigratedProductEditPageAdapter } from './migrated/F-03/product-edit.adapter.js';
+import { CurrentSupplierListPageAdapter } from './current/F-04/supplier-list.adapter.js';
+import { MigratedSupplierListPageAdapter } from './migrated/F-04/supplier-list.adapter.js';
 
 const isMigrated = process.env.TARGET_ENV === 'migrated';
 
@@ -117,4 +120,10 @@ export function createProductEditAdapter(page: Page): ProductEditPageAdapter {
   return isMigrated
     ? new MigratedProductEditPageAdapter(page)
     : new CurrentProductEditPageAdapter(page);
+}
+
+export function createSupplierListAdapter(page: Page): SupplierListPageAdapter {
+  return isMigrated
+    ? new MigratedSupplierListPageAdapter(page)
+    : new CurrentSupplierListPageAdapter(page);
 }
