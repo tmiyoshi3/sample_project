@@ -1,0 +1,472 @@
+openapi: "3.0.3"
+info:
+  title: "Existing System API - F-03-03 カテゴリ管理画面"
+  version: "1.0.0"
+  description: "既存システムのAPI仕様（マイグレーション用） - F-03-03 カテゴリ管理画面"
+
+servers:
+  - url: http://localhost:4200
+    description: "既存システム（nginx経由）"
+
+paths:
+  /api/products/categories:
+    get:
+      summary: "カテゴリ一覧取得"
+      description: |
+        全カテゴリをフラットなリストで取得する。
+        JPQL: SELECT c FROM Category c LEFT JOIN FETCH c.parent ORDER BY c.name
+        製品数は別クエリで集計: SELECT p.category.id, COUNT(p) FROM Product p WHERE p.category IS NOT NULL GROUP BY p.category.id
+
+        実装上の注意点:
+        - レスポンスはフラットなリスト（階層構造ではない）。parentIdにより親子関係を表現。
+        - FE側のbuildTree()でparentIdを使って階層ツリーを再構築する。
+        - productCountは直接属する製品数のみ（子カテゴリの製品数は含まない）。
+        - 名前順（ORDER BY c.name）でソートされている。
+        - 別途 GET /api/categories（CategoryResource）もあるが、こちらは階層構造を返すエンドポイントで、カテゴリ管理画面では使用されない。
+      operationId: listCategories
+      tags:
+        - "F-03-03-001"
+        - "F-03-03-008"
+      x-feature-ids:
+        - "F-03-03-001"
+        - "F-03-03-008"
+      x-evidence:
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:425-458"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:67-69"
+      x-confidence: "High"
+      x-unconfirmed: []
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        "200":
+          description: "成功 - カテゴリ一覧"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoryListItem"
+              example:
+                - id: 1
+                  code: "CAT-001"
+                  name: "コンピュータ"
+                  description: "デスクトップ・ノートPC・ワークステーション"
+                  parentId: null
+                  productCount: 14
+                - id: 2
+                  code: "CAT-002"
+                  name: "デスクトップPC"
+                  description: ""
+                  parentId: 1
+                  productCount: 5
+        "500":
+          description: "サーバーエラー"
+
+    post:
+      summary: "カテゴリ作成"
+      description: |
+        新しいカテゴリを作成する。
+
+        実装上の注意点:
+        - category_codeは "CAT-" + System.currentTimeMillis() で自動生成される（技術的負債: タイムスタンプベースのコード生成、衝突リスクあり）。
+        - FE側にコード入力欄はない。
+        - parentIdを指定すると子カテゴリとして作成（level = parent.level + 1）。
+        - parentIdがnullまたは未指定の場合はルートカテゴリ（level = 0）。
+        - parentIdに存在しないIDを指定した場合: parentがnullとなりlevel=0のルートカテゴリとして作成される（エラーにならない）。
+        - BE側にバリデーションなし（name=nullでも永続化を試みる。DBのNOT NULL制約でエラー）。
+        - 循環参照防止なし。
+        - createdBy/updatedByは設定されない（技術的負債）。
+        - @RolesAllowed未設定（全認証ユーザーが作成可能）。
+      operationId: createCategory
+      tags:
+        - "F-03-03-002"
+        - "F-03-03-005"
+      x-feature-ids:
+        - "F-03-03-002"
+        - "F-03-03-005"
+      x-evidence:
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:468-505"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:113-115"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "DB制約エラー時のレスポンス形式（nameがnullの場合のJakarta Persistence例外のエラーレスポンス形式は未確認）"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCategoryRequest"
+            example:
+              name: "新しいカテゴリ"
+              description: "カテゴリの説明"
+              parentId: 1
+      responses:
+        "201":
+          description: "作成成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryCreateResponse"
+              example:
+                id: 21
+                code: "CAT-1748181234567"
+                name: "新しいカテゴリ"
+                description: "カテゴリの説明"
+                parentId: 1
+                productCount: 0
+        "500":
+          description: "サーバーエラー（DB制約違反等）"
+
+  /api/products/categories/{id}:
+    put:
+      summary: "カテゴリ更新"
+      description: |
+        既存カテゴリの情報を更新する。
+
+        実装上の注意点:
+        - nameとdescriptionはcategoryDataに含まれるキーのみ更新（部分更新対応）。
+        - parentIdは常に評価される（nullの場合はルートカテゴリに変更、非nullの場合は親カテゴリを変更）。
+        - 循環参照の防止なし（自身を親に設定可能 → 無限ループのリスク）。
+        - category_codeは更新されない。
+        - レスポンスにcodeとproductCountが含まれない（GETレスポンスとフィールドが異なる）。
+        - createdBy/updatedByは更新されない（技術的負債）。
+        - @RolesAllowed未設定。
+      operationId: updateCategory
+      tags:
+        - "F-03-03-006"
+      x-feature-ids:
+        - "F-03-03-006"
+      x-evidence:
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:507-547"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:118-120"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "parentIdに自身のIDを指定した場合の挙動（循環参照）"
+        - "楽観的ロック(@Version)によるOptimisticLockException発生時のレスポンス"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: "カテゴリID"
+          x-evidence: "ソースコード: ProductResource.java:510"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCategoryRequest"
+            example:
+              name: "更新後の名前"
+              description: "更新後の説明"
+              parentId: null
+      responses:
+        "200":
+          description: "更新成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryUpdateResponse"
+              example:
+                id: 1
+                name: "更新後の名前"
+                description: "更新後の説明"
+                parentId: null
+        "404":
+          description: "カテゴリが見つからない"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "カテゴリが見つかりません。"
+        "500":
+          description: "サーバーエラー"
+
+    delete:
+      summary: "カテゴリ削除"
+      description: |
+        カテゴリを物理削除する。
+
+        実装上の注意点:
+        - 物理削除（em.remove）であり論理削除ではない。
+        - 削除前に2つの制約チェックを行う:
+          1. 子カテゴリの存在チェック（SELECT COUNT(c) FROM Category c WHERE c.parent.id = :id）
+          2. 紐付き製品の存在チェック（SELECT COUNT(p) FROM Product p WHERE p.category.id = :id）
+        - どちらかが0より大きい場合は409 Conflictを返す。
+        - FE側のエラーハンドリング: error.error?.error をバナーメッセージとして表示。
+        - @RolesAllowed未設定。
+      operationId: deleteCategory
+      tags:
+        - "F-03-03-007"
+      x-feature-ids:
+        - "F-03-03-007"
+      x-evidence:
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:549-580"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:123-125"
+      x-confidence: "High"
+      x-unconfirmed: []
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: "カテゴリID"
+          x-evidence: "ソースコード: ProductResource.java:552"
+      responses:
+        "204":
+          description: "削除成功（No Content）"
+        "404":
+          description: "カテゴリが見つからない"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "カテゴリが見つかりません。"
+        "409":
+          description: "削除不可（子カテゴリまたは製品が紐付いている）"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                childExists:
+                  summary: "子カテゴリが存在する場合"
+                  value:
+                    error: "子カテゴリが存在するため削除できません。"
+                productExists:
+                  summary: "製品が紐付いている場合"
+                  value:
+                    error: "このカテゴリに紐付く製品が存在するため削除できません。"
+        "500":
+          description: "サーバーエラー"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Keycloak OIDC JWT トークン"
+
+  schemas:
+    CategoryListItem:
+      type: object
+      description: "カテゴリ一覧アイテム（GETレスポンス）"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "カテゴリID"
+          x-evidence: "ソースコード: ProductResource.java:448"
+        code:
+          type: string
+          description: "カテゴリコード（自動生成: CAT-{timestamp}）"
+          example: "CAT-001"
+          x-evidence: "ソースコード: ProductResource.java:449"
+        name:
+          type: string
+          description: "カテゴリ名"
+          maxLength: 200
+          example: "コンピュータ"
+          x-evidence: "ソースコード: ProductResource.java:450, Category.java:47"
+        description:
+          type: string
+          description: "カテゴリの説明（nullの場合は空文字列）"
+          maxLength: 1000
+          example: "デスクトップ・ノートPC・ワークステーション"
+          x-evidence: "ソースコード: ProductResource.java:451, Category.java:56"
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+          description: "親カテゴリID（ルートカテゴリの場合はnull）"
+          x-evidence: "ソースコード: ProductResource.java:452"
+        productCount:
+          type: integer
+          format: int64
+          description: "直接属する製品数（子カテゴリの製品数は含まない）"
+          x-evidence: "ソースコード: ProductResource.java:436-442,453"
+
+    CreateCategoryRequest:
+      type: object
+      description: "カテゴリ作成リクエスト"
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: "カテゴリ名"
+          maxLength: 200
+          x-fe-validation: "required, maxLength(100)"
+          x-be-validation: "なし（DB NOT NULL制約のみ）"
+          x-evidence: "ソースコード: ProductResource.java:472, category-management.component.ts:84"
+        description:
+          type: string
+          description: "カテゴリの説明"
+          maxLength: 1000
+          nullable: true
+          x-fe-validation: "maxLength(500)"
+          x-be-validation: "なし"
+          x-evidence: "ソースコード: ProductResource.java:478, category-management.component.ts:85"
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+          description: "親カテゴリID（nullの場合はルートカテゴリ）"
+          x-evidence: "ソースコード: ProductResource.java:480-492"
+
+    CategoryCreateResponse:
+      type: object
+      description: "カテゴリ作成レスポンス"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "作成されたカテゴリID"
+        code:
+          type: string
+          description: "自動生成されたカテゴリコード（CAT-{timestamp}）"
+          example: "CAT-1748181234567"
+        name:
+          type: string
+          description: "カテゴリ名"
+        description:
+          type: string
+          description: "カテゴリの説明（nullの場合は空文字列）"
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+          description: "親カテゴリID"
+        productCount:
+          type: integer
+          description: "製品数（常に0）"
+
+    UpdateCategoryRequest:
+      type: object
+      description: "カテゴリ更新リクエスト"
+      properties:
+        name:
+          type: string
+          description: "カテゴリ名（キーが存在する場合のみ更新）"
+          maxLength: 200
+          x-fe-validation: "required, maxLength(100)"
+          x-be-validation: "なし"
+          x-evidence: "ソースコード: ProductResource.java:520-522"
+        description:
+          type: string
+          description: "カテゴリの説明（キーが存在する場合のみ更新）"
+          maxLength: 1000
+          nullable: true
+          x-fe-validation: "maxLength(500)"
+          x-be-validation: "なし"
+          x-evidence: "ソースコード: ProductResource.java:523-525"
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+          description: "親カテゴリID（常に評価: nullの場合はルートに移動）"
+          x-evidence: "ソースコード: ProductResource.java:527-536"
+
+    CategoryUpdateResponse:
+      type: object
+      description: "カテゴリ更新レスポンス（code, productCountを含まない）"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "カテゴリID"
+        name:
+          type: string
+          description: "カテゴリ名"
+        description:
+          type: string
+          description: "カテゴリの説明（nullの場合は空文字列）"
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+          description: "親カテゴリID"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: "エラーメッセージ"
+          example: "カテゴリが見つかりません。"
+
+# 技術的負債・仕様上の注意事項
+x-technical-debt:
+  - id: "TD-F03-03-001"
+    description: "カテゴリCRUDがProductResourceに混在（技術的負債 #5）"
+    detail: "本来はCategoryResourceとして分離すべき。別途 GET /api/categories（CategoryResource.java）が存在するが、カテゴリ管理画面では使用されていない。"
+    source: "ProductResource.java:66-70"
+  - id: "TD-F03-03-002"
+    description: "category_codeの自動生成がタイムスタンプベース"
+    detail: "CAT- + System.currentTimeMillis() で生成。高負荷時の衝突リスクあり。DB UNIQUE制約で整合性は保たれるが、衝突時は500エラー。"
+    source: "ProductResource.java:477"
+  - id: "TD-F03-03-003"
+    description: "循環参照の防止なし"
+    detail: "PUT時に自身を親カテゴリに設定可能。FE側にもBE側にもチェックなし。"
+    source: "ProductResource.java:527-536"
+  - id: "TD-F03-03-004"
+    description: "BE側バリデーションなし"
+    detail: "name=nullやname=空文字列のチェックがBE側にない。FE側のReactive Formsバリデーション（required, maxLength(100)）のみ。BE側のDB制約（name NOT NULL, length 200）でエラーになる。FE側とBE側でmaxLengthも不一致（FE:100, DB:200）。"
+    source: "ProductResource.java:468-505, category-management.component.ts:82-88"
+  - id: "TD-F03-03-005"
+    description: "上下移動のAPI未実装"
+    detail: "F-03-03-004（上下移動ボタン）はクライアントサイドのみ。並べ替え結果はサーバーに永続化されず、リロードで元に戻る。"
+    source: "category-management.component.ts:345-396"
+  - id: "TD-F03-03-006"
+    description: "@RolesAllowed未設定"
+    detail: "カテゴリの作成・更新・削除が全認証ユーザーに開放されている。VIEWER等の参照専用ロールも変更操作可能。"
+    source: "ProductResource.java:468,507,549"
+  - id: "TD-F03-03-007"
+    description: "PUTレスポンスにcode/productCountが含まれない"
+    detail: "GETレスポンスと異なるフィールドセットを返却。FE側はPUT後にloadCategories()（GET呼び出し）で全データを再取得するため実害なし。"
+    source: "ProductResource.java:540-546"
+  - id: "TD-F03-03-008"
+    description: "createdBy/updatedBy未設定"
+    detail: "AuditableEntityにcreatedBy/updatedByフィールドがあるが、カテゴリCRUDでは設定されていない。"
+    source: "ProductResource.java:468-580"
+
+# 機能IDとAPIの対応表
+x-feature-api-mapping:
+  F-03-03-001:
+    apis: ["GET /api/products/categories"]
+    note: "カテゴリツリーの表示"
+  F-03-03-002:
+    apis: ["POST /api/products/categories"]
+    note: "新規カテゴリ作成（ルートまたは子）"
+  F-03-03-003:
+    apis: []
+    note: "クライアントサイド操作のみ（API呼び出しなし）"
+  F-03-03-004:
+    apis: []
+    note: "クライアントサイド操作のみ（API未実装、並べ替え非永続化）"
+  F-03-03-005:
+    apis: ["POST /api/products/categories"]
+    note: "子カテゴリ作成（parentIdをプリセット）"
+  F-03-03-006:
+    apis: ["PUT /api/products/categories/{id}"]
+    note: "カテゴリ編集"
+  F-03-03-007:
+    apis: ["DELETE /api/products/categories/{id}"]
+    note: "カテゴリ削除（物理削除、子カテゴリ/製品チェック付き）"
+  F-03-03-008:
+    apis: ["GET /api/products/categories"]
+    note: "製品数はGETレスポンスのproductCountフィールド"

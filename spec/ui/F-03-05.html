@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>F-03-05: 製品新規登録/編集画面 UI仕様</title>
+  <style>
+    body { font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif; margin: 40px; color: #333; }
+    h1 { border-bottom: 2px solid #1a5276; padding-bottom: 8px; }
+    h2 { border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-top: 40px; }
+    h3 { margin-top: 24px; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: left; font-size: 13px; }
+    th { background-color: #f5f6fa; font-weight: 600; }
+    .feature { margin-bottom: 48px; }
+    .screenshot-item { margin-bottom: 16px; border: 1px solid #ddd; border-radius: 4px; padding: 12px; }
+    code { background: #f0f0f0; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+  </style>
+</head>
+<body>
+<h1>F-03-05: 製品新規登録/編集画面 UI仕様</h1>
+<p>最終更新: 2026-05-26</p>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-05-001">
+  <h2>F-03-05-001: ウィザードナビゲーション</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-05-001</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-05 製品新規登録/編集画面</li>
+    <li>小分類: ウィザードナビゲーション（ステップインジケーター・前へ/次へ/キャンセル）</li>
+    <li>画面名: 製品登録</li>
+    <li>URL: /products/new</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-018</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">5ステップウィザードの初期表示。ステップ1がアクティブ状態。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_initial.png</p>
+    <img src="../../screenshots/F-03/F-03-05_product-create_initial.png" alt="F-03-05-001 ウィザード初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>製品登録画面を5ステップのウィザード形式で構成し、ステップインジケーター（番号付き丸アイコン）と「前へ」「次へ」「キャンセル」ボタンでナビゲーションする。完了済みステップにはチェックマーク（✓）が表示される。</p>
+
+  <h3>WHY</h3>
+  <p>製品登録に必要な多数の入力項目をステップごとに分割し、入力の負荷を軽減してユーザーを順序立てて案内するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ページタイトル「製品登録」</td><td>常時</td><td>固定文字列</td><td>h1要素</td></tr>
+    <tr><td>ステップインジケーター</td><td>常時</td><td>steps配列</td><td>5つの番号付き丸アイコン（1-5）を横並び表示</td></tr>
+    <tr><td>ステップ1ラベル: 基本情報</td><td>常時</td><td>固定文字列</td><td>サブラベル「製品名、SKU、カテゴリ」</td></tr>
+    <tr><td>ステップ2ラベル: 価格・在庫</td><td>常時</td><td>固定文字列</td><td>サブラベル「価格、単位、発注点」</td></tr>
+    <tr><td>ステップ3ラベル: 仕様</td><td>常時</td><td>固定文字列</td><td>サブラベル「製品仕様の詳細」</td></tr>
+    <tr><td>ステップ4ラベル: 画像・資料</td><td>常時</td><td>固定文字列</td><td>サブラベル「画像・ドキュメント」</td></tr>
+    <tr><td>ステップ5ラベル: 確認</td><td>常時</td><td>固定文字列</td><td>サブラベル「入力内容の最終確認」</td></tr>
+    <tr><td>完了マーク（✓）</td><td>ステップが完了済み</td><td>currentStep比較</td><td>番号の代わりにチェックマークを表示</td></tr>
+    <tr><td>「キャンセル」ボタン</td><td>常時（全ステップ）</td><td>固定文字列</td><td>製品一覧へ戻る</td></tr>
+    <tr><td>「← 前へ」ボタン</td><td>currentStep >= 2</td><td>固定文字列</td><td>ステップ1では非表示</td></tr>
+    <tr><td>「次へ →」ボタン</td><td>currentStep <= 4</td><td>固定文字列</td><td>ステップ5では非表示</td></tr>
+    <tr><td>「登録する」ボタン</td><td>currentStep === 5</td><td>固定文字列</td><td>ステップ5のみ表示</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>本機能固有の入力項目なし（ナビゲーション制御のみ）。</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>次のステップへ</td><td>「次へ →」ボタンクリック</td><td>現在のステップのバリデーション実行、合格時にcurrentStep+1</td><td>次のステップが表示される</td><td>バリデーションエラー表示（F-03-05-002参照）</td><td>currentStep: N→N+1</td></tr>
+    <tr><td>前のステップへ</td><td>「← 前へ」ボタンクリック</td><td>currentStep-1（バリデーションなし）</td><td>前のステップが表示される</td><td>-</td><td>currentStep: N→N-1</td></tr>
+    <tr><td>キャンセル</td><td>「キャンセル」ボタンクリック</td><td>router.navigate(['/products'])</td><td>製品一覧画面へ遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>ステップ1から順に入力し、「次へ →」で進む。完了済みステップにはチェックマーク（✓）が表示される。「← 前へ」で戻ることも可能（バリデーションなし、入力値は保持）。ステップ5で「登録する」をクリックして登録を完了する。</p>
+
+  <h3>異常系</h3>
+  <p>ステップ1で必須項目未入力の状態で「次へ →」をクリックすると、バリデーションエラーメッセージが表示されステップ遷移しない。ステップ2以降のバリデーションも同様。</p>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。BE側ProductResourceに@RolesAllowed未設定（技術的負債：全認証済みユーザーがアクセス可能）。FEルートにRoleGuardなし。</p>
+
+  <h3>状態変化</h3>
+  <table>
+    <tr><th>状態</th><th>条件</th><th>表示</th></tr>
+    <tr><td>currentStep=1</td><td>初期表示</td><td>基本情報フォーム表示、「← 前へ」非表示</td></tr>
+    <tr><td>currentStep=2-4</td><td>「次へ →」遷移後</td><td>該当ステップフォーム表示、「← 前へ」「次へ →」両方表示</td></tr>
+    <tr><td>currentStep=5</td><td>ステップ4から遷移</td><td>確認画面表示、「次へ →」非表示、「登録する」表示</td></tr>
+  </table>
+
+  <h3>関連API</h3>
+  <p>ナビゲーション自体にAPI呼び出しなし。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-create/product-create.component.ts</td><td>currentStep, nextStep(), prevStep()</td><td>ステップ遷移ロジック</td></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-create/product-create.component.html</td><td>step-indicator セクション</td><td>ステップインジケーターのテンプレート</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 製品登録画面の初期表示（ステップ1アクティブ） ／
+        <strong>備考:</strong> ステップインジケーターの番号丸アイコンとラベルが確認できる
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_initial.png</p>
+      <img src="../../screenshots/F-03/F-03-05_product-create_initial.png" alt="F-03-05-001 ウィザード初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: /products/new にアクセスし、5ステップウィザードの初期表示を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-05_product-create_initial.png</li>
+    <li>ソースコード: product-create.component.ts（currentStep, nextStep, prevStep）</li>
+    <li>ソースコード: product-create.component.html（step-indicatorテンプレート）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>未保存データの離脱ガード（canDeactivate guard）が未実装。入力途中でブラウザバック・画面遷移すると確認なしにデータが失われる（技術的負債）</li>
+    <li>ステップインジケーターのクリックによる直接ジャンプが可能かどうか未確認</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-05-002">
+  <h2>F-03-05-002: 基本情報入力</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-05-002</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-05 製品新規登録/編集画面</li>
+    <li>小分類: 基本情報入力（製品名・SKU・説明・カテゴリ・メーカー・ステータス）</li>
+    <li>画面名: 製品登録</li>
+    <li>URL: /products/new</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-018</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">ステップ1（基本情報）の入力フォーム。値を入力した状態。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_step1-filled.png</p>
+    <img src="../../screenshots/F-03/F-03-05_product-create_step1-filled.png" alt="F-03-05-002 基本情報入力済み" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>ウィザードのステップ1で製品の基本情報（製品名・SKU・説明・カテゴリ・メーカー・ステータス）を入力するフォーム。カテゴリとメーカーはAPIから取得した選択肢をドロップダウンで表示する。</p>
+
+  <h3>WHY</h3>
+  <p>製品を一意に識別・分類するための基本属性を入力するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ステップタイトル「基本情報」</td><td>currentStep === 1</td><td>固定文字列</td><td>h2要素</td></tr>
+    <tr><td>バリデーションエラーメッセージ</td><td>フォーム送信試行時に各項目invalid</td><td>バリデーション結果</td><td>赤文字で各項目下に表示</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>製品名</td><td>text</td><td>必須</td><td>最大300文字（DB: VARCHAR(300)）</td><td>空文字</td><td>Validators.required</td><td>placeholder: 「例: 制御ユニット Type-A」</td></tr>
+    <tr><td>SKU（品番）</td><td>text</td><td>必須</td><td>パターン制約あり（F-03-05-003参照）</td><td>空文字</td><td>Validators.required</td><td>placeholder: 「例: AB-12345」。入力時にSKU重複チェック実行</td></tr>
+    <tr><td>説明</td><td>textarea</td><td>任意</td><td>DB: TEXT（制限なし）</td><td>空文字</td><td>なし</td><td>placeholder: 「製品の説明を入力してください」</td></tr>
+    <tr><td>カテゴリ</td><td>select</td><td>必須</td><td>APIから取得した選択肢（20件）</td><td>「選択してください」（未選択）</td><td>Validators.required</td><td>GET /api/products/categories で取得。HDD, OS, SSD, アクセスポイント, オフィスソフト, キーボード, コンピュータ, サプライ品, スイッチ, ストレージ, ソフトウェア, デスクトップPC, ネットワーク, ノートPC, プリンター, マウス, モニター, ルーター, ワークステーション, 周辺機器</td></tr>
+    <tr><td>メーカー</td><td>select</td><td>必須</td><td>APIから取得した選択肢（15件）</td><td>「選択してください」（未選択）</td><td>Validators.required</td><td>GET /api/products/manufacturers で取得。ASUS, Apple, Cisco Systems, Dell Technologies, EIZO, HP Inc., Lenovo, Microsoft, NEC, エプソン, エレコム, キヤノン, バッファロー, ブラザー工業, 富士通</td></tr>
+    <tr><td>ステータス</td><td>select</td><td>必須</td><td>有効/無効/保留の3択</td><td>有効</td><td>Validators.required</td><td>新規登録では3択（編集画面では「廃番」を加えた4択）</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>カテゴリ一覧取得</td><td>画面初期表示（ngOnInit）</td><td>GET /api/products/categories</td><td>カテゴリドロップダウンに選択肢をセット</td><td>コンソールエラー</td><td>categories配列更新</td></tr>
+    <tr><td>メーカー一覧取得</td><td>画面初期表示（ngOnInit）</td><td>GET /api/products/manufacturers</td><td>メーカードロップダウンに選択肢をセット</td><td>コンソールエラー</td><td>manufacturers配列更新</td></tr>
+    <tr><td>次へバリデーション</td><td>「次へ →」クリック（ステップ1）</td><td>基本情報フォームのバリデーション実行</td><td>ステップ2へ遷移</td><td>エラーメッセージ表示</td><td>markAllAsTouched実行</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>製品名・SKU・カテゴリ・メーカーの必須項目を入力し、「次へ →」をクリックするとステップ2に遷移する。カテゴリとメーカーは画面初期表示時にAPIから取得してドロップダウンにセットされる。ステータスのデフォルト値は「有効」。</p>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>製品名未入力 → 「製品名は必須です」</li>
+    <li>SKU未入力 → 「SKUは必須です」</li>
+    <li>カテゴリ未選択 → 「カテゴリを選択してください」</li>
+    <li>メーカー未選択 → 「メーカーを選択してください」</li>
+  </ul>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。BE側ProductResourceに@RolesAllowed未設定（技術的負債）。</p>
+
+  <h3>状態変化</h3>
+  <p>フォーム入力値はcurrentStep遷移時も保持される。「← 前へ」で戻った場合も入力値はそのまま。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/categories</td><td>なし</td><td>string[]（カテゴリ名一覧、20件）</td><td>500</td><td>ソースコード: ProductResource.java</td></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/manufacturers</td><td>なし</td><td>string[]（メーカー名一覧、15件）</td><td>500</td><td>ソースコード: ProductResource.java</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-create/product-create.component.ts</td><td>ngOnInit(), initForm()</td><td>フォーム初期化・カテゴリ/メーカー取得</td></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-create/product-create.component.html</td><td>step1セクション</td><td>基本情報入力フォームテンプレート</td></tr>
+    <tr><td>proquip-frontend/src/app/shared/services/product.service.ts</td><td>getCategories(), getManufacturers()</td><td>カテゴリ/メーカーAPI呼び出し</td></tr>
+    <tr><td>proquip-web/.../resource/ProductResource.java</td><td>getCategories(), getManufacturers()</td><td>カテゴリ/メーカーエンドポイント</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> ステップ1で値を入力した状態 ／
+        <strong>備考:</strong> 製品名・SKU入力済み、カテゴリ・メーカー選択済み
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_step1-filled.png</p>
+      <img src="../../screenshots/F-03/F-03-05_product-create_step1-filled.png" alt="F-03-05-002 基本情報入力済み" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 必須項目未入力で「次へ →」クリック時のバリデーションエラー ／
+        <strong>備考:</strong> 各必須項目の下にエラーメッセージが赤文字で表示される
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_validation-error.png</p>
+      <img src="../../screenshots/F-03/F-03-05_product-create_validation-error.png" alt="F-03-05-002 バリデーションエラー" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: /products/new にアクセスし、ステップ1の入力フォームを確認。カテゴリ20件・メーカー15件のドロップダウンを確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-05_product-create_step1-filled.png, screenshots/F-03/F-03-05_product-create_validation-error.png</li>
+    <li>ソースコード: product-create.component.ts（initForm、バリデーション定義）</li>
+    <li>ソースコード: product-create.component.html（step1テンプレート、エラーメッセージ）</li>
+    <li>DB定義: Product.java（name VARCHAR(300), sku UNIQUE, description TEXT, status VARCHAR(30)）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>製品名の最大文字数バリデーションがFE側にない（DB上はVARCHAR(300)だが、FEではValidators.requiredのみ）</li>
+    <li>ステータスの内部値（ACTIVE/INACTIVE/ON_HOLD等）とラベル（有効/無効/保留）のマッピング詳細</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-05-003">
+  <h2>F-03-05-003: SKU重複チェック</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-05-003</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-05 製品新規登録/編集画面</li>
+    <li>小分類: SKU重複チェック</li>
+    <li>画面名: 製品登録 / 製品編集</li>
+    <li>URL: /products/new, /products/:id/edit</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-018, UC-019</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">SKU入力フィールドの右側に重複チェックの状態インジケーターが表示される。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_step1-filled.png</p>
+    <img src="../../screenshots/F-03/F-03-05_product-create_step1-filled.png" alt="F-03-05-003 SKU重複チェック" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>SKU入力時にリアルタイムでサーバーサイドの重複チェックを行い、結果をインジケーターで表示する機能。「確認中...」→「✓」（利用可能）の状態遷移を表示。</p>
+
+  <h3>WHY</h3>
+  <p>SKUは製品の一意識別子であり、重複登録を防ぐためにリアルタイムで検証する必要がある。登録完了時にDB制約違反で失敗するのを未然に防ぐ。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>「確認中...」テキスト</td><td>SKU重複チェックAPI呼び出し中</td><td>チェック状態</td><td>SKUフィールド付近に表示</td></tr>
+    <tr><td>「✓」マーク</td><td>重複なし確認完了</td><td>API応答結果</td><td>緑色チェックマーク</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>SKU（品番）</td><td>text</td><td>必須</td><td>FE create: <code>^[A-Z0-9]{2,4}-\d{3,8}$</code>、custom-validators.ts: <code>^[A-Za-z]{2,5}-[0-9]{4,8}$</code>、BE: <code>[A-Za-z]{2,5}-[0-9]{4,8}$</code></td><td>空文字</td><td>Validators.required + パターン + 非同期重複チェック</td><td>技術的負債: FE create/FE validator/BEでパターンが不一致</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>SKU重複チェック</td><td>SKU入力時（debounce後）</td><td>GET /api/products/check-sku?sku={入力値}</td><td>重複なし: ✓マーク表示</td><td>重複あり: エラーメッセージ表示</td><td>チェック状態: idle→checking→available/duplicate</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>SKU入力後にdebounce処理を経てサーバーサイド重複チェックAPIが呼び出される。重複なしの場合「✓」マークが表示される。編集画面では自身のSKUは重複対象から除外される。</p>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>重複SKU入力 → 重複エラーメッセージ表示</li>
+    <li>SKUパターン不一致 → パターンバリデーションエラー（ただしFE/BE間でパターンが不一致 -- 技術的負債）</li>
+    <li>APIエラー → チェックインジケーターが更新されない</li>
+  </ul>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。BE側@RolesAllowed未設定。</p>
+
+  <h3>状態変化</h3>
+  <table>
+    <tr><th>状態</th><th>表示</th><th>遷移条件</th></tr>
+    <tr><td>idle</td><td>インジケーターなし</td><td>初期状態/SKU未入力</td></tr>
+    <tr><td>checking</td><td>「確認中...」</td><td>SKU入力後debounce経過</td></tr>
+    <tr><td>available</td><td>「✓」（緑）</td><td>APIレスポンス: 重複なし</td></tr>
+    <tr><td>duplicate</td><td>エラー表示</td><td>APIレスポンス: 重複あり</td></tr>
+  </table>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/check-sku?sku={sku}</td><td>クエリパラメータ: sku</td><td>{ available: boolean }</td><td>500</td><td>ソースコード: ProductResource.java</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-create/product-create.component.ts</td><td>SKU入力ハンドラ</td><td>debounce付きSKU重複チェック呼び出し</td></tr>
+    <tr><td>proquip-frontend/src/app/shared/services/product.service.ts</td><td>checkSku()</td><td>GET /api/products/check-sku API呼び出し</td></tr>
+    <tr><td>proquip-frontend/src/app/shared/validators/custom-validators.ts</td><td>skuValidator</td><td>SKUパターンバリデーション（^[A-Za-z]{2,5}-[0-9]{4,8}$）</td></tr>
+    <tr><td>proquip-web/.../resource/ProductResource.java</td><td>checkSku()</td><td>SKU重複チェックエンドポイント</td></tr>
+    <tr><td>proquip-ejb/.../validator/ProductValidator.java</td><td>validateSku()</td><td>BE側SKUパターンバリデーション（[A-Za-z]{2,5}-[0-9]{4,8}$）</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> SKU入力後の重複チェック完了状態（✓表示） ／
+        <strong>備考:</strong> SKU入力フィールドの右側にチェックマークが表示される
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_step1-filled.png</p>
+      <img src="../../screenshots/F-03/F-03-05_product-create_step1-filled.png" alt="F-03-05-003 SKU重複チェック完了" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: SKU入力時に「確認中...」→「✓」のインジケーター遷移を確認</li>
+    <li>ネットワーク: GET /api/products/check-sku?sku=XXX のリクエスト/レスポンスを確認</li>
+    <li>ソースコード: product-create.component.ts（SKU重複チェックロジック）</li>
+    <li>ソースコード: custom-validators.ts（SKUパターン: ^[A-Za-z]{2,5}-[0-9]{4,8}$）</li>
+    <li>ソースコード: ProductValidator.java（BEパターン: [A-Za-z]{2,5}-[0-9]{4,8}$）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>技術的負債: SKUバリデーションパターンがFE create（<code>^[A-Z0-9]{2,4}-\d{3,8}$</code>）、custom-validators.ts（<code>^[A-Za-z]{2,5}-[0-9]{4,8}$</code>）、BE（<code>[A-Za-z]{2,5}-[0-9]{4,8}$</code>）で不一致。FE createは大文字のみ・2-4文字、他は大小文字・2-5文字。数字部分も3-8 vs 4-8で異なる</li>
+    <li>debounceの時間設定（何ms後にAPIを呼び出すか）</li>
+    <li>編集画面での自身のSKU除外の実装方法</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-05-004">
+  <h2>F-03-05-004: 価格・在庫情報入力</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-05-004</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-05 製品新規登録/編集画面</li>
+    <li>小分類: 価格・在庫情報入力（単価・単位・最低発注数・リードタイム・重量・寸法）</li>
+    <li>画面名: 製品登録</li>
+    <li>URL: /products/new</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-018</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">ステップ2（価格・在庫）の入力フォーム。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_step2.png</p>
+    <img src="../../screenshots/F-03/F-03-05_product-create_step2.png" alt="F-03-05-004 価格・在庫入力" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>ウィザードのステップ2で製品の価格情報（単価）・在庫関連情報（単位・最低発注数・リードタイム）・物理属性（重量・寸法）を入力するフォーム。</p>
+
+  <h3>WHY</h3>
+  <p>製品の価格設定・発注管理・物流管理に必要な情報を入力するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ステップタイトル「価格・在庫」</td><td>currentStep === 2</td><td>固定文字列</td><td>h2要素</td></tr>
+    <tr><td>¥ プレフィックス</td><td>常時</td><td>固定文字列</td><td>単価入力フィールドの前に表示</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>単価（税抜）</td><td>number</td><td>必須</td><td>DB: NUMERIC(18,4)</td><td>0</td><td>Validators.required</td><td>¥プレフィックス付き。技術的負債: BE側で負の値を許容（マイナス価格チェックなし）</td></tr>
+    <tr><td>単位</td><td>select</td><td>必須</td><td>個/本/枚/セット/箱/kg/m/Lの8択</td><td>個</td><td>Validators.required</td><td>-</td></tr>
+    <tr><td>最低発注数</td><td>number</td><td>必須</td><td>min=1</td><td>1</td><td>Validators.required, min(1)</td><td>-</td></tr>
+    <tr><td>リードタイム（日）</td><td>number</td><td>必須</td><td>min=1</td><td>7</td><td>Validators.required, min(1)</td><td>-</td></tr>
+    <tr><td>重量（kg）</td><td>number</td><td>任意</td><td>-</td><td>0.0</td><td>-</td><td>-</td></tr>
+    <tr><td>寸法</td><td>text</td><td>任意</td><td>-</td><td>空文字</td><td>-</td><td>placeholder: 「例: 100mm x 50mm x 30mm」。自由入力テキスト</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>次へバリデーション</td><td>「次へ →」クリック（ステップ2）</td><td>価格・在庫フォームのバリデーション実行</td><td>ステップ3へ遷移</td><td>エラーメッセージ表示</td><td>markAllAsTouched実行</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>単価・単位・最低発注数・リードタイムの必須項目を入力（デフォルト値あり）し、「次へ →」でステップ3に遷移する。重量・寸法は任意入力。デフォルト値が設定されているため、変更なしでも「次へ →」で遷移可能。</p>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>単価未入力またはクリア → バリデーションエラー</li>
+    <li>最低発注数に0以下 → min(1)バリデーションエラー</li>
+    <li>リードタイムに0以下 → min(1)バリデーションエラー</li>
+    <li>技術的負債: 負の単価がBE側で検証されない</li>
+  </ul>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。BE側@RolesAllowed未設定。</p>
+
+  <h3>状態変化</h3>
+  <p>入力値はステップ遷移時も保持される。</p>
+
+  <h3>関連API</h3>
+  <p>ステップ2自体でのAPI呼び出しなし（ステップ5での登録時にまとめて送信）。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-create/product-create.component.ts</td><td>initForm()（price/inventory部分）</td><td>価格・在庫フォーム定義</td></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-create/product-create.component.html</td><td>step2セクション</td><td>価格・在庫入力テンプレート</td></tr>
+    <tr><td>proquip-ejb/.../entity/product/Product.java</td><td>unitPrice, unit, minimumOrderQuantity, leadTimeDays, weight, dimensions</td><td>エンティティフィールド定義（unitPrice: precision=18, scale=4）</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> ステップ2の初期表示（デフォルト値がセットされた状態） ／
+        <strong>備考:</strong> 単価=0, 単位=個, 最低発注数=1, リードタイム=7
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_step2.png</p>
+      <img src="../../screenshots/F-03/F-03-05_product-create_step2.png" alt="F-03-05-004 価格・在庫入力" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ステップ2への遷移後、各入力フィールドとデフォルト値を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-05_product-create_step2.png</li>
+    <li>ソースコード: product-create.component.ts（価格・在庫フォーム定義）</li>
+    <li>ソースコード: Product.java（unitPrice precision=18 scale=4、単位定義）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>技術的負債: BE側で負の価格（unitPrice < 0）のバリデーションがない</li>
+    <li>単価の小数入力（NUMERIC(18,4)）がFE側でどこまで許容されるか</li>
+    <li>単位の選択肢がDB定義（ENUM/CHECKなど）で制約されているかどうか</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-05-005">
+  <h2>F-03-05-005: 仕様テーブル入力</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-05-005</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-05 製品新規登録/編集画面</li>
+    <li>小分類: 仕様テーブル入力（動的キーバリュー・行追加/削除・備考）</li>
+    <li>画面名: 製品登録 / 製品編集</li>
+    <li>URL: /products/new, /products/:id/edit</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-018, UC-019</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">ステップ3（仕様）の動的テーブル入力画面。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_step3.png</p>
+    <img src="../../screenshots/F-03/F-03-05_product-create_step3.png" alt="F-03-05-005 仕様テーブル入力" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>製品仕様を動的なキーバリューテーブルで入力する機能。行の追加・削除が可能で、項目名と値のペアを自由に入力できる。備考欄も併設される。</p>
+
+  <h3>WHY</h3>
+  <p>製品ごとに異なる仕様項目（CPU、メモリ、解像度など）を柔軟に入力するため。固定カラムではなく動的キーバリュー形式で多様な製品仕様に対応する。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ステップタイトル「仕様」</td><td>currentStep === 3</td><td>固定文字列</td><td>h2要素</td></tr>
+    <tr><td>仕様テーブルヘッダ（項目名 / 値）</td><td>常時</td><td>固定文字列</td><td>2列のテーブルヘッダ</td></tr>
+    <tr><td>仕様行</td><td>常時（最低1行）</td><td>FormArray</td><td>動的行。項目名テキスト入力 + 値テキスト入力 + ×削除ボタン</td></tr>
+    <tr><td>「+ 仕様行を追加」ボタン</td><td>常時</td><td>固定文字列</td><td>テーブル下部に表示</td></tr>
+    <tr><td>備考ラベル</td><td>常時</td><td>固定文字列</td><td>テーブル下部</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>項目名</td><td>text</td><td>任意</td><td>-</td><td>空文字</td><td>-</td><td>例: CPU, メモリ, ストレージなど</td></tr>
+    <tr><td>値</td><td>text</td><td>任意</td><td>-</td><td>空文字</td><td>-</td><td>例: Intel Core i5, 16GB DDR5など</td></tr>
+    <tr><td>備考</td><td>textarea</td><td>任意</td><td>-</td><td>空文字</td><td>-</td><td>placeholder: 「補足情報や注意事項を入力してください」</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>行追加</td><td>「+ 仕様行を追加」ボタンクリック</td><td>FormArrayに空の{key:'', value:''}を追加</td><td>テーブルに新しい空行が追加される</td><td>-</td><td>specifications配列に要素追加</td></tr>
+    <tr><td>行削除</td><td>行の×ボタンクリック</td><td>FormArrayから該当indexを削除</td><td>テーブルから行が削除される</td><td>-</td><td>specifications配列から要素削除</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>初期表示で1行の空行が表示される。「+ 仕様行を追加」で行を追加し、各行に項目名と値を入力する。行が1行のみの場合、×削除ボタンは無効化（disabled）される。仕様入力は任意のため、空のまま「次へ →」でステップ4に遷移可能。</p>
+
+  <h3>異常系</h3>
+  <p>仕様入力は全て任意のため、バリデーションエラーは発生しない。</p>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。BE側@RolesAllowed未設定。</p>
+
+  <h3>状態変化</h3>
+  <table>
+    <tr><th>状態</th><th>削除ボタン</th><th>追加ボタン</th></tr>
+    <tr><td>行数 = 1</td><td>disabled</td><td>enabled</td></tr>
+    <tr><td>行数 >= 2</td><td>enabled</td><td>enabled</td></tr>
+  </table>
+
+  <h3>関連API</h3>
+  <p>ステップ3自体でのAPI呼び出しなし。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-create/product-create.component.ts</td><td>addSpecification(), removeSpecification()</td><td>仕様行の追加/削除</td></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-create/product-create.component.html</td><td>step3セクション</td><td>仕様テーブルテンプレート</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> ステップ3の初期表示（空の仕様テーブル1行） ／
+        <strong>備考:</strong> ×ボタンはdisabled、「+ 仕様行を追加」ボタンあり
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_step3.png</p>
+      <img src="../../screenshots/F-03/F-03-05_product-create_step3.png" alt="F-03-05-005 仕様テーブル" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ステップ3で仕様テーブルの初期表示（1行・削除ボタンdisabled）を確認。行追加・削除を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-05_product-create_step3.png</li>
+    <li>ソースコード: product-create.component.ts（addSpecification, removeSpecification）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>仕様データのDB保存形式（JSONBカラム or 子テーブル）</li>
+    <li>仕様行数の上限制限の有無</li>
+    <li>空の仕様行（項目名・値ともに空）の送信時の扱い</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-05-006">
+  <h2>F-03-05-006: 画像アップロード</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-05-006</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-05 製品新規登録/編集画面</li>
+    <li>小分類: 画像アップロード（PNG/JPG・プレビュー・プライマリ設定）</li>
+    <li>画面名: 製品登録</li>
+    <li>URL: /products/new</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-018</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">ステップ4（画像・資料）の画像アップロード部分。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_step4.png</p>
+    <img src="../../screenshots/F-03/F-03-05_product-create_step4.png" alt="F-03-05-006 画像アップロード" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>製品画像をアップロードする機能。PNG/JPG形式の画像ファイルを選択し、プレビュー表示する。複数画像のアップロードが可能で、プライマリ画像の設定ができる。</p>
+
+  <h3>WHY</h3>
+  <p>製品のビジュアル情報を提供し、カタログ・一覧画面での識別性を高めるため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>セクションタイトル「製品画像」</td><td>常時</td><td>固定文字列</td><td>-</td></tr>
+    <tr><td>説明テキスト「PNG, JPG形式の画像をアップロードできます」</td><td>常時</td><td>固定文字列</td><td>-</td></tr>
+    <tr><td>「+ 画像を追加」ボタン</td><td>常時</td><td>固定文字列</td><td>file input（accept: image/png, image/jpeg）をトリガー</td></tr>
+    <tr><td>画像プレビュー</td><td>画像選択後</td><td>FileReader</td><td>選択した画像のサムネイルプレビュー</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>製品画像ファイル</td><td>file</td><td>任意</td><td>PNG/JPG形式</td><td>-</td><td>accept属性でファイル形式制限</td><td>複数ファイル選択可能</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>画像選択</td><td>「+ 画像を追加」クリック→ファイル選択</td><td>FileReaderでプレビュー生成、imagesリストに追加</td><td>プレビュー画像表示</td><td>-</td><td>selectedImages配列に追加</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>「+ 画像を追加」をクリックしてPNG/JPGファイルを選択するとプレビューが表示される。画像の追加は任意で、未選択のまま「次へ →」でステップ5に遷移可能。実際のアップロードはステップ5の「登録する」実行後にPOST /api/products/{id}/imagesで行われる。</p>
+
+  <h3>異常系</h3>
+  <p>PNG/JPG以外のファイル形式はファイルダイアログのフィルターで選択不可（accept属性による制限）。</p>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。BE側@RolesAllowed未設定。</p>
+
+  <h3>状態変化</h3>
+  <p>選択した画像はステップ遷移時も保持される。実際のアップロードはステップ5の登録実行時に行われる。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>POST</td><td>/api/products/{id}/images</td><td>multipart/form-data（画像ファイル）</td><td>201 Created</td><td>500</td><td>ソースコード: ProductResource.java</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-create/product-create.component.ts</td><td>onImageSelected()</td><td>画像ファイル選択ハンドラ</td></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-create/product-create.component.html</td><td>step4 画像セクション</td><td>画像アップロードテンプレート</td></tr>
+    <tr><td>proquip-frontend/src/app/shared/services/product.service.ts</td><td>uploadImage()</td><td>POST /api/products/{id}/images API呼び出し</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> ステップ4の初期表示（画像未選択状態） ／
+        <strong>備考:</strong> 「+ 画像を追加」ボタンのみ表示
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_step4.png</p>
+      <img src="../../screenshots/F-03/F-03-05_product-create_step4.png" alt="F-03-05-006 画像アップロード" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ステップ4で画像アップロード領域を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-05_product-create_step4.png</li>
+    <li>ソースコード: product-create.component.ts（onImageSelected）</li>
+    <li>ネットワーク: 登録後にPOST /api/products/{id}/imagesのリクエストを確認</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>画像ファイルサイズ上限の有無</li>
+    <li>プライマリ画像設定の具体的なUI操作方法</li>
+    <li>アップロード失敗時のエラーハンドリング（製品自体は登録済み、画像のみ失敗のケース）</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-05-007">
+  <h2>F-03-05-007: ドキュメントアップロード</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-05-007</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-05 製品新規登録/編集画面</li>
+    <li>小分類: ドキュメントアップロード（PDF・ドキュメントタイプ選択）</li>
+    <li>画面名: 製品登録</li>
+    <li>URL: /products/new</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-018</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">ステップ4（画像・資料）のドキュメントアップロード部分。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_step4.png</p>
+    <img src="../../screenshots/F-03/F-03-05_product-create_step4.png" alt="F-03-05-007 ドキュメントアップロード" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>製品ドキュメント（PDF形式）をアップロードする機能。ドキュメントタイプ（仕様書・カタログ等）を選択してファイルを添付する。</p>
+
+  <h3>WHY</h3>
+  <p>製品に関連する技術文書・カタログ・マニュアル等を一元管理し、関係者がいつでも参照できるようにするため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>セクションタイトル「ドキュメント」</td><td>常時</td><td>固定文字列</td><td>-</td></tr>
+    <tr><td>説明テキスト「PDF形式のドキュメントをアップロードできます」</td><td>常時</td><td>固定文字列</td><td>-</td></tr>
+    <tr><td>「+ ドキュメントを追加」ボタン</td><td>常時</td><td>固定文字列</td><td>file input（accept: application/pdf）をトリガー</td></tr>
+    <tr><td>選択済みドキュメント一覧</td><td>ドキュメント選択後</td><td>selectedDocuments配列</td><td>ファイル名表示</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>ドキュメントファイル</td><td>file</td><td>任意</td><td>PDF形式</td><td>-</td><td>accept属性でPDFに制限</td><td>複数ファイル選択可能</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>ドキュメント選択</td><td>「+ ドキュメントを追加」クリック→ファイル選択</td><td>documentsリストにファイル追加</td><td>ファイル名表示</td><td>-</td><td>selectedDocuments配列に追加</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>「+ ドキュメントを追加」をクリックしてPDFファイルを選択するとファイル名が一覧に表示される。ドキュメントの追加は任意。実際のアップロードはステップ5の「登録する」実行後にPOST /api/products/{id}/documentsで行われる。</p>
+
+  <h3>異常系</h3>
+  <p>PDF以外のファイル形式はファイルダイアログのフィルターで選択不可（accept属性による制限）。</p>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。BE側@RolesAllowed未設定。</p>
+
+  <h3>状態変化</h3>
+  <p>選択したドキュメントはステップ遷移時も保持される。実際のアップロードはステップ5の登録実行時に行われる。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>POST</td><td>/api/products/{id}/documents</td><td>multipart/form-data（PDFファイル）</td><td>201 Created</td><td>500</td><td>ソースコード: ProductResource.java</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-create/product-create.component.ts</td><td>onDocumentSelected()</td><td>ドキュメントファイル選択ハンドラ</td></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-create/product-create.component.html</td><td>step4 ドキュメントセクション</td><td>ドキュメントアップロードテンプレート</td></tr>
+    <tr><td>proquip-frontend/src/app/shared/services/product.service.ts</td><td>uploadDocument()</td><td>POST /api/products/{id}/documents API呼び出し</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> ステップ4の初期表示（ドキュメント未選択状態） ／
+        <strong>備考:</strong> 画像セクションとドキュメントセクションが上下に並ぶ
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_step4.png</p>
+      <img src="../../screenshots/F-03/F-03-05_product-create_step4.png" alt="F-03-05-007 ドキュメントアップロード" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ステップ4でドキュメントアップロード領域を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-05_product-create_step4.png</li>
+    <li>ソースコード: product-create.component.ts（onDocumentSelected）</li>
+    <li>ネットワーク: 登録後にPOST /api/products/{id}/documentsのリクエストを確認</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>新規登録画面でのドキュメントタイプ選択UIの有無（編集画面にはドキュメントタイプセレクタがあるが、新規登録時のデフォルトタイプ）</li>
+    <li>ドキュメントファイルサイズ上限の有無</li>
+    <li>アップロード失敗時のエラーハンドリング</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-05-008">
+  <h2>F-03-05-008: 確認・登録実行</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-05-008</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-05 製品新規登録/編集画面</li>
+    <li>小分類: 確認・登録実行（レビュー画面・送信）</li>
+    <li>画面名: 製品登録</li>
+    <li>URL: /products/new</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-018</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">ステップ5（確認）の入力内容レビュー画面。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_step5-confirm.png</p>
+    <img src="../../screenshots/F-03/F-03-05_product-create_step5-confirm.png" alt="F-03-05-008 確認画面" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>ウィザードのステップ5でこれまでに入力した全ての情報を読み取り専用テーブル形式で表示し、最終確認後に「登録する」ボタンで製品を登録する画面。登録後に画像・ドキュメントのアップロードを順次実行する。</p>
+
+  <h3>WHY</h3>
+  <p>入力ミスを防ぐために登録前に全入力内容をレビューし、ユーザーに確認の機会を与えるため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>見出し「入力内容の確認」</td><td>currentStep === 5</td><td>固定文字列</td><td>h2要素</td></tr>
+    <tr><td>基本情報セクション</td><td>常時</td><td>フォーム入力値</td><td>読み取り専用テーブル形式</td></tr>
+    <tr><td>製品名</td><td>常時</td><td>form.name</td><td>-</td></tr>
+    <tr><td>SKU</td><td>常時</td><td>form.sku</td><td>-</td></tr>
+    <tr><td>説明</td><td>常時</td><td>form.description</td><td>未入力時は「-」表示</td></tr>
+    <tr><td>カテゴリ</td><td>常時</td><td>form.category</td><td>-</td></tr>
+    <tr><td>メーカー</td><td>常時</td><td>form.manufacturer</td><td>-</td></tr>
+    <tr><td>ステータス</td><td>常時</td><td>form.status</td><td>ラベル表示（有効/無効/保留）</td></tr>
+    <tr><td>価格・在庫セクション</td><td>常時</td><td>フォーム入力値</td><td>読み取り専用テーブル形式</td></tr>
+    <tr><td>単価</td><td>常時</td><td>form.unitPrice</td><td>¥フォーマット（例: ¥50,000）</td></tr>
+    <tr><td>単位</td><td>常時</td><td>form.unit</td><td>-</td></tr>
+    <tr><td>最低発注数</td><td>常時</td><td>form.minimumOrderQuantity</td><td>-</td></tr>
+    <tr><td>リードタイム</td><td>常時</td><td>form.leadTimeDays</td><td>「N日」形式</td></tr>
+    <tr><td>重量</td><td>常時</td><td>form.weight</td><td>「N kg」形式、未入力時は「-」</td></tr>
+    <tr><td>寸法</td><td>常時</td><td>form.dimensions</td><td>未入力時は「-」</td></tr>
+    <tr><td>「登録する」ボタン</td><td>currentStep === 5</td><td>固定文字列</td><td>btn-primary</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>確認画面のため入力項目なし（読み取り専用）。</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>製品登録</td><td>「登録する」ボタンクリック</td><td>1. POST /api/products（製品データ送信）<br>2. POST /api/products/{id}/images（画像アップロード、forkJoin）<br>3. POST /api/products/{id}/documents（ドキュメントアップロード、forkJoin）</td><td>登録成功→製品一覧画面へ遷移</td><td>エラーメッセージ表示</td><td>isSubmitting: false→true→false</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>入力内容を確認し「登録する」をクリックすると、まずPOST /api/productsで製品データが登録される。レスポンスで取得したIDを使って、画像とドキュメントのアップロードをforkJoinで並列実行する。全て成功した場合、製品一覧画面（/products）へ遷移する。</p>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>POST /api/products失敗 → エラーメッセージ表示、画面遷移しない</li>
+    <li>製品登録成功・画像/ドキュメントアップロード失敗 → 製品自体は登録済みだが添付ファイルが未登録の状態になる可能性</li>
+    <li>SKU重複（DB UNIQUE制約違反） → サーバーエラー</li>
+  </ul>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。BE側ProductResourceに@RolesAllowed未設定（技術的負債）。</p>
+
+  <h3>状態変化</h3>
+  <table>
+    <tr><th>状態</th><th>「登録する」ボタン</th><th>遷移条件</th></tr>
+    <tr><td>isSubmitting=false</td><td>enabled</td><td>初期状態</td></tr>
+    <tr><td>isSubmitting=true</td><td>disabled（送信中）</td><td>「登録する」クリック後</td></tr>
+  </table>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>POST</td><td>/api/products</td><td>{ name, sku, description, category, manufacturer, status, unitPrice, unit, minimumOrderQuantity, leadTimeDays, weight, dimensions, specifications, notes }</td><td>201 Created + Product（id含む）</td><td>400 バリデーションエラー / 409 SKU重複 / 500</td><td>ソースコード: ProductResource.java</td></tr>
+    <tr><td>-</td><td>POST</td><td>/api/products/{id}/images</td><td>multipart/form-data</td><td>201 Created</td><td>500</td><td>ソースコード: ProductResource.java</td></tr>
+    <tr><td>-</td><td>POST</td><td>/api/products/{id}/documents</td><td>multipart/form-data</td><td>201 Created</td><td>500</td><td>ソースコード: ProductResource.java</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-create/product-create.component.ts</td><td>submit()</td><td>登録実行（POST products → forkJoin images/documents）</td></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-create/product-create.component.html</td><td>step5セクション</td><td>確認画面テンプレート</td></tr>
+    <tr><td>proquip-frontend/src/app/shared/services/product.service.ts</td><td>createProduct(), uploadImage(), uploadDocument()</td><td>API呼び出し</td></tr>
+    <tr><td>proquip-web/.../resource/ProductResource.java</td><td>createProduct()</td><td>POST /api/products エンドポイント</td></tr>
+    <tr><td>proquip-ejb/.../service/ProductServiceBean.java</td><td>createProduct()</td><td>製品登録ビジネスロジック</td></tr>
+    <tr><td>proquip-ejb/.../validator/ProductValidator.java</td><td>validate()</td><td>BE側バリデーション</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> ステップ5の確認画面（全入力内容の読み取り専用表示） ／
+        <strong>備考:</strong> 基本情報・価格・在庫の各セクションが読み取り専用テーブルで表示される
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-create_step5-confirm.png</p>
+      <img src="../../screenshots/F-03/F-03-05_product-create_step5-confirm.png" alt="F-03-05-008 確認画面" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ステップ5で全入力内容が読み取り専用テーブルで表示されることを確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-05_product-create_step5-confirm.png</li>
+    <li>ソースコード: product-create.component.ts（submit、forkJoinによる画像/ドキュメントアップロード）</li>
+    <li>ネットワーク: POST /api/products → POST /api/products/{id}/images, POST /api/products/{id}/documents の順序を確認</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>登録後のリダイレクト先（製品一覧 or 製品詳細）</li>
+    <li>製品登録成功後に画像/ドキュメントアップロードが失敗した場合のリカバリー手段</li>
+    <li>確認画面で仕様・画像・ドキュメントの情報が表示されるかどうか</li>
+    <li>二重送信防止の実装（isSubmitting以外にdebounce等あるか）</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-05-009">
+  <h2>F-03-05-009: 編集フォーム</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-05-009</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-05 製品新規登録/編集画面</li>
+    <li>小分類: 編集フォーム（既存データ読込・セクション配置）</li>
+    <li>画面名: 製品編集</li>
+    <li>URL: /products/:id/edit</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-019</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">製品編集画面の初期表示。ウィザードではなく、全セクションが1ページに展開される。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-edit_initial.png</p>
+    <img src="../../screenshots/F-03/F-03-05_product-edit_initial.png" alt="F-03-05-009 編集フォーム初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>既存製品のデータを読み込み、全セクション（基本情報・価格/在庫・仕様・備考・画像・ドキュメント）を1ページにまとめたフォームで編集する画面。新規登録のウィザード形式とは異なり、全項目を一覧で確認・編集できる。</p>
+
+  <h3>WHY</h3>
+  <p>既存製品の情報を効率的に更新するため。ウィザードのステップ分割は初回入力の案内用であり、編集時は全項目を俯瞰しながら必要箇所のみ修正できる構成が適切。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ページタイトル「製品編集」</td><td>常時</td><td>固定文字列</td><td>h1要素</td></tr>
+    <tr><td>基本情報セクション</td><td>常時</td><td>GET /api/products/{id}</td><td>製品名, SKU, ステータス, 説明, カテゴリ, メーカー</td></tr>
+    <tr><td>価格・在庫セクション</td><td>常時</td><td>GET /api/products/{id}</td><td>単価, 単位, 最低発注数, リードタイム, 重量, 寸法</td></tr>
+    <tr><td>仕様セクション</td><td>常時</td><td>GET /api/products/{id}</td><td>既存仕様データがテーブルにプリセット</td></tr>
+    <tr><td>備考セクション</td><td>常時</td><td>GET /api/products/{id}</td><td>textarea</td></tr>
+    <tr><td>製品画像セクション</td><td>常時</td><td>GET /api/products/{id}</td><td>既存画像のサムネイル表示</td></tr>
+    <tr><td>ドキュメントセクション</td><td>常時</td><td>GET /api/products/{id}</td><td>既存ドキュメントのリンク表示</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>製品名</td><td>text</td><td>必須</td><td>最大300文字</td><td>既存値</td><td>Validators.required</td><td>-</td></tr>
+    <tr><td>SKU（品番）</td><td>text</td><td>必須</td><td>パターン制約</td><td>既存値</td><td>Validators.required + 重複チェック</td><td>✓インジケーター付き。自身のSKUは重複対象外</td></tr>
+    <tr><td>ステータス</td><td>select</td><td>必須</td><td>有効/無効/廃番/保留の4択</td><td>既存値</td><td>Validators.required</td><td>新規登録と異なり「廃番」を含む4択</td></tr>
+    <tr><td>説明</td><td>textarea</td><td>任意</td><td>-</td><td>既存値</td><td>-</td><td>-</td></tr>
+    <tr><td>カテゴリ</td><td>select</td><td>必須</td><td>APIから取得</td><td>既存値</td><td>Validators.required</td><td>-</td></tr>
+    <tr><td>メーカー</td><td>select</td><td>必須</td><td>APIから取得</td><td>既存値</td><td>Validators.required</td><td>-</td></tr>
+    <tr><td>単価（税抜）</td><td>number</td><td>必須</td><td>NUMERIC(18,4)</td><td>既存値</td><td>Validators.required</td><td>¥プレフィックス</td></tr>
+    <tr><td>単位</td><td>select</td><td>必須</td><td>8択</td><td>既存値</td><td>Validators.required</td><td>-</td></tr>
+    <tr><td>最低発注数</td><td>number</td><td>必須</td><td>min=1</td><td>既存値</td><td>Validators.required, min(1)</td><td>-</td></tr>
+    <tr><td>リードタイム（日）</td><td>number</td><td>必須</td><td>min=1</td><td>既存値</td><td>Validators.required, min(1)</td><td>-</td></tr>
+    <tr><td>重量（kg）</td><td>number</td><td>任意</td><td>-</td><td>既存値</td><td>-</td><td>-</td></tr>
+    <tr><td>寸法</td><td>text</td><td>任意</td><td>-</td><td>既存値</td><td>-</td><td>-</td></tr>
+    <tr><td>仕様テーブル（項目名/値）</td><td>text x N行</td><td>任意</td><td>動的行</td><td>既存仕様データ</td><td>-</td><td>既存仕様がプリセットされる（例: CPU, メモリ, ストレージ等）</td></tr>
+    <tr><td>備考</td><td>textarea</td><td>任意</td><td>-</td><td>既存値</td><td>-</td><td>-</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>製品データ読込</td><td>画面初期表示（ngOnInit）</td><td>GET /api/products/{id}</td><td>フォームに既存値をプリセット</td><td>エラー表示 or 404で一覧へリダイレクト</td><td>フォーム値更新</td></tr>
+    <tr><td>カテゴリ/メーカー取得</td><td>画面初期表示</td><td>GET /api/products/categories, GET /api/products/manufacturers</td><td>ドロップダウンに選択肢セット</td><td>コンソールエラー</td><td>categories, manufacturers配列更新</td></tr>
+    <tr><td>キャンセル</td><td>「キャンセル」ボタンクリック</td><td>router.navigate</td><td>製品一覧または前の画面へ遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>画面表示時にGET /api/products/{id}で既存データを取得し、全フォーム項目にプリセットする。カテゴリ・メーカーの選択肢もAPIから取得してドロップダウンにセット。仕様テーブルには既存の仕様データ（例: CPU=Intel Core i5-13500T, メモリ=16GB DDR5-4800等）が行として表示される。</p>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>製品ID不正（404） → 一覧画面へリダイレクト</li>
+    <li>カテゴリ/メーカー取得失敗 → ドロップダウンが空になる</li>
+  </ul>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。BE側ProductResourceに@RolesAllowed未設定（技術的負債）。FEルートにRoleGuardなし。</p>
+
+  <h3>状態変化</h3>
+  <p>全セクションが同時に表示される（ウィザードのステップ遷移なし）。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/{id}</td><td>なし</td><td>Product（全フィールド含む）</td><td>404 Not Found</td><td>ソースコード: ProductResource.java</td></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/categories</td><td>なし</td><td>string[]</td><td>500</td><td>ソースコード: ProductResource.java</td></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/manufacturers</td><td>なし</td><td>string[]</td><td>500</td><td>ソースコード: ProductResource.java</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-edit/product-edit.component.ts</td><td>ngOnInit(), loadProduct()</td><td>製品データ読込・フォームプリセット</td></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-edit/product-edit.component.html</td><td>全セクション</td><td>編集フォームテンプレート</td></tr>
+    <tr><td>proquip-frontend/src/app/shared/services/product.service.ts</td><td>getProduct(id)</td><td>GET /api/products/{id} API呼び出し</td></tr>
+    <tr><td>proquip-web/.../resource/ProductResource.java</td><td>getProduct()</td><td>GET /api/products/{id} エンドポイント</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 製品編集画面の初期表示（既存データがプリセットされた状態） ／
+        <strong>備考:</strong> ウィザードではなく全セクションが1ページに展開
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-edit_initial.png</p>
+      <img src="../../screenshots/F-03/F-03-05_product-edit_initial.png" alt="F-03-05-009 編集フォーム初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: /products/{id}/edit にアクセスし、既存データがプリセットされた全セクション表示を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-05_product-edit_initial.png</li>
+    <li>ソースコード: product-edit.component.ts（loadProduct, フォームプリセット）</li>
+    <li>ソースコード: product-edit.component.html（全セクションテンプレート）</li>
+    <li>ネットワーク: GET /api/products/{id}, GET /api/products/categories, GET /api/products/manufacturers のリクエストを確認</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>技術的負債: 新規登録画面と編集画面でコードが約90%重複している（product-create.component.ts / product-edit.component.ts）</li>
+    <li>技術的負債: ステータスの選択肢が新規登録（3択: 有効/無効/保留）と編集（4択: 有効/無効/廃番/保留）で異なる</li>
+    <li>未保存データの離脱ガード（canDeactivate guard）が未実装（技術的負債）</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-05-010">
+  <h2>F-03-05-010: 画像管理</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-05-010</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-05 製品新規登録/編集画面</li>
+    <li>小分類: 画像管理（既存画像表示・削除・追加）</li>
+    <li>画面名: 製品編集</li>
+    <li>URL: /products/:id/edit</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-019</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">編集画面の製品画像セクション。既存画像のサムネイルとプライマリバッジが表示される。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-edit_initial.png</p>
+    <img src="../../screenshots/F-03/F-03-05_product-edit_initial.png" alt="F-03-05-010 画像管理" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>編集画面で既存の製品画像をサムネイル表示し、削除・追加を行う機能。プライマリ画像には「メイン」バッジが表示される。</p>
+
+  <h3>WHY</h3>
+  <p>製品の画像を最新の状態に保ち、不要な画像の削除や新しい画像の追加を可能にするため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>セクションタイトル「製品画像」</td><td>常時</td><td>固定文字列</td><td>-</td></tr>
+    <tr><td>既存画像サムネイル</td><td>images.length > 0</td><td>GET /api/products/{id} のimages</td><td>複数画像を横並び表示</td></tr>
+    <tr><td>「メイン」バッジ</td><td>image.primary === true</td><td>image.primary</td><td>プライマリ画像に表示される緑色バッジ</td></tr>
+    <tr><td>「削除」ボタン</td><td>各画像に対して</td><td>-</td><td>画像ごとに赤色の削除ボタン</td></tr>
+    <tr><td>「+ 画像を追加」ボタン</td><td>常時</td><td>固定文字列</td><td>新しい画像のアップロード</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>追加画像ファイル</td><td>file</td><td>任意</td><td>PNG/JPG形式</td><td>-</td><td>accept属性</td><td>-</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>画像削除</td><td>「削除」ボタンクリック</td><td>DELETE /api/products/{id}/images/{imageId}</td><td>画像がサムネイル一覧から削除される</td><td>エラーメッセージ表示</td><td>images配列から削除</td></tr>
+    <tr><td>画像追加</td><td>「+ 画像を追加」→ファイル選択</td><td>POST /api/products/{id}/images</td><td>サムネイル一覧に追加画像が表示される</td><td>エラーメッセージ表示</td><td>images配列に追加</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>編集画面表示時に既存画像がサムネイルで表示される。プライマリ画像には「メイン」バッジが付く。「削除」ボタンで即座にDELETE APIが呼び出され画像が削除される。「+ 画像を追加」で新しい画像をアップロードできる。</p>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>画像削除API失敗 → エラーメッセージ表示</li>
+    <li>画像アップロード失敗 → エラーメッセージ表示</li>
+  </ul>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。BE側@RolesAllowed未設定。</p>
+
+  <h3>状態変化</h3>
+  <table>
+    <tr><th>操作</th><th>即時API実行</th><th>備考</th></tr>
+    <tr><td>画像削除</td><td>はい（DELETE即時実行）</td><td>「更新する」ボタンとは独立して実行される</td></tr>
+    <tr><td>画像追加</td><td>はい（POST即時実行）</td><td>「更新する」ボタンとは独立して実行される</td></tr>
+  </table>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>DELETE</td><td>/api/products/{id}/images/{imageId}</td><td>なし</td><td>204 No Content</td><td>404 / 500</td><td>ソースコード: ProductResource.java</td></tr>
+    <tr><td>-</td><td>POST</td><td>/api/products/{id}/images</td><td>multipart/form-data</td><td>201 Created</td><td>500</td><td>ソースコード: ProductResource.java</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-edit/product-edit.component.ts</td><td>deleteImage(), addImage()</td><td>画像削除・追加ロジック</td></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-edit/product-edit.component.html</td><td>画像セクション</td><td>画像管理テンプレート（サムネイル・メインバッジ・削除ボタン）</td></tr>
+    <tr><td>proquip-frontend/src/app/shared/services/product.service.ts</td><td>deleteImage(), uploadImage()</td><td>画像API呼び出し</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 編集画面の画像セクション（既存画像表示、メインバッジあり） ／
+        <strong>備考:</strong> プライマリ画像に「メイン」バッジ、各画像に「削除」ボタン
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-edit_initial.png</p>
+      <img src="../../screenshots/F-03/F-03-05_product-edit_initial.png" alt="F-03-05-010 画像管理" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 編集画面で既存画像のサムネイル・「メイン」バッジ・削除ボタンを確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-05_product-edit_initial.png</li>
+    <li>ソースコード: product-edit.component.ts（deleteImage, addImage）</li>
+    <li>ネットワーク: DELETE /api/products/{id}/images/{imageId} のリクエストを確認</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>画像削除の確認ダイアログの有無（即時削除 vs 確認後削除）</li>
+    <li>プライマリ画像の変更（設定/解除）操作の有無</li>
+    <li>プライマリ画像を削除した場合の代替プライマリ設定ロジック</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-05-011">
+  <h2>F-03-05-011: ドキュメント管理</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-05-011</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-05 製品新規登録/編集画面</li>
+    <li>小分類: ドキュメント管理（既存ドキュメント表示・削除・追加・タイプ選択）</li>
+    <li>画面名: 製品編集</li>
+    <li>URL: /products/:id/edit</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-019</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">編集画面のドキュメントセクション。既存ドキュメントがリンク形式で表示される。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-edit_initial.png</p>
+    <img src="../../screenshots/F-03/F-03-05_product-edit_initial.png" alt="F-03-05-011 ドキュメント管理" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>編集画面で既存のドキュメントをリンク表示し、削除・追加・ドキュメントタイプの選択を行う機能。ドキュメントタイプは仕様書・カタログ・マニュアル・図面・その他の5種類。</p>
+
+  <h3>WHY</h3>
+  <p>製品に関連する技術文書を最新の状態に保ち、適切なドキュメントタイプで分類管理するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>セクションタイトル「ドキュメント」</td><td>常時</td><td>固定文字列</td><td>-</td></tr>
+    <tr><td>既存ドキュメントリンク</td><td>documents.length > 0</td><td>GET /api/products/{id} のdocuments</td><td>ドキュメント名がリンクとして表示（例:「Dell OptiPlex 7010 SFF 仕様書」）</td></tr>
+    <tr><td>「削除」ボタン</td><td>各ドキュメントに対して</td><td>-</td><td>ドキュメントごとに削除ボタン</td></tr>
+    <tr><td>ドキュメントタイプセレクタ</td><td>ドキュメント追加時</td><td>固定選択肢</td><td>仕様書/カタログ/マニュアル/図面/その他の5択</td></tr>
+    <tr><td>「+ ドキュメントを追加」ボタン</td><td>常時</td><td>固定文字列</td><td>新しいドキュメントのアップロード</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>ドキュメントファイル</td><td>file</td><td>任意</td><td>PDF形式</td><td>-</td><td>accept属性</td><td>-</td></tr>
+    <tr><td>ドキュメントタイプ</td><td>select</td><td>必須（追加時）</td><td>仕様書/カタログ/マニュアル/図面/その他</td><td>仕様書</td><td>-</td><td>ドキュメント追加時に選択</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>ドキュメント削除</td><td>「削除」ボタンクリック</td><td>DELETE /api/products/{id}/documents/{docId}</td><td>ドキュメントが一覧から削除される</td><td>エラーメッセージ表示</td><td>documents配列から削除</td></tr>
+    <tr><td>ドキュメント追加</td><td>「+ ドキュメントを追加」→ファイル選択</td><td>POST /api/products/{id}/documents（ドキュメントタイプ含む）</td><td>ドキュメントが一覧に追加される</td><td>エラーメッセージ表示</td><td>documents配列に追加</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>編集画面表示時に既存ドキュメントがリンク形式で表示される。「削除」ボタンで即座にDELETE APIが呼び出されドキュメントが削除される。「+ ドキュメントを追加」でドキュメントタイプを選択し、PDFファイルをアップロードできる。</p>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>ドキュメント削除API失敗 → エラーメッセージ表示</li>
+    <li>ドキュメントアップロード失敗 → エラーメッセージ表示</li>
+  </ul>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。BE側@RolesAllowed未設定。</p>
+
+  <h3>状態変化</h3>
+  <table>
+    <tr><th>操作</th><th>即時API実行</th><th>備考</th></tr>
+    <tr><td>ドキュメント削除</td><td>はい（DELETE即時実行）</td><td>「更新する」ボタンとは独立して実行される</td></tr>
+    <tr><td>ドキュメント追加</td><td>はい（POST即時実行）</td><td>「更新する」ボタンとは独立して実行される</td></tr>
+  </table>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>DELETE</td><td>/api/products/{id}/documents/{docId}</td><td>なし</td><td>204 No Content</td><td>404 / 500</td><td>ソースコード: ProductResource.java</td></tr>
+    <tr><td>-</td><td>POST</td><td>/api/products/{id}/documents</td><td>multipart/form-data（PDFファイル + documentType）</td><td>201 Created</td><td>500</td><td>ソースコード: ProductResource.java</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-edit/product-edit.component.ts</td><td>deleteDocument(), addDocument()</td><td>ドキュメント削除・追加ロジック</td></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-edit/product-edit.component.html</td><td>ドキュメントセクション</td><td>ドキュメント管理テンプレート（リンク・タイプセレクタ・削除ボタン）</td></tr>
+    <tr><td>proquip-frontend/src/app/shared/services/product.service.ts</td><td>deleteDocument(), uploadDocument()</td><td>ドキュメントAPI呼び出し</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 編集画面のドキュメントセクション（既存ドキュメントリンク表示） ／
+        <strong>備考:</strong> ドキュメント名リンク・ドキュメントタイプセレクタ・削除ボタン
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-edit_initial.png</p>
+      <img src="../../screenshots/F-03/F-03-05_product-edit_initial.png" alt="F-03-05-011 ドキュメント管理" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 編集画面でドキュメントリンク・タイプセレクタ・削除ボタンを確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-05_product-edit_initial.png</li>
+    <li>ソースコード: product-edit.component.ts（deleteDocument, addDocument）</li>
+    <li>ネットワーク: DELETE /api/products/{id}/documents/{docId} のリクエストを確認</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>ドキュメント削除の確認ダイアログの有無</li>
+    <li>ドキュメントタイプの変更（既存ドキュメントのタイプ変更）が可能かどうか</li>
+    <li>ドキュメントリンクのクリック時の挙動（ダウンロード or ブラウザ表示）</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-05-012">
+  <h2>F-03-05-012: 更新実行</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-05-012</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-05 製品新規登録/編集画面</li>
+    <li>小分類: 更新実行（バリデーション・送信）</li>
+    <li>画面名: 製品編集</li>
+    <li>URL: /products/:id/edit</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-019</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">編集画面下部の「キャンセル」「更新する」ボタン。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-edit_initial.png</p>
+    <img src="../../screenshots/F-03/F-03-05_product-edit_initial.png" alt="F-03-05-012 更新実行" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>編集フォームの入力内容をバリデーションし、PUT /api/products/{id}で更新を実行する機能。更新成功後は製品一覧画面へ遷移する。</p>
+
+  <h3>WHY</h3>
+  <p>編集した製品情報をサーバーに保存するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>「キャンセル」ボタン</td><td>常時</td><td>固定文字列</td><td>btn-secondary</td></tr>
+    <tr><td>「更新する」ボタン</td><td>常時</td><td>固定文字列</td><td>btn-primary</td></tr>
+    <tr><td>バリデーションエラーメッセージ</td><td>バリデーション失敗時</td><td>バリデーション結果</td><td>各項目下に赤文字で表示</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>F-03-05-009（編集フォーム）と同一。</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>更新実行</td><td>「更新する」ボタンクリック</td><td>1. フォームバリデーション実行<br>2. PUT /api/products/{id}（製品データ送信）</td><td>更新成功→製品一覧画面へ遷移</td><td>バリデーションエラー表示 or APIエラー表示</td><td>isSubmitting: false→true→false</td></tr>
+    <tr><td>キャンセル</td><td>「キャンセル」ボタンクリック</td><td>router.navigate</td><td>製品一覧画面へ遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>「更新する」をクリックするとフォームバリデーションが実行され、合格時にPUT /api/products/{id}で更新リクエストが送信される。更新成功後、製品一覧画面へ遷移する。画像・ドキュメントの追加/削除は個別のAPI呼び出し（F-03-05-010、F-03-05-011参照）で即時実行されるため、「更新する」には含まれない。</p>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>必須項目未入力 → markAllAsTouched()でバリデーションエラー表示（エラーメッセージはF-03-05-002と同様）</li>
+    <li>SKU重複（他製品と同一SKU） → サーバーエラー（409 or 500）</li>
+    <li>PUT API失敗 → エラーメッセージ表示</li>
+    <li>楽観的ロック競合 → サーバーエラー（存在する場合）</li>
+  </ul>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。BE側ProductResourceに@RolesAllowed未設定（技術的負債：全認証済みユーザーが更新可能）。</p>
+
+  <h3>状態変化</h3>
+  <table>
+    <tr><th>状態</th><th>「更新する」ボタン</th><th>遷移条件</th></tr>
+    <tr><td>isSubmitting=false</td><td>enabled</td><td>初期状態</td></tr>
+    <tr><td>isSubmitting=true</td><td>disabled（送信中）</td><td>「更新する」クリック後</td></tr>
+  </table>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>PUT</td><td>/api/products/{id}</td><td>{ name, sku, description, category, manufacturer, status, unitPrice, unit, minimumOrderQuantity, leadTimeDays, weight, dimensions, specifications, notes }</td><td>200 OK + Product</td><td>400 バリデーションエラー / 404 Not Found / 409 SKU重複 / 500</td><td>ソースコード: ProductResource.java</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-edit/product-edit.component.ts</td><td>submit()</td><td>更新実行（バリデーション + PUT API呼び出し）</td></tr>
+    <tr><td>proquip-frontend/src/app/shared/services/product.service.ts</td><td>updateProduct(id, data)</td><td>PUT /api/products/{id} API呼び出し</td></tr>
+    <tr><td>proquip-web/.../resource/ProductResource.java</td><td>updateProduct()</td><td>PUT /api/products/{id} エンドポイント</td></tr>
+    <tr><td>proquip-ejb/.../service/ProductServiceBean.java</td><td>updateProduct()</td><td>製品更新ビジネスロジック</td></tr>
+    <tr><td>proquip-ejb/.../validator/ProductValidator.java</td><td>validate()</td><td>BE側バリデーション</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 編集画面下部のアクションボタン（キャンセル・更新する） ／
+        <strong>備考:</strong> 「更新する」はbtn-primary、「キャンセル」はbtn-secondary
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-05_product-edit_initial.png</p>
+      <img src="../../screenshots/F-03/F-03-05_product-edit_initial.png" alt="F-03-05-012 更新実行ボタン" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 「更新する」ボタンクリックで更新実行・画面遷移を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-05_product-edit_initial.png</li>
+    <li>ソースコード: product-edit.component.ts（submit）</li>
+    <li>ネットワーク: PUT /api/products/{id} のリクエスト/レスポンスを確認</li>
+    <li>ソースコード: ProductResource.java（updateProduct）</li>
+    <li>ソースコード: ProductValidator.java（validate）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>更新成功後のリダイレクト先（製品一覧 or 製品詳細）</li>
+    <li>楽観的ロック（@Version）の実装有無</li>
+    <li>更新成功時のトースト/バナーメッセージの有無</li>
+    <li>技術的負債: 画像/ドキュメントの追加/削除が「更新する」と独立して即時実行される設計（キャンセルしても画像/ドキュメント操作は取り消されない）</li>
+  </ul>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,478 @@
+openapi: "3.0.3"
+info:
+  title: "Existing System API - F-03-04 バンドル管理画面"
+  version: "1.0.0"
+  description: "既存システムのAPI仕様（マイグレーション用） - F-03-04 バンドル管理画面"
+
+servers:
+  - url: http://localhost:4200
+    description: "既存システム（nginx経由）"
+
+paths:
+  /api/products/bundles:
+    get:
+      summary: "バンドル一覧取得"
+      description: |
+        全バンドルを名前順で取得する。ページングなし（全件取得）。
+        JPQL: SELECT DISTINCT b FROM ProductBundle b LEFT JOIN FETCH b.bundleItems ORDER BY b.bundleName
+
+        実装上の注意点:
+        - bundleItemsをLEFT JOIN FETCHし、さらにProduct名をループで初期化（N+1解消のための手動初期化）。
+        - totalPriceはレスポンス生成時（toBundleMap）にbundleItemsのproduct.unitPrice × quantityから再計算される。
+          DB保存値（bundle_price）はbundlePriceフィールドで返される。
+          製品単価が変更されるとtotalPriceは変わるがbundlePriceは保存時のまま → 不整合の可能性あり。
+        - ページングなし。バンドル数が増えた場合のパフォーマンス懸念。
+        - @RolesAllowed未設定（全認証ユーザーがアクセス可能）。
+      operationId: listBundles
+      tags:
+        - "F-03-04-001"
+        - "F-03-04-004"
+        - "F-03-04-007"
+      x-feature-ids:
+        - "F-03-04-001"
+        - "F-03-04-004"
+        - "F-03-04-007"
+      x-evidence:
+        network: "Network通信で確認（GET /api/products/bundles → 200、3件のバンドル配列を返却）"
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:660-686"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:128-130"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "バンドル数が大量の場合のパフォーマンス（ページングなし）"
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        "200":
+          description: "成功 - バンドル一覧"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BundleListItem"
+              example:
+                - id: 3
+                  name: "会議室セット"
+                  description: "モニター + 無線AP + ケーブル類の会議室整備セット"
+                  status: "ACTIVE"
+                  discountPercentage: 3.0
+                  bundlePrice: 155000.0
+                  createdAt: "2026-05-21 11:10:16.289592"
+                  products:
+                    - productId: 18
+                      productName: "EIZO FlexScan EV2760"
+                      productSku: "MON-004001"
+                      unitPrice: 78000.0
+                      quantity: 1
+                      subtotal: 78000.0
+                  totalPrice: 141500.0
+        "500":
+          description: "サーバーエラー"
+
+    post:
+      summary: "バンドル作成"
+      description: |
+        新しいバンドルを作成する。
+
+        実装上の注意点:
+        - bundleCodeは "BDL-" + System.currentTimeMillis() で自動生成（技術的負債: タイムスタンプベース、衝突リスクあり）。
+        - FE側にbundleCode入力欄はない。
+        - statusを省略した場合デフォルト "ACTIVE"。
+        - discountPercentageを省略した場合デフォルト 0。
+        - itemsが空配列またはnullでもバンドル自体は作成される。FE側で「少なくとも1つの製品を追加してください」チェックあり。
+        - 価格計算: totalPrice = Σ(product.unitPrice × quantity)、discountAmount = floor(totalPrice × discountPct / 100)、bundlePrice = totalPrice - discountAmount。
+        - createdBy/updatedByは "system" 固定（技術的負債: SecurityContextを使用していない）。
+        - BE側にバリデーションなし（name=nullでもDB制約でエラー）。
+        - 存在しないproductIdが指定された場合はそのitemがスキップされる（エラーにならない）。
+        - @RolesAllowed未設定（全認証ユーザーが作成可能）。
+      operationId: createBundle
+      tags:
+        - "F-03-04-002"
+        - "F-03-04-003"
+        - "F-03-04-004"
+      x-feature-ids:
+        - "F-03-04-002"
+        - "F-03-04-003"
+        - "F-03-04-004"
+      x-evidence:
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:688-713"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:132-134"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "BE側にバリデーションがないため、不正なstatusやdiscountPercentage > 100でもDB制約違反まで到達する"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BundleCreateRequest"
+            example:
+              name: "テストバンドル"
+              description: "テスト用バンドル"
+              discountPercentage: 10
+              status: "ACTIVE"
+              items:
+                - productId: 8
+                  quantity: 1
+                - productId: 19
+                  quantity: 2
+      responses:
+        "201":
+          description: "作成成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BundleListItem"
+        "500":
+          description: "サーバーエラー（DB制約違反含む）"
+
+  /api/products/bundles/{id}:
+    put:
+      summary: "バンドル更新"
+      description: |
+        既存バンドルを更新する。構成製品は全削除→再追加（orphanRemoval）。
+
+        実装上の注意点:
+        - bundleItemsを先にclear() + flush() → 新しいitemsを追加する方式。
+        - bundleCodeは変更不可（リクエストにbundleCode項目なし）。
+        - statusを省略した場合は既存値を維持。
+        - discountPercentageを省略した場合は既存値を維持（nullチェックなし → 既存のdiscountが保持される）。
+        - 価格計算はcreateと同じロジック（addBundleItemsメソッド共通）。
+        - updatedByは "system" 固定（技術的負債）。
+        - @RolesAllowed未設定。
+      operationId: updateBundle
+      tags:
+        - "F-03-04-005"
+        - "F-03-04-003"
+        - "F-03-04-004"
+      x-feature-ids:
+        - "F-03-04-005"
+        - "F-03-04-003"
+        - "F-03-04-004"
+      x-evidence:
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:716-743"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:137-139"
+      x-confidence: "High"
+      x-unconfirmed: []
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: "バンドルID"
+          x-evidence: "ソースコード: ProductResource.java:717"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BundleUpdateRequest"
+            example:
+              name: "会議室セット（更新）"
+              description: "モニター + 無線AP + ケーブル類"
+              discountPercentage: 5
+              status: "ACTIVE"
+              items:
+                - productId: 18
+                  quantity: 1
+                - productId: 39
+                  quantity: 1
+      responses:
+        "200":
+          description: "更新成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BundleListItem"
+        "404":
+          description: "バンドルが見つかりません"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "バンドルが見つかりません。"
+        "500":
+          description: "サーバーエラー"
+
+    delete:
+      summary: "バンドル削除（物理削除）"
+      description: |
+        バンドルを物理削除する。product_bundle_itemはON DELETE CASCADEで自動削除。
+
+        実装上の注意点:
+        - 物理削除（em.remove）。製品のDISCONTINUED（論理削除）とは異なる削除戦略。
+        - product_bundle_itemテーブルのbundle_idはON DELETE CASCADE。
+        - product_bundle_itemテーブルのproduct_idはON DELETE RESTRICT → バンドルに含まれている製品は削除できない。
+        - @RolesAllowed未設定（全認証ユーザーが削除可能 — 技術的負債）。
+      operationId: deleteBundle
+      tags:
+        - "F-03-04-006"
+      x-feature-ids:
+        - "F-03-04-006"
+      x-evidence:
+        network: "Network通信で確認（DELETE /api/products/bundles/{id} → 204）"
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:746-761"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:142-144"
+      x-confidence: "High"
+      x-unconfirmed: []
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: "バンドルID"
+          x-evidence: "ソースコード: ProductResource.java:747"
+      responses:
+        "204":
+          description: "削除成功（レスポンスボディなし）"
+        "404":
+          description: "バンドルが見つかりません"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "バンドルが見つかりません。"
+        "500":
+          description: "サーバーエラー"
+
+  /api/products:
+    get:
+      summary: "製品一覧取得（バンドル構成製品の候補取得に使用）"
+      description: |
+        バンドル管理画面では、構成製品の候補をGET /api/products?page=0&size=100で取得し、
+        FE側でクライアントサイドフィルタ（名前・SKUの部分一致）を行う。
+        APIの詳細仕様はspec/api/F-03-01.ymlを参照。
+
+        バンドル管理画面固有の注意点:
+        - 先頭100件のみ取得。101件目以降の製品はバンドルに追加できない（技術的負債）。
+        - FEのloadProducts()メソッドで初期化時に1回のみ呼び出し。
+      operationId: listProductsForBundle
+      tags:
+        - "F-03-04-003"
+      x-feature-ids:
+        - "F-03-04-003"
+      x-evidence:
+        source: "ソースコード: proquip/proquip-frontend/src/app/features/products/bundle-management/bundle-management.component.ts:144-153（loadProducts: page=0&size=100）"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "101件目以降の製品がバンドルに追加不可（クライアントサイドフィルタの制約）"
+      x-see-also: "spec/api/F-03-01.yml"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+          x-evidence: "ソースコード: bundle-management.component.ts:148"
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 100
+          x-evidence: "ソースコード: bundle-management.component.ts:148"
+      responses:
+        "200":
+          description: "成功 - 製品一覧（PageResult形式）"
+          x-see-also: "spec/api/F-03-01.yml のレスポンススキーマを参照"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Keycloak OIDC JWT。ただしバンドルAPI群は@RolesAllowed未設定のため、認証済みであれば全ロールがアクセス可能。"
+
+  schemas:
+    BundleListItem:
+      type: object
+      description: "バンドル一覧/詳細レスポンス"
+      x-evidence: "Network通信 + ソースコード: ProductResource.java:791-822（toBundleMap）"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "バンドルID"
+        name:
+          type: string
+          description: "バンドル名（DB: name VARCHAR(300)）"
+        description:
+          type: string
+          description: "説明（DB: description TEXT）。nullの場合は空文字列で返却"
+        status:
+          type: string
+          enum: ["ACTIVE", "INACTIVE", "DRAFT"]
+          description: "ステータス。nullの場合は'ACTIVE'で返却"
+        discountPercentage:
+          type: number
+          format: double
+          description: "割引率（%）。nullの場合は0で返却。DB: discount_pct NUMERIC(5,2)"
+        bundlePrice:
+          type: number
+          format: double
+          description: "バンドル価格（DB保存値）。作成/更新時にBEで算出: totalPrice - discountAmount"
+        createdAt:
+          type: string
+          description: "作成日時（フォーマット: yyyy-MM-dd HH:mm:ss.SSSSSS）。nullの場合は空文字列"
+        products:
+          type: array
+          description: "構成製品リスト"
+          items:
+            $ref: "#/components/schemas/BundleProductItem"
+        totalPrice:
+          type: number
+          format: double
+          description: "定価合計（レスポンス生成時にbundleItemsから再計算: Σ(product.unitPrice × quantity)）。DB保存値ではない"
+      required:
+        - id
+        - name
+
+    BundleProductItem:
+      type: object
+      description: "バンドル構成製品"
+      x-evidence: "Network通信 + ソースコード: ProductResource.java:803-816（toBundleMap内のループ）"
+      properties:
+        productId:
+          type: integer
+          format: int64
+          description: "製品ID"
+        productName:
+          type: string
+          description: "製品名（Product.nameから取得）"
+        productSku:
+          type: string
+          description: "SKU（Product.skuから取得）"
+        unitPrice:
+          type: number
+          format: double
+          description: "製品単価（Product.unitPriceから取得、nullの場合は0）"
+        quantity:
+          type: integer
+          description: "数量（ProductBundleItem.quantity）"
+        subtotal:
+          type: number
+          format: double
+          description: "小計（unitPrice × quantity、FEではなくBEのtoBundleMapで算出）"
+
+    BundleCreateRequest:
+      type: object
+      description: "バンドル作成リクエスト"
+      x-evidence: "ソースコード: ProductResource.java:691-711"
+      properties:
+        name:
+          type: string
+          maxLength: 300
+          description: "バンドル名（DB: VARCHAR(300)、FE側は200文字制限）"
+        description:
+          type: string
+          description: "説明（DB: TEXT）"
+        discountPercentage:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: "割引率（%）。省略時は0。DB: NUMERIC(5,2)、CHECK制約: 0-100"
+        status:
+          type: string
+          enum: ["ACTIVE", "INACTIVE", "DRAFT"]
+          description: "ステータス。省略時は'ACTIVE'。DB: CHECK制約"
+        items:
+          type: array
+          description: "構成製品リスト"
+          items:
+            $ref: "#/components/schemas/BundleItemRequest"
+      required:
+        - name
+
+    BundleUpdateRequest:
+      type: object
+      description: "バンドル更新リクエスト"
+      x-evidence: "ソースコード: ProductResource.java:719-741"
+      properties:
+        name:
+          type: string
+          maxLength: 300
+          description: "バンドル名"
+        description:
+          type: string
+          description: "説明"
+        discountPercentage:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: "割引率（%）。省略時は既存値を維持"
+        status:
+          type: string
+          enum: ["ACTIVE", "INACTIVE", "DRAFT"]
+          description: "ステータス。省略時は既存値を維持"
+        items:
+          type: array
+          description: "構成製品リスト（全置換: 既存itemsは全削除→新規追加）"
+          items:
+            $ref: "#/components/schemas/BundleItemRequest"
+      required:
+        - name
+
+    BundleItemRequest:
+      type: object
+      description: "バンドル構成製品リクエスト"
+      x-evidence: "ソースコード: ProductResource.java:764-789（addBundleItems）"
+      properties:
+        productId:
+          type: integer
+          format: int64
+          description: "製品ID。存在しないIDの場合はスキップされる（エラーにならない）"
+        quantity:
+          type: integer
+          minimum: 1
+          description: "数量。DB: CHECK制約 quantity >= 1"
+      required:
+        - productId
+        - quantity
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: "エラーメッセージ"
+
+x-technical-debts:
+  - id: "TD-B01"
+    description: "bundleCode自動生成がタイムスタンプベース（BDL-{timestamp}）。衝突リスクあり"
+    evidence: "ProductResource.java:695"
+  - id: "TD-B02"
+    description: "createdBy/updatedByが'system'固定。SecurityContextを使用していない"
+    evidence: "ProductResource.java:699-700"
+  - id: "TD-B03"
+    description: "FEとBEで価格計算ロジックが重複（FE: Math.floor、BE: RoundingMode.FLOOR）"
+    evidence: "bundle-management.component.ts:219-235, ProductResource.java:764-789"
+  - id: "TD-B04"
+    description: "@RolesAllowed未設定。全認証ユーザーがCRUD操作可能"
+    evidence: "ProductResource.java:660-761"
+  - id: "TD-B05"
+    description: "BE側にバリデーションなし。DB制約（NOT NULL、CHECK）に依存"
+    evidence: "ProductResource.java:688-761"
+  - id: "TD-B06"
+    description: "構成製品候補がpage=0&size=100の先頭100件に限定。101件目以降はバンドルに追加不可"
+    evidence: "bundle-management.component.ts:144-153"
+  - id: "TD-B07"
+    description: "totalPriceがレスポンス生成時に再計算されるため、製品単価変更時にbundlePriceと乖離する"
+    evidence: "ProductResource.java:791-822（toBundleMap）"
+  - id: "TD-B08"
+    description: "DB上のsort_orderカラムがFEで未使用。構成製品の順序が保証されない"
+    evidence: "V002:306, addBundleItems内でorder変数を定義するが未使用"

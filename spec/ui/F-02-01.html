@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F-02-01: ダッシュボード画面 - UI仕様</title>
+  <style>
+    body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; margin: 24px; line-height: 1.6; color: #333; }
+    h1 { border-bottom: 3px solid #2196F3; padding-bottom: 8px; }
+    h2 { border-bottom: 2px solid #64B5F6; padding-bottom: 4px; margin-top: 48px; }
+    h3 { border-left: 4px solid #90CAF9; padding-left: 8px; margin-top: 24px; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; font-size: 14px; }
+    th { background: #E3F2FD; }
+    .feature { margin-bottom: 64px; }
+    .screenshot-item { margin-bottom: 16px; border: 1px solid #ddd; border-radius: 4px; padding: 12px; }
+    .screenshot-list { margin-top: 12px; }
+    ul { margin: 4px 0; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<h1>F-02-01: ダッシュボード画面 - UI仕様</h1>
+<p>最終更新: 2026-05-22</p>
+
+<!-- ================================================================== -->
+<!-- F-02-01-001: 発注件数カード -->
+<!-- ================================================================== -->
+<div class="feature" id="F-02-01-001">
+  <h2>F-02-01-001: 発注件数カード</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-02-01-001</li>
+    <li>大分類: F-02 ダッシュボード</li>
+    <li>中分類: F-02-01 ダッシュボード画面</li>
+    <li>小分類: 発注件数カード</li>
+    <li>画面名: ダッシュボード</li>
+    <li>URL: /dashboard</li>
+    <li>対象ロール: 全認証ユーザー（ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER）</li>
+    <li>関連ユースケース: UC-004, UC-007</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">ダッシュボード画面の全体像。サマリーカード4枚が画面上部に横並びで表示される。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-02/F-02-01_dashboard_initial_phase3.png</p>
+    <img src="../../screenshots/F-02/F-02-01_dashboard_initial_phase3.png" alt="F-02-01 ダッシュボード 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>全発注書の合計件数と、ステータス別の内訳（保留中・承認済み）を表示するサマリーカード。</p>
+
+  <h3>WHY</h3>
+  <p>調達業務の全体量とステータスの偏りを一目で把握し、対応が必要な発注の有無を即座に判断するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>カードタイトル「発注件数」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+    <tr><td>合計件数（メイン値）</td><td>常時</td><td>GET /api/purchase-orders?page=0&size=100 → totalElements</td><td>全ステータスの発注書合計数</td></tr>
+    <tr><td>保留中件数</td><td>常時</td><td>コンポーネント内でstatus=PENDING/PENDING_APPROVALを集計</td><td></td></tr>
+    <tr><td>承認済み件数</td><td>常時</td><td>コンポーネント内でstatus=APPROVEDを集計</td><td></td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし（表示専用）</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>（なし）</td><td>-</td><td>-</td><td>-</td><td>-</td><td>カードのクリックイベントは未設定（遷移なし）</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>ページロード時にAPIからデータ取得し、合計件数・保留中・承認済み件数を表示する。データ例: 合計20件、保留中0件、承認済み2件。</p>
+
+  <h3>異常系</h3>
+  <p>API取得エラー時は画面上部にエラーバナー「データの取得に失敗しました。再度お試しください。」と「再試行」ボタンを表示。発注件数カードは0で表示される。</p>
+
+  <h3>権限制御</h3>
+  <p>フロントエンド・バックエンドともにロールによる表示制御なし。全認証ユーザーに全発注データが表示される。バックエンドDashboardResourceに@RolesAllowed未設定。</p>
+
+  <h3>状態変化</h3>
+  <p>ローディング中: ローディングスピナー表示 → データ取得完了後にカード表示。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/purchase-orders?page=0&size=100</td><td>page, size</td><td>{content: PurchaseOrder[], totalElements: number}</td><td>500 → エラーバナー表示</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/dashboard/dashboard-main/dashboard-main.component.ts</td><td>calculateOrderStats()</td><td>PENDING/PENDING_APPROVAL→保留中、APPROVED→承認済みの集計</td></tr>
+    <tr><td>proquip-frontend/src/app/features/dashboard/dashboard-main/dashboard-main.component.html</td><td>L20-38</td><td>カードのテンプレート構造</td></tr>
+    <tr><td>proquip-frontend/src/app/shared/services/purchase-order.service.ts</td><td>getOrders()</td><td>/api/purchase-orders の呼び出し</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPによるダッシュボード画面の確認</li>
+    <li>スクリーンショット: screenshots/F-02/F-02-01_dashboard_initial_phase3.png</li>
+    <li>Network通信: GET /api/purchase-orders?page=0&size=100 [200] レスポンス確認</li>
+    <li>ソースコード: dashboard-main.component.ts:193-204（calculateOrderStats）</li>
+    <li>ソースコード: dashboard-main.component.html:20-38（カードテンプレート）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>発注書が100件を超えた場合の表示（page=0&size=100で取得しており、100件超のデータは反映されない可能性）</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-02-01-002: 在庫アラートカード -->
+<!-- ================================================================== -->
+<div class="feature" id="F-02-01-002">
+  <h2>F-02-01-002: 在庫アラートカード</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-02-01-002</li>
+    <li>大分類: F-02 ダッシュボード</li>
+    <li>中分類: F-02-01 ダッシュボード画面</li>
+    <li>小分類: 在庫アラートカード</li>
+    <li>画面名: ダッシュボード</li>
+    <li>URL: /dashboard</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-004, UC-005</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>在庫不足（発注点以下）の製品数を表示するサマリーカード。クリックすると在庫管理画面に遷移する。</p>
+
+  <h3>WHY</h3>
+  <p>在庫不足の発生を即座に把握し、発注対応の必要性を判断するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>カードタイトル「在庫アラート」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+    <tr><td>在庫不足製品数（メイン値）</td><td>常時</td><td>GET /api/inventory/alerts/low-stock → 配列の長さ</td><td>初回はsummary APIから取得、後にlow-stock APIで上書き</td></tr>
+    <tr><td>説明文「在庫不足の製品があります」</td><td>常時</td><td>固定文字列</td><td>0件でも表示される</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし（表示専用）</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>在庫管理画面へ遷移</td><td>カード全体クリック</td><td>router.navigate(['/inventory'])</td><td>/inventory に遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>在庫不足製品数を数値で表示。0件の場合も「0」と表示。アラートがある場合はhas-alertクラスが付与され強調表示。</p>
+
+  <h3>異常系</h3>
+  <p>API取得エラー時はコンソールにエラー出力。カードは0で表示される。</p>
+
+  <h3>権限制御</h3>
+  <p>ロールによる表示制御なし。</p>
+
+  <h3>状態変化</h3>
+  <p>lowStockCount > 0 の場合、メイン値にhas-alertクラスが付与される（CSSで強調表示）。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/dashboard/summary</td><td>なし</td><td>{lowStockItems: number, ...}</td><td>500</td><td>Network通信</td></tr>
+    <tr><td>-</td><td>GET</td><td>/api/inventory/alerts/low-stock</td><td>なし</td><td>InventoryItem[]</td><td>500</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>dashboard-main.component.html</td><td>L40-53</td><td>カードテンプレート、(click)="navigateToInventory()"</td></tr>
+    <tr><td>dashboard-main.component.ts</td><td>navigateToInventory()</td><td>router.navigate(['/inventory'])</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: カード表示確認（0件表示）</li>
+    <li>スクリーンショット: screenshots/F-02/F-02-01_dashboard_initial_phase3.png</li>
+    <li>Network通信: GET /api/inventory/alerts/low-stock [200] → []</li>
+    <li>ソースコード: dashboard-main.component.html:40-53</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>has-alertクラスのCSS定義（強調表示の具体的なスタイル）</li>
+    <li>アラートが存在する場合のカード表示状態（テスト環境で在庫不足データなし）</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-02-01-003: 承認待ちカード -->
+<!-- ================================================================== -->
+<div class="feature" id="F-02-01-003">
+  <h2>F-02-01-003: 承認待ちカード</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-02-01-003</li>
+    <li>大分類: F-02 ダッシュボード</li>
+    <li>中分類: F-02-01 ダッシュボード画面</li>
+    <li>小分類: 承認待ちカード</li>
+    <li>画面名: ダッシュボード</li>
+    <li>URL: /dashboard</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-004, UC-006</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>承認が必要なタスク（発注書承認待ち + 購買依頼承認待ち）の合計件数を表示するサマリーカード。クリックするとマイタスク画面（/dashboard/tasks）に遷移する。</p>
+
+  <h3>WHY</h3>
+  <p>承認待ちの業務タスク数を一目で把握し、承認遅延を防止するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>カードタイトル「承認待ち」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+    <tr><td>承認待ち件数（メイン値）</td><td>常時</td><td>summary.pendingApprovals + requisitions(PENDING_APPROVAL).totalElements</td><td>2つのAPI結果を合算</td></tr>
+    <tr><td>説明文「承認が必要なタスク」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし（表示専用）</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>マイタスク画面へ遷移</td><td>カード全体クリック</td><td>router.navigate(['/dashboard', 'tasks'])</td><td>/dashboard/tasks に遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>承認待ち件数を表示。画面確認では4件表示（summary APIのpendingApprovals=4に、requisitionsのPENDING_APPROVAL件数を加算）。pendingApprovals > 0の場合、has-pendingクラスで強調表示。</p>
+
+  <h3>異常系</h3>
+  <p>API取得エラー時はコンソールにエラー出力。件数は0のまま。</p>
+
+  <h3>権限制御</h3>
+  <p>ロールによる表示制御なし。全ユーザーに全承認待ちの合計が表示される（自分に割り当てられた承認のみではない）。</p>
+
+  <h3>状態変化</h3>
+  <p>pendingApprovals > 0 の場合、has-pendingクラス付与。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/dashboard/summary</td><td>なし</td><td>{pendingApprovals: number, ...}</td><td>500</td><td>Network通信</td></tr>
+    <tr><td>-</td><td>GET</td><td>/api/requisitions?page=0&size=100&status=PENDING_APPROVAL</td><td>page, size, status</td><td>{totalElements: number, content: []}</td><td>500</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>dashboard-main.component.html</td><td>L55-68</td><td>カードテンプレート、(click)="navigateToTasks()"</td></tr>
+    <tr><td>dashboard-main.component.ts</td><td>loadDashboardSummary() L152-154</td><td>pendingApprovals = summary値 + requisitions.totalElements</td></tr>
+    <tr><td>dashboard-main.component.ts</td><td>navigateToTasks()</td><td>router.navigate(['/dashboard', 'tasks'])</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: カード表示確認（4件表示）</li>
+    <li>スクリーンショット: screenshots/F-02/F-02-01_dashboard_initial_phase3.png</li>
+    <li>Network通信: GET /api/dashboard/summary → pendingApprovals:4, GET /api/requisitions?status=PENDING_APPROVAL</li>
+    <li>ソースコード: dashboard-main.component.ts:128,152-154</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>マイタスク画面（/dashboard/tasks）の実際の表示内容（画面未到達 - F-02-02-001で対応）</li>
+    <li>承認待ちカウントの二重加算の可能性（summary.pendingApprovalsにrequisitionsの件数が含まれているかどうか）</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-02-01-004: 予算消化率カード -->
+<!-- ================================================================== -->
+<div class="feature" id="F-02-01-004">
+  <h2>F-02-01-004: 予算消化率カード</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-02-01-004</li>
+    <li>大分類: F-02 ダッシュボード</li>
+    <li>中分類: F-02-01 ダッシュボード画面</li>
+    <li>小分類: 予算消化率カード</li>
+    <li>画面名: ダッシュボード</li>
+    <li>URL: /dashboard</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-004</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>当年度の予算消化率をパーセント表示し、プログレスバーで視覚化するサマリーカード。消化済み金額と予算総額の内訳も表示する。</p>
+
+  <h3>WHY</h3>
+  <p>予算の使用状況を即座に把握し、予算超過を未然に防ぐため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>カードタイトル「予算消化率」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+    <tr><td>消化率パーセント（メイン値）</td><td>常時</td><td>コンポーネント内で計算: round((usedAmount合計 / totalAmount合計) * 100)</td><td>予算未登録時は0%</td></tr>
+    <tr><td>プログレスバー</td><td>常時</td><td>budgetUtilization値をwidthに反映</td><td>80%超:警告色, 95%超:危険色</td></tr>
+    <tr><td>金額内訳「¥X / ¥Y」</td><td>常時</td><td>budgetSpent / budgetTotal</td><td>formatCurrency()で¥カンマ区切り</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし（表示専用）</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>（なし）</td><td>-</td><td>-</td><td>-</td><td>-</td><td>カードのクリックイベントは未設定</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>当年度（2026年）の予算データを取得し消化率を計算・表示。テスト環境では予算データなし（0% / ¥0 / ¥0）。</p>
+
+  <h3>異常系</h3>
+  <p>API取得エラー時はコンソールにエラー出力。消化率は0%のまま。</p>
+
+  <h3>権限制御</h3>
+  <p>ロールによる表示制御なし。</p>
+
+  <h3>状態変化</h3>
+  <ul>
+    <li>消化率 ≤ 80%: 通常色（デフォルト）</li>
+    <li>消化率 > 80%: budget-warningクラス（警告色）</li>
+    <li>消化率 > 95%: budget-dangerクラス（危険色）</li>
+  </ul>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/budgets?fiscalYear=2026</td><td>fiscalYear</td><td>Budget[]（totalAmount, usedAmount含む）</td><td>500</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>dashboard-main.component.html</td><td>L70-88</td><td>カードテンプレート、プログレスバー、警告/危険クラス</td></tr>
+    <tr><td>dashboard-main.component.ts</td><td>calculateBudgetUtilization()</td><td>予算合計・使用合計からパーセント計算</td></tr>
+    <tr><td>dashboard-main.component.ts</td><td>loadDashboardSummary() L147</td><td>budgetService.getBudgets(2026)呼び出し（会計年度ハードコード）</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: カード表示確認（0% / ¥0 / ¥0）</li>
+    <li>スクリーンショット: screenshots/F-02/F-02-01_dashboard_initial_phase3.png</li>
+    <li>Network通信: GET /api/budgets?fiscalYear=2026 [200] → []</li>
+    <li>ソースコード: dashboard-main.component.ts:211-225（calculateBudgetUtilization）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>会計年度2026がハードコードされている（動的に現在年度を取得すべきか）</li>
+    <li>予算データが存在する場合のプログレスバー表示（テスト環境にデータなし）</li>
+    <li>budget-warning/budget-dangerクラスのCSS定義</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-02-01-005: 月別発注金額推移グラフ -->
+<!-- ================================================================== -->
+<div class="feature" id="F-02-01-005">
+  <h2>F-02-01-005: 月別発注金額推移グラフ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-02-01-005</li>
+    <li>大分類: F-02 ダッシュボード</li>
+    <li>中分類: F-02-01 ダッシュボード画面</li>
+    <li>小分類: 月別発注金額推移グラフ</li>
+    <li>画面名: ダッシュボード</li>
+    <li>URL: /dashboard</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-004</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>過去12か月間の月別発注金額推移をdiv要素による擬似棒グラフで表示するチャートエリア。現在はプレースホルダー実装。</p>
+
+  <h3>WHY</h3>
+  <p>発注金額の月次推移を把握し、支出の季節変動や異常値を検出するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>セクションタイトル「月別発注金額推移」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+    <tr><td>棒グラフ</td><td>monthlySpendingData配列に要素がある場合</td><td>GET /api/dashboard/spending-trend?months=12</td><td>div要素で棒グラフを擬似的に表現</td></tr>
+    <tr><td>月ラベル</td><td>データがある場合</td><td>spending-trend.month（YYYY-MM形式）から月部分を抽出</td><td></td></tr>
+    <tr><td>注記「※ グラフはプレースホルダーです」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし（表示専用）</p>
+
+  <h3>操作</h3>
+  <p>操作なし（ホバー時にtitleで月と金額が表示される）。</p>
+
+  <h3>正常系</h3>
+  <p>テスト環境ではデータが空配列のため棒グラフは表示されず、注記のみ表示。データがある場合、各月の金額に比例した高さの棒グラフが表示される（最大値を200pxとして比率計算）。</p>
+
+  <h3>異常系</h3>
+  <p>API取得エラー時はコンソールにエラー出力。グラフエリアは空のまま注記のみ表示。</p>
+
+  <h3>権限制御</h3>
+  <p>ロールによる表示制御なし。</p>
+
+  <h3>状態変化</h3>
+  <p>なし。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/dashboard/spending-trend?months=12</td><td>months (default: 12)</td><td>[{month: "YYYY-MM", amount: number}]</td><td>500</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>dashboard-main.component.html</td><td>L92-109</td><td>棒グラフテンプレート（div擬似グラフ）</td></tr>
+    <tr><td>dashboard-main.component.ts</td><td>getBarHeight()</td><td>最大値比で高さ計算（max200px）</td></tr>
+    <tr><td>dashboard-main.component.ts</td><td>loadDashboardSummary() L95-105</td><td>spending-trend APIの呼び出しとデータ変換</td></tr>
+    <tr><td>DashboardResource.java</td><td>getSpendingTrend()</td><td>PostgreSQLネイティブSQL（月別GROUP BY）</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 「※ グラフはプレースホルダーです」表示確認</li>
+    <li>Network通信: GET /api/dashboard/spending-trend?months=12 [200] → []</li>
+    <li>ソースコード: dashboard-main.component.ts:95-105, 262-265</li>
+    <li>ソースコード: DashboardResource.java（ネイティブSQL）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>Medium（データなしのためグラフ表示の実際の見た目は未確認）</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>spending-trend APIがデータを返す場合の棒グラフ表示</li>
+    <li>チャートライブラリ導入予定の有無（技術的負債として記録済み）</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-02-01-006: カテゴリ別支出割合 -->
+<!-- ================================================================== -->
+<div class="feature" id="F-02-01-006">
+  <h2>F-02-01-006: カテゴリ別支出割合</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-02-01-006</li>
+    <li>大分類: F-02 ダッシュボード</li>
+    <li>中分類: F-02-01 ダッシュボード画面</li>
+    <li>小分類: カテゴリ別支出割合</li>
+    <li>画面名: ダッシュボード</li>
+    <li>URL: /dashboard</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-004</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>カテゴリごとの支出金額と割合をリスト形式（水平バー + パーセント + 金額）で表示するチャートエリア。円グラフのプレースホルダー実装。</p>
+
+  <h3>WHY</h3>
+  <p>支出のカテゴリ別構成比を把握し、調達戦略やコスト削減の対象カテゴリを判断するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>セクションタイトル「カテゴリ別支出割合」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+    <tr><td>カテゴリ名</td><td>データがある場合</td><td>category-spending.categoryName</td><td></td></tr>
+    <tr><td>水平バー</td><td>データがある場合</td><td>percentage値をwidthに反映</td><td></td></tr>
+    <tr><td>パーセント表示</td><td>データがある場合</td><td>コンポーネント内で計算: round((item.totalAmount / 全体合計) * 100)</td><td></td></tr>
+    <tr><td>金額</td><td>データがある場合</td><td>category-spending.totalAmount → formatCurrency()</td><td>¥カンマ区切り</td></tr>
+    <tr><td>注記「※ グラフはプレースホルダーです」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし（表示専用）</p>
+
+  <h3>操作</h3>
+  <p>操作なし。</p>
+
+  <h3>正常系</h3>
+  <p>11カテゴリが表示される。上位：ノートPC 21% ¥20,433,650、モニター 19% ¥18,129,110、サプライ品 12% ¥11,291,510 等。パーセントの合計は四捨五入の都合で100%にならない場合がある。</p>
+
+  <h3>異常系</h3>
+  <p>API取得エラー時はコンソールにエラー出力。カテゴリリストは空のまま。</p>
+
+  <h3>権限制御</h3>
+  <p>ロールによる表示制御なし。</p>
+
+  <h3>状態変化</h3>
+  <p>なし。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/dashboard/category-spending</td><td>なし</td><td>[{categoryName, orderCount, totalAmount}]</td><td>500</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>dashboard-main.component.html</td><td>L111-129</td><td>カテゴリリストテンプレート</td></tr>
+    <tr><td>dashboard-main.component.ts</td><td>loadDashboardSummary() L108-121</td><td>category-spending APIの呼び出しとパーセント計算</td></tr>
+    <tr><td>DashboardResource.java</td><td>getCategorySpending()</td><td>JPQL: PurchaseOrder→items→product→category JOIN</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 11カテゴリのリスト表示確認</li>
+    <li>スクリーンショット: screenshots/F-02/F-02-01_dashboard_initial_phase3.png</li>
+    <li>Network通信: GET /api/dashboard/category-spending [200] → 11件の配列</li>
+    <li>ソースコード: dashboard-main.component.ts:108-121</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>カテゴリの表示順（API応答順 = 金額降順と推測されるが、ソートロジック未確認）</li>
+    <li>カテゴリ数が非常に多い場合のUI挙動（スクロールやページングの有無）</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-02-01-007: 最近の発注テーブル -->
+<!-- ================================================================== -->
+<div class="feature" id="F-02-01-007">
+  <h2>F-02-01-007: 最近の発注テーブル</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-02-01-007</li>
+    <li>大分類: F-02 ダッシュボード</li>
+    <li>中分類: F-02-01 ダッシュボード画面</li>
+    <li>小分類: 最近の発注テーブル</li>
+    <li>画面名: ダッシュボード</li>
+    <li>URL: /dashboard</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-004, UC-007</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>最近の発注書を発注日降順で上位10件表示するテーブル。各行をクリックすると発注書詳細画面に遷移する。</p>
+
+  <h3>WHY</h3>
+  <p>最新の発注状況を一覧で確認し、ステータス変化を追跡するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>セクションタイトル「最近の発注」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+    <tr><td>発注番号</td><td>データがある場合</td><td>order.orderNumber</td><td>例: PO-2025-000006</td></tr>
+    <tr><td>サプライヤー</td><td>データがある場合</td><td>order.supplierName</td><td></td></tr>
+    <tr><td>発注日</td><td>データがある場合</td><td>order.orderDate → formatDate()</td><td>「YYYY年MM月DD日」形式（手動フォーマット、技術的負債#6）</td></tr>
+    <tr><td>金額</td><td>データがある場合</td><td>order.totalAmount → formatCurrency()</td><td>「¥X,XXX,XXX」形式</td></tr>
+    <tr><td>ステータス</td><td>データがある場合</td><td>order.status → getStatusLabel()</td><td>status-tagクラス + ステータス別CSSクラス</td></tr>
+    <tr><td>空状態メッセージ「最近の発注はありません」</td><td>発注データがない場合</td><td>app-empty-stateコンポーネント</td><td></td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし（表示専用）</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>発注詳細画面へ遷移</td><td>テーブル行クリック</td><td>router.navigate(['/procurement', 'orders', order.id])</td><td>/procurement/orders/:id に遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>発注書を発注日降順でソートし、上位10件を表示。表示確認: PO-2025-000006（下書き）、PO-2025-000005（下書き）、PO-2025-000004（申請中）、PO-2025-000003（承認済み）、PO-2025-000002（承認済み）、PO-2024-000013（キャンセル）、PO-2024-000012（却下）、PO-2025-000001（発注済み）、PO-2024-000011（発注済み）、PO-2024-000010（発注済み）。</p>
+
+  <h3>異常系</h3>
+  <p>データがない場合: app-empty-stateで「最近の発注はありません」を表示。API取得エラー時はコンソールにエラー出力。</p>
+
+  <h3>権限制御</h3>
+  <p>ロールによる表示制御なし。全ユーザーに全発注書が表示される。</p>
+
+  <h3>状態変化</h3>
+  <p>行のホバー時にclickable-rowクラスによりカーソル変化。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/purchase-orders?page=0&size=100</td><td>page, size</td><td>{content: PurchaseOrder[], totalElements: number}</td><td>500</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>dashboard-main.component.html</td><td>L132-171</td><td>テーブルテンプレート</td></tr>
+    <tr><td>dashboard-main.component.ts</td><td>loadDashboardSummary() L136-138</td><td>発注日降順ソート、上位10件スライス</td></tr>
+    <tr><td>dashboard-main.component.ts</td><td>navigateToOrder()</td><td>発注詳細画面遷移</td></tr>
+    <tr><td>dashboard-main.component.ts</td><td>formatDate(), formatCurrency(), getStatusLabel(), getStatusClass()</td><td>各列のフォーマッター</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 10件のテーブル表示確認</li>
+    <li>スクリーンショット: screenshots/F-02/F-02-01_dashboard_initial_phase3.png</li>
+    <li>Network通信: GET /api/purchase-orders?page=0&size=100 [200]</li>
+    <li>ソースコード: dashboard-main.component.ts:136-138（ソート・スライス）</li>
+    <li>ソースコード: dashboard-main.component.html:132-171（テーブルテンプレート）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>ステータスラベルの全パターンと対応CSSクラス（status.utils.tsの実装）</li>
+    <li>発注書が100件を超えた場合に最新10件の抽出が正しく行われるか</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-02-01-008: すべて表示リンク（発注） -->
+<!-- ================================================================== -->
+<div class="feature" id="F-02-01-008">
+  <h2>F-02-01-008: すべて表示リンク（発注）</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-02-01-008</li>
+    <li>大分類: F-02 ダッシュボード</li>
+    <li>中分類: F-02-01 ダッシュボード画面</li>
+    <li>小分類: すべて表示リンク（発注）</li>
+    <li>画面名: ダッシュボード</li>
+    <li>URL: /dashboard</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-007</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>「最近の発注」セクションのヘッダー右側に表示されるリンク。発注書一覧画面へ遷移する。</p>
+
+  <h3>WHY</h3>
+  <p>ダッシュボードに表示しきれない全発注書の一覧を確認するためのナビゲーション。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>リンクテキスト「すべて表示 →」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>発注書一覧画面へ遷移</td><td>リンククリック</td><td>routerLink="/procurement/orders"</td><td>/procurement/orders に遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>クリックすると発注書一覧画面（F-05-03）に遷移する。</p>
+
+  <h3>異常系</h3>
+  <p>なし。</p>
+
+  <h3>権限制御</h3>
+  <p>ロールによる表示制御なし。</p>
+
+  <h3>状態変化</h3>
+  <p>なし。</p>
+
+  <h3>関連API</h3>
+  <p>なし（画面遷移のみ）。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>dashboard-main.component.html</td><td>L137</td><td><code>&lt;a class="link-more" routerLink="/procurement/orders"&gt;すべて表示 →&lt;/a&gt;</code></td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: リンク表示確認（a11yスナップショット uid=2_97）</li>
+    <li>ソースコード: dashboard-main.component.html:137</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>なし</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-02-01-009: 在庫アラートテーブル -->
+<!-- ================================================================== -->
+<div class="feature" id="F-02-01-009">
+  <h2>F-02-01-009: 在庫アラートテーブル</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-02-01-009</li>
+    <li>大分類: F-02 ダッシュボード</li>
+    <li>中分類: F-02-01 ダッシュボード画面</li>
+    <li>小分類: 在庫アラートテーブル</li>
+    <li>画面名: ダッシュボード</li>
+    <li>URL: /dashboard</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-004, UC-005</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>在庫不足（発注点以下）の製品をリスト表示するパネル。各製品の名前、SKU、現在在庫数、最低在庫数、在庫バーを表示する。各項目クリックで製品詳細画面に遷移する。</p>
+
+  <h3>WHY</h3>
+  <p>在庫不足の製品を具体的に把握し、発注アクションにつなげるため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>セクションタイトル「在庫アラート」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+    <tr><td>製品名</td><td>アラートデータがある場合</td><td>item.productName</td><td></td></tr>
+    <tr><td>製品SKU</td><td>アラートデータがある場合</td><td>item.productSku</td><td></td></tr>
+    <tr><td>現在在庫数「現在: X」</td><td>アラートデータがある場合</td><td>item.quantity, item.status</td><td></td></tr>
+    <tr><td>最低在庫数「最低: X」</td><td>アラートデータがある場合</td><td>item.minimumStock</td><td></td></tr>
+    <tr><td>在庫バー</td><td>アラートデータがある場合</td><td>(quantity / minimumStock) * 100</td><td>criticalとwarningのCSS切替あり</td></tr>
+    <tr><td>空状態メッセージ「在庫アラートはありません」</td><td>アラートデータがない場合</td><td>app-empty-stateコンポーネント</td><td>テスト環境ではこの状態</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし（表示専用）</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>製品詳細画面へ遷移</td><td>アラート項目クリック</td><td>router.navigate(['/products', item.productId])</td><td>/products/:id に遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>在庫不足製品がない場合: 「在庫アラートはありません」と表示（テスト環境で確認済み）。在庫不足製品がある場合: 製品名・SKU・現在/最低在庫数・在庫バーのリストを表示。</p>
+
+  <h3>異常系</h3>
+  <p>API取得エラー時はコンソールにエラー出力。空状態表示のまま。</p>
+
+  <h3>権限制御</h3>
+  <p>ロールによる表示制御なし。</p>
+
+  <h3>状態変化</h3>
+  <ul>
+    <li>quantity ≤ minimumStock / 2: criticalクラス（在庫バーにstock-criticalクラス、現在数にcriticalクラス）</li>
+    <li>minimumStock / 2 < quantity ≤ minimumStock: warningクラス（在庫バーにstock-warningクラス）</li>
+  </ul>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/inventory/alerts/low-stock</td><td>なし</td><td>InventoryItem[]（productId, productName, productSku, quantity, minimumStock, status含む）</td><td>500</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>dashboard-main.component.html</td><td>L174-211</td><td>アラートリストテンプレート（在庫バー、critical/warning判定）</td></tr>
+    <tr><td>dashboard-main.component.ts</td><td>navigateToProduct()</td><td>router.navigate(['/products', productId])</td></tr>
+    <tr><td>dashboard-main.component.ts</td><td>loadDashboardSummary() L141-144</td><td>lowStockItems/lowStockCount設定</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 空状態表示確認（「在庫アラートはありません」）</li>
+    <li>スクリーンショット: screenshots/F-02/F-02-01_dashboard_initial_phase3.png</li>
+    <li>Network通信: GET /api/inventory/alerts/low-stock [200] → []</li>
+    <li>ソースコード: dashboard-main.component.html:174-211</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>Medium（在庫不足データがないため、リスト表示時の見た目・在庫バーの表示は未確認）</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>在庫アラートがある場合のリスト表示状態（テスト環境に在庫不足データなし）</li>
+    <li>アラートリストの表示上限（ページングやスクロールの有無）</li>
+    <li>stock-critical/stock-warningクラスのCSS定義</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-02-01-010: すべて表示リンク（在庫） -->
+<!-- ================================================================== -->
+<div class="feature" id="F-02-01-010">
+  <h2>F-02-01-010: すべて表示リンク（在庫）</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-02-01-010</li>
+    <li>大分類: F-02 ダッシュボード</li>
+    <li>中分類: F-02-01 ダッシュボード画面</li>
+    <li>小分類: すべて表示リンク（在庫）</li>
+    <li>画面名: ダッシュボード</li>
+    <li>URL: /dashboard</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-005</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>「在庫アラート」セクションのヘッダー右側に表示されるリンク。在庫管理画面へ遷移する。</p>
+
+  <h3>WHY</h3>
+  <p>在庫管理画面へのショートカット。全在庫状況を確認するためのナビゲーション。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>リンクテキスト「すべて表示 →」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>在庫管理画面へ遷移</td><td>リンククリック</td><td>routerLink="/inventory"</td><td>/inventory に遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>クリックすると在庫管理画面（F-06-01）に遷移する。</p>
+
+  <h3>異常系</h3>
+  <p>なし。</p>
+
+  <h3>権限制御</h3>
+  <p>ロールによる表示制御なし。</p>
+
+  <h3>状態変化</h3>
+  <p>なし。</p>
+
+  <h3>関連API</h3>
+  <p>なし（画面遷移のみ）。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>dashboard-main.component.html</td><td>L177</td><td><code>&lt;a class="link-more" routerLink="/inventory"&gt;すべて表示 →&lt;/a&gt;</code></td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: リンク表示確認（a11yスナップショット uid=2_155）</li>
+    <li>ソースコード: dashboard-main.component.html:177</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>なし</li>
+  </ul>
+</div>
+
+</body>
+</html>

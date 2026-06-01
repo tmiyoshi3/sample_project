@@ -1,0 +1,31 @@
+<header class="app-header">
+  <button class="sidebar-toggle" (click)="onToggleSidebar()" aria-label="メニュー切替">&#9776;</button>
+  <div class="logo">
+    <span class="logo-text">ProQuip</span>
+    <span class="logo-subtitle">調達・在庫管理</span>
+  </div>
+  <div class="search-bar">
+    <input type="search" class="search-input" [(ngModel)]="searchKeyword" placeholder="製品・サプライヤー・注文番号を検索..." aria-label="グローバル検索" (keydown.enter)="onSearch()">
+    <button class="search-btn" (click)="onSearch()">検索</button>
+  </div>
+  <div class="header-actions">
+    <button class="notification-btn" aria-label="通知">&#128276;
+      <span class="notification-badge" *ngIf="notificationService.notificationCount > 0">{{ notificationService.notificationCount }}</span>
+    </button>
+    <div class="user-menu">
+      <button class="user-btn" (click)="onToggleUserMenu()">
+        <span class="user-avatar">{{ username.charAt(0) }}</span>
+        <span class="user-name">{{ username }}</span>
+        <span class="user-caret">&#9660;</span>
+      </button>
+      <div class="user-dropdown" *ngIf="showUserMenu">
+        <div class="dropdown-header">
+          <span class="user-fullname">{{ username }}</span>
+          <span class="user-role">{{ userRole }}</span>
+        </div>
+        <a class="dropdown-item" routerLink="/admin" (click)="onCloseUserMenu()">&#9881; 設定</a>
+        <button class="logout-btn" (click)="onLogout()">&#10140; ログアウト</button>
+      </div>
+    </div>
+  </div>
+</header>

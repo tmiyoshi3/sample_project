@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>F-03-02: 製品詳細画面 - UI仕様</title>
+<style>
+body { font-family: "Hiragino Sans", "Meiryo", sans-serif; margin: 24px; line-height: 1.6; color: #333; }
+h1 { border-bottom: 3px solid #1a5276; padding-bottom: 8px; }
+h2 { border-bottom: 2px solid #2980b9; padding-bottom: 6px; margin-top: 40px; }
+h3 { border-bottom: 1px solid #bdc3c7; padding-bottom: 4px; margin-top: 24px; }
+table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; font-size: 14px; }
+th { background: #f0f3f5; font-weight: bold; }
+.feature { margin-bottom: 48px; padding: 16px; border: 1px solid #e0e0e0; border-radius: 8px; }
+.screenshot-item { margin-bottom: 16px; border: 1px solid #ddd; border-radius: 4px; padding: 12px; }
+ul { margin: 8px 0; }
+</style>
+</head>
+<body>
+<h1>F-03-02: 製品詳細画面 - UI仕様</h1>
+
+<!-- ================================================================ -->
+<!-- F-03-02-001: 製品ヘッダ情報 -->
+<!-- ================================================================ -->
+<div class="feature" id="F-03-02-001">
+  <h2>F-03-02-001: 製品ヘッダ情報</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-02-001</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-02 製品詳細画面</li>
+    <li>小分類: 製品ヘッダ情報</li>
+    <li>画面名: 製品詳細</li>
+    <li>URL: /products/:id</li>
+    <li>対象ロール: ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER（全ロール共通）</li>
+    <li>関連ユースケース: UC-010</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">製品詳細画面の初期表示状態。ヘッダ領域に製品名・ステータスバッジ・メタ情報が表示される。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02_product_detail_initial.png</p>
+    <img src="../../screenshots/F-03/F-03-02_product_detail_initial.png" alt="F-03-02 製品詳細画面 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>製品の基本識別情報（製品名・ステータス・SKU・カテゴリ・メーカー）をヘッダ領域に常時表示する。タブ切替に関係なく常に表示される。</p>
+
+  <h3>WHY</h3>
+  <p>どのタブを閲覧中でも、現在表示中の製品が何かをユーザーが常に把握できるようにするため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ページタイトル「製品詳細」</td><td>常時</td><td>固定テキスト</td><td>h1要素</td></tr>
+    <tr><td>製品名</td><td>常時</td><td>GET /api/products/{id} → name</td><td>h2要素</td></tr>
+    <tr><td>ステータスバッジ</td><td>常時</td><td>GET /api/products/{id} → status</td><td>ACTIVE=有効, INACTIVE=無効, DISCONTINUED=廃番, PENDING=保留。色分け表示</td></tr>
+    <tr><td>SKU</td><td>常時</td><td>GET /api/products/{id} → sku</td><td>「SKU: DPC-001001」形式</td></tr>
+    <tr><td>カテゴリ</td><td>常時</td><td>GET /api/products/{id} → categoryName</td><td>「カテゴリ: デスクトップPC」形式</td></tr>
+    <tr><td>メーカー</td><td>常時</td><td>GET /api/products/{id} → manufacturerName</td><td>「メーカー: Dell Technologies」形式</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし（表示専用）</p>
+
+  <h3>操作</h3>
+  <p>なし（ヘッダ情報は閲覧のみ）</p>
+
+  <h3>正常系</h3>
+  <p>画面アクセス時にGET /api/products/{id}でデータ取得し、ヘッダ領域に製品名・ステータス・SKU・カテゴリ・メーカーを表示する。</p>
+
+  <h3>異常系</h3>
+  <p>API取得失敗時はエラーバナー「製品情報の取得に失敗しました。」を表示し、「一覧に戻る」ボタンを表示する。</p>
+
+  <h3>権限制御</h3>
+  <p>全認証ユーザーが閲覧可能。バックエンドに@RolesAllowed未設定（技術的負債）。</p>
+
+  <h3>状態変化</h3>
+  <p>なし（読み取り専用）</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/{id}</td><td>パスパラメータ: id</td><td>ProductDetailDto（id, name, sku, status, categoryName, manufacturerName, ...）</td><td>404: 商品が見つかりません</td><td>Network通信 + ソースコード</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-detail/product-detail.component.ts</td><td>loadAllData()</td><td>productService.getProduct(productId)で全データ取得</td></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-detail/product-detail.component.html</td><td>.detail-header セクション</td><td>ヘッダ領域のテンプレート構造</td></tr>
+    <tr><td>proquip-web/.../resource/ProductResource.java</td><td>getProduct(@PathParam("id"))</td><td>GET /api/products/{id} エンドポイント</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPで /products/1 にアクセスし、ヘッダ情報を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-02_product_detail_initial.png</li>
+    <li>Network通信: GET /api/products/1 → 200, レスポンスにname, sku, status, categoryName, manufacturerName確認</li>
+    <li>ソースコード: product-detail.component.ts（loadAllData）, product-detail.component.html（.detail-header）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>存在しない製品IDへのアクセス時のエラー画面表示（404のUI確認未実施）</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<!-- F-03-02-002: 一覧に戻るボタン -->
+<!-- ================================================================ -->
+<div class="feature" id="F-03-02-002">
+  <h2>F-03-02-002: 一覧に戻るボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-02-002</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-02 製品詳細画面</li>
+    <li>小分類: 一覧に戻るボタン</li>
+    <li>画面名: 製品詳細</li>
+    <li>URL: /products/:id</li>
+    <li>対象ロール: ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER</li>
+    <li>関連ユースケース: UC-010</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">ヘッダ右側のアクションボタン群。左端に「← 一覧に戻る」ボタン。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02_product_detail_initial.png</p>
+    <img src="../../screenshots/F-03/F-03-02_product_detail_initial.png" alt="F-03-02 製品詳細画面 ボタン" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>製品一覧画面（/products）へ遷移するナビゲーションボタン。</p>
+
+  <h3>WHY</h3>
+  <p>ユーザーが製品詳細の閲覧を終えた後、製品一覧に戻る手段を提供するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>「← 一覧に戻る」ボタン</td><td>常時</td><td>固定テキスト</td><td>btn-secondary スタイル</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>一覧に戻る</td><td>ボタンクリック</td><td>router.navigate(['/products'])</td><td>/products へ遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>クリック時に /products に遷移する。</p>
+
+  <h3>異常系</h3>
+  <p>なし</p>
+
+  <h3>権限制御</h3>
+  <p>全ロール共通で表示・操作可能。</p>
+
+  <h3>状態変化</h3>
+  <p>画面遷移のみ。データ変更なし。</p>
+
+  <h3>関連API</h3>
+  <p>なし（クライアントサイドルーティングのみ）</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>navigateToList()</td><td>router.navigate(['/products'])</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ボタン表示を確認</li>
+    <li>ソースコード: product-detail.component.ts（navigateToList）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>なし</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<!-- F-03-02-003: 編集ボタン -->
+<!-- ================================================================ -->
+<div class="feature" id="F-03-02-003">
+  <h2>F-03-02-003: 編集ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-02-003</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-02 製品詳細画面</li>
+    <li>小分類: 編集ボタン</li>
+    <li>画面名: 製品詳細</li>
+    <li>URL: /products/:id</li>
+    <li>対象ロール: ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER</li>
+    <li>関連ユースケース: F-03-05へのエントリーポイント</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02_product_detail_initial.png</p>
+    <img src="../../screenshots/F-03/F-03-02_product_detail_initial.png" alt="F-03-02 編集ボタン" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>製品編集画面（/products/:id/edit）へ遷移するボタン。</p>
+
+  <h3>WHY</h3>
+  <p>製品情報の変更が必要な場合に、詳細画面から直接編集画面に移動できるようにするため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>「編集」ボタン</td><td>常時</td><td>固定テキスト</td><td>btn-primary スタイル</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>編集画面へ遷移</td><td>ボタンクリック</td><td>router.navigate(['/products', productId, 'edit'])</td><td>/products/:id/edit へ遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>クリック時に /products/:id/edit に遷移する。</p>
+
+  <h3>異常系</h3>
+  <p>なし</p>
+
+  <h3>権限制御</h3>
+  <p>全ロール共通で表示・操作可能。バックエンドに@RolesAllowed未設定（技術的負債: VIEWER には編集を制限すべき可能性あり）。</p>
+
+  <h3>状態変化</h3>
+  <p>画面遷移のみ。データ変更なし。</p>
+
+  <h3>関連API</h3>
+  <p>なし（クライアントサイドルーティングのみ）</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>navigateToEdit()</td><td>router.navigate(['/products', this.productId, 'edit'])</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ボタン表示を確認</li>
+    <li>ソースコード: product-detail.component.ts（navigateToEdit）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>編集画面（F-03-05）の詳細は対象外</li>
+    <li>ロール別の編集ボタン表示制御の有無</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<!-- F-03-02-004: 削除ボタン -->
+<!-- ================================================================ -->
+<div class="feature" id="F-03-02-004">
+  <h2>F-03-02-004: 削除ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-02-004</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-02 製品詳細画面</li>
+    <li>小分類: 削除ボタン</li>
+    <li>画面名: 製品詳細</li>
+    <li>URL: /products/:id</li>
+    <li>対象ロール: ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER</li>
+    <li>関連ユースケース: UC-011</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">削除ボタンクリック時に確認ダイアログが表示される。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02-004_delete_confirm.png</p>
+    <img src="../../screenshots/F-03/F-03-02-004_delete_confirm.png" alt="F-03-02-004 削除確認ダイアログ" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>製品を削除（論理削除: ステータスをDISCONTINUEDに変更）するボタン。クリック時に確認ダイアログを表示し、確認後に削除を実行する。</p>
+
+  <h3>WHY</h3>
+  <p>不要になった製品をカタログから除外するため。誤操作防止のため確認ダイアログを挟む。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>「削除」ボタン</td><td>常時</td><td>固定テキスト</td><td>btn-danger スタイル</td></tr>
+    <tr><td>確認ダイアログ タイトル「製品の削除」</td><td>削除ボタンクリック時</td><td>固定テキスト</td><td>app-confirm-dialog コンポーネント</td></tr>
+    <tr><td>確認メッセージ「この製品を削除してもよろしいですか？この操作は取り消せません。」</td><td>削除ボタンクリック時</td><td>固定テキスト</td><td>-</td></tr>
+    <tr><td>「キャンセル」ボタン</td><td>確認ダイアログ表示時</td><td>固定テキスト</td><td>-</td></tr>
+    <tr><td>「削除する」ボタン</td><td>確認ダイアログ表示時</td><td>固定テキスト</td><td>-</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>削除確認表示</td><td>「削除」ボタンクリック</td><td>showDeleteConfirm = true</td><td>確認ダイアログ表示</td><td>-</td><td>ダイアログ表示</td></tr>
+    <tr><td>削除キャンセル</td><td>「キャンセル」ボタンクリック</td><td>showDeleteConfirm = false</td><td>確認ダイアログ閉じる</td><td>-</td><td>ダイアログ非表示</td></tr>
+    <tr><td>削除実行</td><td>「削除する」ボタンクリック</td><td>DELETE /api/products/{id}</td><td>/products へ遷移</td><td>エラーメッセージ表示「製品の削除に失敗しました。」</td><td>製品ステータスがDISCONTINUEDに変更</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>「削除」→確認ダイアログ表示→「削除する」→ DELETE API呼び出し → 204 No Content → /products へ自動遷移。</p>
+
+  <h3>異常系</h3>
+  <p>DELETE API失敗時: エラーメッセージ「製品の削除に失敗しました。」を表示。画面遷移しない。</p>
+
+  <h3>権限制御</h3>
+  <p>全ロール共通で表示・操作可能。バックエンドに@RolesAllowed未設定（技術的負債: VIEWER/BUYER には削除を制限すべき可能性あり）。</p>
+
+  <h3>状態変化</h3>
+  <p>削除実行時: バックエンドでproductService.changeStatus(id, "DISCONTINUED")を呼び出し。物理削除ではなく論理削除（ステータス変更）。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>DELETE</td><td>/api/products/{id}</td><td>パスパラメータ: id</td><td>204 No Content</td><td>404: 商品が見つかりません</td><td>ソースコード</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>confirmDelete(), deleteProduct(), cancelDelete()</td><td>削除確認フロー</td></tr>
+    <tr><td>proquip-web/.../resource/ProductResource.java</td><td>deleteProduct(@PathParam("id"))</td><td>changeStatus(id, "DISCONTINUED")で論理削除</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item" style="margin-bottom:24px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 削除ボタンクリック後 ／
+        <strong>備考:</strong> 確認ダイアログが表示される
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02-004_delete_confirm.png</p>
+      <img src="../../screenshots/F-03/F-03-02-004_delete_confirm.png" alt="F-03-02-004 削除確認" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 削除ボタンクリックで確認ダイアログ表示を確認、キャンセルでダイアログ閉じを確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-02-004_delete_confirm.png</li>
+    <li>ソースコード: product-detail.component.ts（confirmDelete, deleteProduct, cancelDelete）, ProductResource.java（deleteProduct）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>削除後の一覧画面での製品ステータス表示（DISCONTINUEDに変わるか）は本画面では未確認</li>
+    <li>在庫がある製品の削除時の挙動（制約チェックの有無）</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<!-- F-03-02-005: 基本情報タブ -->
+<!-- ================================================================ -->
+<div class="feature" id="F-03-02-005">
+  <h2>F-03-02-005: 基本情報タブ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-02-005</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-02 製品詳細画面</li>
+    <li>小分類: 基本情報タブ</li>
+    <li>画面名: 製品詳細</li>
+    <li>URL: /products/:id</li>
+    <li>対象ロール: ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER</li>
+    <li>関連ユースケース: UC-010</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02_product_detail_initial.png</p>
+    <img src="../../screenshots/F-03/F-03-02_product_detail_initial.png" alt="F-03-02-005 基本情報タブ" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>製品の基本属性（製品名・SKU・説明・カテゴリ・メーカー・ステータス）を表示するタブ。デフォルトで選択されている（タブインデックス0）。</p>
+
+  <h3>WHY</h3>
+  <p>製品のアイデンティティ情報を一目で把握できるようにするため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>製品名</td><td>常時</td><td>product.name</td><td>-</td></tr>
+    <tr><td>SKU</td><td>常時</td><td>product.sku</td><td>monospaceフォント</td></tr>
+    <tr><td>説明</td><td>常時</td><td>product.description</td><td>空の場合「-」表示</td></tr>
+    <tr><td>カテゴリ</td><td>常時</td><td>product.categoryName</td><td>-</td></tr>
+    <tr><td>メーカー</td><td>常時</td><td>product.manufacturerName</td><td>-</td></tr>
+    <tr><td>ステータス</td><td>常時</td><td>product.status</td><td>日本語ラベル表示（ACTIVE=有効, INACTIVE=無効, DISCONTINUED=廃番, PENDING=保留）</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし（表示専用）</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>タブ選択</td><td>「基本情報」タブクリック</td><td>activeTab = 0</td><td>基本情報セクション表示</td><td>-</td><td>タブ切替（コンポーネントstate管理）</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>初期表示時にデフォルトで選択されており、基本情報セクションが表示される。</p>
+
+  <h3>異常系</h3>
+  <p>なし（データはヘッダと同一APIで取得済み）</p>
+
+  <h3>権限制御</h3>
+  <p>全ロール共通。</p>
+
+  <h3>状態変化</h3>
+  <p>タブ切替はコンポーネント内部state（activeTab）で管理。URLは変化しない。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/{id}</td><td>パスパラメータ: id</td><td>ProductDetailDto</td><td>404</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>switchTab(index), tabs配列</td><td>タブ切替ロジック、タブ定義</td></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.html</td><td>*ngIf="activeTab === 0"</td><td>基本情報タブのテンプレート</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 初期表示で基本情報タブが選択状態であることを確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-02_product_detail_initial.png</li>
+    <li>Network通信: GET /api/products/1 → name, sku, description, categoryName, manufacturerName, status確認</li>
+    <li>ソースコード: product-detail.component.ts / .html</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>なし</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<!-- F-03-02-006: 価格・数量セクション -->
+<!-- ================================================================ -->
+<div class="feature" id="F-03-02-006">
+  <h2>F-03-02-006: 価格・数量セクション</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-02-006</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-02 製品詳細画面</li>
+    <li>小分類: 価格・数量セクション</li>
+    <li>画面名: 製品詳細</li>
+    <li>URL: /products/:id</li>
+    <li>対象ロール: ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER</li>
+    <li>関連ユースケース: UC-010</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02_product_detail_initial.png</p>
+    <img src="../../screenshots/F-03/F-03-02_product_detail_initial.png" alt="F-03-02-006 価格・数量セクション" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>基本情報タブ内に表示される、製品の価格・発注関連情報セクション（h4見出し「価格・数量」）。</p>
+
+  <h3>WHY</h3>
+  <p>調達担当者が発注判断に必要な価格・最低発注数量・リードタイム情報を把握するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>単価</td><td>常時</td><td>product.unitPrice</td><td>¥フォーマット（例: ¥148,000）。formatCurrency()で整形</td></tr>
+    <tr><td>単位</td><td>常時</td><td>product.unit</td><td>未設定時は「-」表示</td></tr>
+    <tr><td>最低発注数</td><td>常時</td><td>product.minimumOrderQuantity</td><td>画面確認で値が空表示（製品ID=1では1だがAPI上minOrderQty=1）</td></tr>
+    <tr><td>リードタイム</td><td>常時</td><td>product.leadTimeDays</td><td>「X 日」形式。未設定時は「日」のみ表示</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし（表示専用）</p>
+
+  <h3>操作</h3>
+  <p>なし</p>
+
+  <h3>正常系</h3>
+  <p>GET /api/products/{id}のレスポンスからunitPrice, unit, minOrderQty, leadTimeDaysを表示。</p>
+
+  <h3>異常系</h3>
+  <p>なし</p>
+
+  <h3>権限制御</h3>
+  <p>全ロール共通。</p>
+
+  <h3>状態変化</h3>
+  <p>なし</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/{id}</td><td>パスパラメータ: id</td><td>unitPrice: 148000.00, minOrderQty: 1</td><td>-</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>formatCurrency()</td><td>金額を¥フォーマットに変換</td></tr>
+    <tr><td>proquip-ejb/.../entity/product/Product.java</td><td>unitPrice (BigDecimal, precision=18, scale=4)</td><td>単価のDB定義</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 単価 ¥148,000、単位 -、リードタイム 日を確認</li>
+    <li>Network通信: GET /api/products/1 → unitPrice: 148000.00, minOrderQty: 1</li>
+    <li>ソースコード: Product.java（unitPrice BigDecimal, minOrderQty Integer, leadTimeDays Integer）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>最低発注数の画面表示が空になっている原因（APIレスポンスでは minOrderQty=1 だが画面表示が空）</li>
+    <li>リードタイムの未設定時表示（「日」のみ表示されている、値がnullの場合）</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<!-- F-03-02-007: 物理情報セクション -->
+<!-- ================================================================ -->
+<div class="feature" id="F-03-02-007">
+  <h2>F-03-02-007: 物理情報セクション</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-02-007</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-02 製品詳細画面</li>
+    <li>小分類: 物理情報セクション</li>
+    <li>画面名: 製品詳細</li>
+    <li>URL: /products/:id</li>
+    <li>対象ロール: ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER</li>
+    <li>関連ユースケース: UC-010</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>基本情報タブ内に表示される、製品の物理的属性セクション（h4見出し「物理情報」）。</p>
+
+  <h3>WHY</h3>
+  <p>倉庫担当者が保管場所や輸送手配に必要な物理情報を把握するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>重量</td><td>常時</td><td>product.weight</td><td>「X kg」形式。未設定時は「-」</td></tr>
+    <tr><td>寸法</td><td>常時</td><td>product.dimensions（width, height, depth）</td><td>未設定時は「-」。Product EntityにはBigDecimal width/height/depthが存在</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <p>なし</p>
+
+  <h3>正常系</h3>
+  <p>画面確認: 重量「5 kg」、寸法「-」と表示。</p>
+
+  <h3>異常系</h3>
+  <p>なし</p>
+
+  <h3>権限制御</h3>
+  <p>全ロール共通。</p>
+
+  <h3>状態変化</h3>
+  <p>なし</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/{id}</td><td>-</td><td>weight: 5.000</td><td>-</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-ejb/.../entity/product/Product.java</td><td>weight (BigDecimal), width/height/depth (BigDecimal)</td><td>物理情報のDB定義</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 重量「5 kg」、寸法「-」を確認</li>
+    <li>Network通信: weight: 5.000 確認（dimensions関連フィールドはAPIレスポンスに未含）</li>
+    <li>ソースコード: Product.java（weight, width, height, depth）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>寸法の表示フォーマット（width×height×depth mm等）。APIレスポンスにwidth/height/depthが含まれていない</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<!-- F-03-02-008: 在庫状況セクション -->
+<!-- ================================================================ -->
+<div class="feature" id="F-03-02-008">
+  <h2>F-03-02-008: 在庫状況セクション</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-02-008</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-02 製品詳細画面</li>
+    <li>小分類: 在庫状況セクション</li>
+    <li>画面名: 製品詳細</li>
+    <li>URL: /products/:id</li>
+    <li>対象ロール: ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER</li>
+    <li>関連ユースケース: UC-010</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>基本情報タブ内に表示される、製品の在庫状況セクション（h4見出し「在庫状況」）。合計在庫数・予約済み・利用可能を表示。倉庫別の在庫内訳テーブルも含む。</p>
+
+  <h3>WHY</h3>
+  <p>製品の現在の在庫数を把握し、発注判断や在庫移動の必要性を確認するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>合計在庫</td><td>常時</td><td>calculateInventoryTotals() → totalStock</td><td>全倉庫のquantity合計</td></tr>
+    <tr><td>予約済み</td><td>常時</td><td>calculateInventoryTotals() → totalReserved</td><td>全倉庫のreservedQuantity合計</td></tr>
+    <tr><td>利用可能</td><td>常時</td><td>calculateInventoryTotals() → totalAvailable</td><td>全倉庫のavailableQuantity合計</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <p>なし</p>
+
+  <h3>正常系</h3>
+  <p>画面確認: 合計在庫 0、予約済み 0、利用可能 0（製品ID=1は在庫なし）。inventoryItemsが空配列の場合、すべて0と表示。</p>
+
+  <h3>異常系</h3>
+  <p>なし</p>
+
+  <h3>権限制御</h3>
+  <p>全ロール共通。</p>
+
+  <h3>状態変化</h3>
+  <p>なし</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/{id}</td><td>-</td><td>inventoryItems配列（product APIレスポンスに含まれるか、別途取得）</td><td>-</td><td>ソースコード</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>calculateInventoryTotals()</td><td>inventoryItemsの合計計算ロジック</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 合計在庫 0、予約済み 0、利用可能 0 を確認</li>
+    <li>ソースコード: calculateInventoryTotals()で全倉庫のquantity/reservedQuantity/availableQuantityを合算</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>Medium</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>在庫がある製品での倉庫別在庫内訳テーブルの表示確認（製品ID=1は在庫0件で内訳テーブル未表示）</li>
+    <li>在庫データの取得元API（メインのproduct APIに含まれるか、別途inventory APIを呼ぶか）</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<!-- F-03-02-009: 管理情報セクション -->
+<!-- ================================================================ -->
+<div class="feature" id="F-03-02-009">
+  <h2>F-03-02-009: 管理情報セクション</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-02-009</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-02 製品詳細画面</li>
+    <li>小分類: 管理情報セクション</li>
+    <li>画面名: 製品詳細</li>
+    <li>URL: /products/:id</li>
+    <li>対象ロール: ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER</li>
+    <li>関連ユースケース: UC-010</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>基本情報タブ内に表示される、管理系メタデータセクション（h4見出し「管理情報」）。</p>
+
+  <h3>WHY</h3>
+  <p>製品データの登録・更新履歴を把握し、データの鮮度を確認するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>登録日</td><td>常時</td><td>product.createdAt</td><td>YYYY/MM/DD形式。未設定時は「-」</td></tr>
+    <tr><td>最終更新日</td><td>常時</td><td>product.updatedAt</td><td>YYYY/MM/DD形式。未設定時は「-」</td></tr>
+    <tr><td>備考</td><td>常時</td><td>product.notes</td><td>未設定時は「-」</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <p>なし</p>
+
+  <h3>正常系</h3>
+  <p>画面確認: 登録日「-」、最終更新日「-」、備考「-」。APIレスポンスにcreatedAt/updatedAtが含まれていないため「-」表示。</p>
+
+  <h3>異常系</h3>
+  <p>なし</p>
+
+  <h3>権限制御</h3>
+  <p>全ロール共通。</p>
+
+  <h3>状態変化</h3>
+  <p>なし</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>formatDate()</td><td>日付フォーマットYYYY/MM/DD</td></tr>
+    <tr><td>proquip-ejb/.../entity/base/AuditableEntity.java</td><td>createdAt, updatedAt (Timestamp)</td><td>監査フィールドのDB定義</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 登録日「-」、最終更新日「-」、備考「-」を確認</li>
+    <li>ソースコード: AuditableEntity.java（createdAt, updatedAt）, product-detail.component.ts（formatDate）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>APIレスポンスにcreatedAt/updatedAtが含まれていない原因（DTOマッピング漏れか、エンティティにデータが未設定か）</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<!-- F-03-02-010: 仕様タブ -->
+<!-- ================================================================ -->
+<div class="feature" id="F-03-02-010">
+  <h2>F-03-02-010: 仕様タブ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-02-010</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-02 製品詳細画面</li>
+    <li>小分類: 仕様タブ</li>
+    <li>画面名: 製品詳細</li>
+    <li>URL: /products/:id</li>
+    <li>対象ロール: ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER</li>
+    <li>関連ユースケース: UC-010</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02-010_spec_tab.png</p>
+    <img src="../../screenshots/F-03/F-03-02-010_spec_tab.png" alt="F-03-02-010 仕様タブ" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>製品のスペック情報をキーバリューテーブルで表示するタブ（タブインデックス1）。</p>
+
+  <h3>WHY</h3>
+  <p>製品の技術的な仕様詳細を確認するため。技術評価や代替品比較に利用。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>仕様テーブル（項目 | 値）</td><td>仕様データ存在時</td><td>product.specifications（JSON文字列をパース）</td><td>JSON.parse()で変換。パース失敗時はプレーンテキストとして表示</td></tr>
+    <tr><td>空状態メッセージ「仕様情報は登録されていません」</td><td>仕様データ未設定時</td><td>固定テキスト</td><td>-</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>タブ選択</td><td>「仕様」タブクリック</td><td>activeTab = 1</td><td>仕様テーブル表示</td><td>-</td><td>タブ切替</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>画面確認（製品ID=1）: CPU「Intel Core i5-13500T」、メモリ「16GB DDR5-4800」、ストレージ「512GB NVMe SSD」、消費電力「65 W」の4行が表示。</p>
+
+  <h3>異常系</h3>
+  <p>specifications文字列のJSON.parse()が失敗した場合: key=「仕様」、value=元の文字列としてフォールバック表示。</p>
+
+  <h3>権限制御</h3>
+  <p>全ロール共通。</p>
+
+  <h3>状態変化</h3>
+  <p>タブ切替のみ。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/{id}</td><td>-</td><td>specifications: "{\"CPU\":\"Intel Core i5-13500T\",...}"（JSON文字列）</td><td>-</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>parseSpecifications()</td><td>JSON.parse + Object.keys().map()でキーバリュー配列変換</td></tr>
+    <tr><td>proquip-ejb/.../entity/product/ProductSpecification.java</td><td>specKey, specValue</td><td>DB上はキーバリュー別テーブル。APIではJSON文字列に変換</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item" style="margin-bottom:24px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 仕様タブ選択時 ／
+        <strong>備考:</strong> 4項目のキーバリューテーブルが表示
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02-010_spec_tab.png</p>
+      <img src="../../screenshots/F-03/F-03-02-010_spec_tab.png" alt="F-03-02-010 仕様タブ" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 仕様タブクリックで4行のキーバリューテーブル確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-02-010_spec_tab.png</li>
+    <li>Network通信: specifications JSON文字列確認</li>
+    <li>ソースコード: parseSpecifications()メソッド</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>仕様未登録製品での空状態メッセージ表示の確認</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<!-- F-03-02-011: 画像タブ -->
+<!-- ================================================================ -->
+<div class="feature" id="F-03-02-011">
+  <h2>F-03-02-011: 画像タブ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-02-011</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-02 製品詳細画面</li>
+    <li>小分類: 画像タブ</li>
+    <li>画面名: 製品詳細</li>
+    <li>URL: /products/:id</li>
+    <li>対象ロール: ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER</li>
+    <li>関連ユースケース: UC-010</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02-011_image_tab.png</p>
+    <img src="../../screenshots/F-03/F-03-02-011_image_tab.png" alt="F-03-02-011 画像タブ" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>製品画像をグリッド形式で表示するタブ（タブインデックス2）。メイン画像にはバッジ表示。</p>
+
+  <h3>WHY</h3>
+  <p>製品の外観を視覚的に確認するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>製品画像</td><td>画像登録時</td><td>product.images[].fileName</td><td>グリッドレイアウト。画像読み込みエラー時はフォールバック画像</td></tr>
+    <tr><td>「メイン」バッジ</td><td>isPrimary === true の画像</td><td>product.images[].primary</td><td>プライマリ画像を識別</td></tr>
+    <tr><td>画像説明テキスト</td><td>常時</td><td>「{製品名} - メイン画像」</td><td>alt属性にも使用</td></tr>
+    <tr><td>空状態メッセージ「画像は登録されていません」</td><td>画像未登録時</td><td>固定テキスト</td><td>-</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>タブ選択</td><td>「画像」タブクリック</td><td>activeTab = 2</td><td>画像グリッド表示</td><td>-</td><td>タブ切替</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>画面確認（製品ID=1）: メイン画像1枚表示（Dell OptiPlex 7010 SFF - メイン画像）、「メイン」バッジ付き。画像URL: /images/products/product-1-dell-optiplex-7010.png</p>
+
+  <h3>異常系</h3>
+  <p>画像ファイルが見つからない場合: /assets/images/no-image.png にフォールバック。</p>
+
+  <h3>権限制御</h3>
+  <p>全ロール共通。</p>
+
+  <h3>状態変化</h3>
+  <p>なし</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/{id}</td><td>-</td><td>images: [{id:1, fileName:"/images/products/product-1-dell-optiplex-7010.png", mimeType:"PHOTO", primary:true, sortOrder:1}]</td><td>-</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>loadProductImages()</td><td>product.imagesからProductImage[]へのマッピング</td></tr>
+    <tr><td>proquip-ejb/.../entity/product/ProductImage.java</td><td>fileName, primary, sortOrder</td><td>画像エンティティ定義</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 画像タブで1枚の画像と「メイン」バッジを確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-02-011_image_tab.png</li>
+    <li>Network通信: images配列内のデータ確認</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>複数画像登録時のグリッドレイアウト表示</li>
+    <li>画像のサムネイル/フルサイズ切替機能の有無</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<!-- F-03-02-012: 代替品タブ -->
+<!-- ================================================================ -->
+<div class="feature" id="F-03-02-012">
+  <h2>F-03-02-012: 代替品タブ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-02-012</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-02 製品詳細画面</li>
+    <li>小分類: 代替品タブ</li>
+    <li>画面名: 製品詳細</li>
+    <li>URL: /products/:id</li>
+    <li>対象ロール: ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER</li>
+    <li>関連ユースケース: UC-010</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02-012_alternatives_tab.png</p>
+    <img src="../../screenshots/F-03/F-03-02-012_alternatives_tab.png" alt="F-03-02-012 代替品タブ" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>当該製品の代替製品一覧をテーブル形式で表示するタブ（タブインデックス3）。各行に詳細ボタンがあり、代替製品の詳細画面へ遷移可能。</p>
+
+  <h3>WHY</h3>
+  <p>製品が在庫切れ・廃番の場合に代替品を素早く見つけるため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>SKU</td><td>代替品存在時</td><td>alternativeProducts[].sku</td><td>-</td></tr>
+    <tr><td>製品名</td><td>代替品存在時</td><td>alternativeProducts[].name</td><td>-</td></tr>
+    <tr><td>メーカー</td><td>代替品存在時</td><td>alternativeProducts[].manufacturerName</td><td>一部の行でメーカー名未表示（データ未設定）</td></tr>
+    <tr><td>単価</td><td>代替品存在時</td><td>alternativeProducts[].unitPrice</td><td>¥フォーマット</td></tr>
+    <tr><td>ステータス</td><td>代替品存在時</td><td>alternativeProducts[].status</td><td>有効/廃番 等の日本語ラベル</td></tr>
+    <tr><td>「詳細」ボタン</td><td>代替品存在時</td><td>-</td><td>クリックで代替製品の詳細画面に遷移</td></tr>
+    <tr><td>空状態メッセージ「代替品は登録されていません」</td><td>代替品未登録時</td><td>固定テキスト</td><td>-</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>タブ選択</td><td>「代替品」タブクリック</td><td>activeTab = 3</td><td>代替品テーブル表示</td><td>-</td><td>タブ切替</td></tr>
+    <tr><td>代替品詳細へ遷移</td><td>「詳細」ボタンクリック</td><td>router.navigate(['/products', productId])</td><td>代替製品の詳細画面へ遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>画面確認（製品ID=1）: 5件の代替品表示（APC Smart-UPS, ASUS ExpertBook, Adobe Creative Cloud, Apple Mac mini, Apple MacBook Air）。</p>
+
+  <h3>異常系</h3>
+  <p>代替品データ取得失敗時: コンソールエラー出力、空リスト表示。</p>
+
+  <h3>権限制御</h3>
+  <p>全ロール共通。</p>
+
+  <h3>状態変化</h3>
+  <p>なし</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products?page=0&amp;size=5</td><td>-</td><td>PageResultDto: content[]（5件）。自身を除外してフィルタ</td><td>-</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>loadAlternativeProducts()</td><td>getProducts(0,5)で取得、自身を除外してマッピング</td></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>navigateToAlternative(productId)</td><td>router.navigate(['/products', productId])</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item" style="margin-bottom:24px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 代替品タブ選択時 ／
+        <strong>備考:</strong> 5件の代替製品が表示。実際にはproduct alternatives APIではなく、一般の製品リストAPIから自身を除外したもの
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02-012_alternatives_tab.png</p>
+      <img src="../../screenshots/F-03/F-03-02-012_alternatives_tab.png" alt="F-03-02-012 代替品タブ" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 代替品タブで5件のテーブル確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-02-012_alternatives_tab.png</li>
+    <li>Network通信: GET /api/products?page=0&size=5 確認</li>
+    <li>ソースコード: loadAlternativeProducts()でgetProducts(0,5)取得→自身除外</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>Medium</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>代替品はProductAlternativeエンティティで管理されているはずだが、フロントエンドでは一般製品リストの先頭5件（自身除外）を表示しているだけ。実際の代替品関係データが使用されていない可能性（技術的負債）</li>
+    <li>GET /api/products/{id}/alternatives エンドポイントの存在はソースコードで確認済みだが、フロントエンドから呼ばれていない</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<!-- F-03-02-013: サプライヤータブ -->
+<!-- ================================================================ -->
+<div class="feature" id="F-03-02-013">
+  <h2>F-03-02-013: サプライヤータブ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-02-013</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-02 製品詳細画面</li>
+    <li>小分類: サプライヤータブ</li>
+    <li>画面名: 製品詳細</li>
+    <li>URL: /products/:id</li>
+    <li>対象ロール: ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER</li>
+    <li>関連ユースケース: UC-010</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02-013_supplier_tab_empty.png</p>
+    <img src="../../screenshots/F-03/F-03-02-013_supplier_tab_empty.png" alt="F-03-02-013 サプライヤータブ 空状態" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>当該製品を取り扱うサプライヤーの一覧をテーブル形式で表示するタブ（タブインデックス4）。</p>
+
+  <h3>WHY</h3>
+  <p>製品の調達先候補を比較・選択するため。優先サプライヤーの識別にも利用。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>サプライヤー名</td><td>サプライヤー登録時</td><td>productSuppliers[].supplierName</td><td>-</td></tr>
+    <tr><td>サプライヤーSKU</td><td>サプライヤー登録時</td><td>productSuppliers[].supplierSku</td><td>サプライヤー側の製品コード</td></tr>
+    <tr><td>単価</td><td>サプライヤー登録時</td><td>productSuppliers[].unitPrice</td><td>¥フォーマット</td></tr>
+    <tr><td>リードタイム</td><td>サプライヤー登録時</td><td>productSuppliers[].leadTimeDays</td><td>日数</td></tr>
+    <tr><td>「優先」バッジ</td><td>isPreferred === true</td><td>productSuppliers[].isPreferred</td><td>優先サプライヤーを視覚的に識別</td></tr>
+    <tr><td>「詳細」ボタン</td><td>サプライヤー登録時</td><td>-</td><td>サプライヤー詳細画面へ遷移</td></tr>
+    <tr><td>空状態メッセージ「サプライヤー情報は登録されていません」</td><td>サプライヤー未登録時</td><td>固定テキスト</td><td>アイコン付き</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>タブ選択</td><td>「サプライヤー」タブクリック</td><td>activeTab = 4</td><td>サプライヤーテーブル表示</td><td>-</td><td>タブ切替</td></tr>
+    <tr><td>サプライヤー詳細へ遷移</td><td>「詳細」ボタンクリック</td><td>router.navigate(['/suppliers', supplierId])</td><td>サプライヤー詳細画面へ遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>画面確認（製品ID=1）: サプライヤー未登録のため空状態メッセージ「サプライヤー情報は登録されていません」を表示。</p>
+
+  <h3>異常系</h3>
+  <p>なし</p>
+
+  <h3>権限制御</h3>
+  <p>全ロール共通。</p>
+
+  <h3>状態変化</h3>
+  <p>なし</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/{id}</td><td>-</td><td>suppliers配列（ProductDetailDtoに含まれる）</td><td>-</td><td>ソースコード</td></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/{id}/suppliers</td><td>-</td><td>SupplierProduct一覧（rating DESC順）</td><td>-</td><td>ソースコード（BEに存在するがFEから直接呼ばれているか未確認）</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>productSuppliers配列</td><td>product.suppliers || [] から取得</td></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>navigateToSupplier(supplierId)</td><td>router.navigate(['/suppliers', supplierId])</td></tr>
+    <tr><td>proquip-ejb/.../entity/supplier/SupplierProduct.java</td><td>-</td><td>サプライヤー・製品中間テーブルエンティティ</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: サプライヤータブで空状態メッセージ確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-02-013_supplier_tab_empty.png</li>
+    <li>ソースコード: product-detail.component.ts</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>Medium</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>サプライヤーが登録されている製品でのテーブル表示確認が未実施</li>
+    <li>「優先」バッジの表示確認が未実施（該当データなし）</li>
+    <li>サプライヤー情報の取得元（メインのproduct APIに含まれるか、別途suppliers APIを呼ぶか）</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<!-- F-03-02-014: ドキュメントタブ -->
+<!-- ================================================================ -->
+<div class="feature" id="F-03-02-014">
+  <h2>F-03-02-014: ドキュメントタブ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-02-014</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-02 製品詳細画面</li>
+    <li>小分類: ドキュメントタブ</li>
+    <li>画面名: 製品詳細</li>
+    <li>URL: /products/:id</li>
+    <li>対象ロール: ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER</li>
+    <li>関連ユースケース: UC-010</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02-014_document_tab.png</p>
+    <img src="../../screenshots/F-03/F-03-02-014_document_tab.png" alt="F-03-02-014 ドキュメントタブ" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>製品に関連するドキュメント（仕様書・カタログ等）のリストを表示するタブ（タブインデックス5）。ダウンロード機能付き。</p>
+
+  <h3>WHY</h3>
+  <p>製品の技術資料やカタログを参照・ダウンロードするため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ファイルタイプアイコン</td><td>ドキュメント登録時</td><td>document.fileType → "PDF" or "DOC"</td><td>docType=DATASHEETの場合「DOC」と表示</td></tr>
+    <tr><td>ドキュメント名</td><td>ドキュメント登録時</td><td>document.fileName</td><td>-</td></tr>
+    <tr><td>メタ情報（サイズ | アップロード者 | 日時）</td><td>ドキュメント登録時</td><td>document.fileSize, uploadedBy, uploadedAt</td><td>「0 B | - | -」形式（データ未設定時）</td></tr>
+    <tr><td>「ダウンロード」ボタン</td><td>ドキュメント登録時</td><td>-</td><td>クリックでファイルダウンロード</td></tr>
+    <tr><td>空状態メッセージ「ドキュメントは登録されていません」</td><td>ドキュメント未登録時</td><td>固定テキスト</td><td>-</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>タブ選択</td><td>「ドキュメント」タブクリック</td><td>activeTab = 5</td><td>ドキュメントリスト表示</td><td>-</td><td>タブ切替</td></tr>
+    <tr><td>ダウンロード</td><td>「ダウンロード」ボタンクリック</td><td>anchor要素作成→click()→remove()</td><td>ファイルダウンロード開始</td><td>filePathが空の場合は何も起きない</td><td>なし</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>画面確認（製品ID=1）: 1件のドキュメント「Dell OptiPlex 7010 SFF 仕様書」（DOCタイプ、0 B）が表示。ダウンロードボタン付き。</p>
+
+  <h3>異常系</h3>
+  <p>filePathが空の場合: ダウンロード動作なし。</p>
+
+  <h3>権限制御</h3>
+  <p>全ロール共通。</p>
+
+  <h3>状態変化</h3>
+  <p>なし</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/{id}</td><td>-</td><td>documents: [{id:1, docType:"DATASHEET", docVersion:"2024.1", fileName:"Dell OptiPlex 7010 SFF 仕様書", filePath:"/documents/products/dell-optiplex-7010-sff-spec.pdf"}]</td><td>-</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>downloadDocument(doc)</td><td>anchor要素でダウンロード実行</td></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>formatFileSize(bytes)</td><td>ファイルサイズのフォーマット（B/KB/MB/GB）</td></tr>
+    <tr><td>proquip-ejb/.../entity/product/ProductDocument.java</td><td>-</td><td>ドキュメントエンティティ定義</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ドキュメントタブで1件のドキュメントリスト確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-02-014_document_tab.png</li>
+    <li>Network通信: documents配列確認</li>
+    <li>ソースコード: downloadDocument()メソッド</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>ダウンロードボタンクリック時の実際のファイルダウンロード動作（ファイルが実在するか）</li>
+    <li>複数ドキュメント登録時のリスト表示</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<!-- F-03-02-015: 変更履歴タブ -->
+<!-- ================================================================ -->
+<div class="feature" id="F-03-02-015">
+  <h2>F-03-02-015: 変更履歴タブ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-02-015</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-02 製品詳細画面</li>
+    <li>小分類: 変更履歴タブ</li>
+    <li>画面名: 製品詳細</li>
+    <li>URL: /products/:id</li>
+    <li>対象ロール: ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER</li>
+    <li>関連ユースケース: UC-010</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02-015_changelog_tab.png</p>
+    <img src="../../screenshots/F-03/F-03-02-015_changelog_tab.png" alt="F-03-02-015 変更履歴タブ" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>製品情報の変更履歴をタイムライン形式で表示するタブ（タブインデックス6）。変更日時・変更フィールド・旧値→新値・変更者を表示。</p>
+
+  <h3>WHY</h3>
+  <p>製品情報の変更経緯を追跡し、いつ・誰が・何を変更したかを確認するため（監査・トレーサビリティ目的）。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>変更種別</td><td>常時</td><td>changeLog[].field or changeType</td><td>UPDATE時: フィールド名（例: unit_price）。CREATE時: 「CREATE」</td></tr>
+    <tr><td>変更日時</td><td>常時</td><td>changeLog[].changedAt</td><td>YYYY/MM/DD HH:MM形式</td></tr>
+    <tr><td>旧値</td><td>UPDATE時</td><td>changeLog[].oldValue</td><td>CREATE時は「-」</td></tr>
+    <tr><td>矢印「→」</td><td>UPDATE時</td><td>固定テキスト</td><td>旧値と新値の間に表示</td></tr>
+    <tr><td>新値</td><td>UPDATE時</td><td>changeLog[].newValue</td><td>CREATE時は「-」</td></tr>
+    <tr><td>変更者</td><td>常時</td><td>changeLog[].changedBy</td><td>UserProfile名（例: 高橋優希）</td></tr>
+    <tr><td>空状態メッセージ「変更履歴はありません」</td><td>変更履歴なし</td><td>固定テキスト</td><td>-</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>タブ選択</td><td>「変更履歴」タブクリック</td><td>activeTab = 6</td><td>変更履歴タイムライン表示</td><td>-</td><td>タブ切替</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>画面確認（製品ID=1）: 2件の変更履歴。
+    (1) unit_price: 2024/10/01 10:00, 145000 → 148000, 高橋優希。
+    (2) CREATE: 2024/04/01 10:00, -, 高橋優希。</p>
+
+  <h3>異常系</h3>
+  <p>変更履歴取得失敗時: コンソールエラー出力、空リスト表示。</p>
+
+  <h3>権限制御</h3>
+  <p>全ロール共通。</p>
+
+  <h3>状態変化</h3>
+  <p>なし</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/{id}/change-log</td><td>パスパラメータ: id</td><td>[{id, changeType, field, oldValue, newValue, changedAt, changedBy}, ...]</td><td>-</td><td>Network通信</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>loadChangeLog()</td><td>productService.getChangeLog(productId)で取得</td></tr>
+    <tr><td>proquip-frontend/.../product-detail.component.ts</td><td>formatDateTime()</td><td>日時フォーマットYYYY/MM/DD HH:MM</td></tr>
+    <tr><td>proquip-web/.../resource/ProductResource.java</td><td>getChangeLog(@PathParam("id"))</td><td>ProductChangeLog JPQL（createdAt DESC）</td></tr>
+    <tr><td>proquip-ejb/.../entity/product/ProductChangeLog.java</td><td>-</td><td>変更履歴エンティティ（changeType, fieldName, oldValue, newValue）</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item" style="margin-bottom:24px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 変更履歴タブ選択時 ／
+        <strong>備考:</strong> 2件のタイムライン表示（UPDATE + CREATE）
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-02-015_changelog_tab.png</p>
+      <img src="../../screenshots/F-03/F-03-02-015_changelog_tab.png" alt="F-03-02-015 変更履歴タブ" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 変更履歴タブで2件のタイムラインエントリ確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-02-015_changelog_tab.png</li>
+    <li>Network通信: GET /api/products/1/change-log → [{id:8, changeType:"UPDATE", field:"unit_price", oldValue:"145000", newValue:"148000", changedAt:"2024-10-01T10:00:00", changedBy:"高橋優希"}, {id:1, changeType:"CREATE", ...}]</li>
+    <li>ソースコード: ProductResource.java（getChangeLog）, ProductChangeLog.java</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>変更履歴が多数ある場合のページング/スクロール動作</li>
+    <li>変更種別がDELETEの場合の表示</li>
+  </ul>
+</div>
+
+</body>
+</html>

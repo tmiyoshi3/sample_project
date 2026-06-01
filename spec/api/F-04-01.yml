@@ -1,0 +1,543 @@
+openapi: "3.0.3"
+info:
+  title: "Existing System API - F-04-01 サプライヤー一覧画面"
+  version: "1.0.0"
+  description: "既存システムのAPI仕様（マイグレーション用） - F-04-01 サプライヤー一覧画面"
+
+servers:
+  - url: http://localhost:4200
+    description: "既存システム（nginx経由）"
+
+paths:
+  /api/suppliers:
+    get:
+      summary: "サプライヤー一覧取得（ページネーション付き）"
+      description: |
+        サプライヤー一覧をページネーション付きで取得する。
+        statusクエリパラメータでサーバーサイドフィルタ可能。
+
+        実装上の注意点:
+        - findAllSuppliers()で全件取得後、statusフィルタとインメモリページネーションを行う（技術的負債）。
+        - DB層にはページネーションなし。REST層のsubListで実装。
+        - email/phoneはenrichDto()でprimary contactから取得するが、現在コンタクトデータ未設定で全件空文字。
+        - ratingはenrichDto()で全SupplierRatingのoverallScoreの平均を計算するが、
+          現在のリスト表示では常に0が返る（SupplierMapper.toDtoがratingをignoreし、enrichDtoで再計算）。
+        - ソート順はfindAllSuppliers()のJPQL ORDER BY s.name（名前昇順固定）。
+        - フロントエンドでは検索（name/code/email部分一致）、ステータスフィルタ、最低評価フィルタを
+          クライアントサイドで追加実装（F-04-01-001, 002, 003）。
+      operationId: listSuppliers
+      tags:
+        - "F-04-01"
+      x-feature-ids:
+        - "F-04-01-001"
+        - "F-04-01-002"
+        - "F-04-01-003"
+        - "F-04-01-004"
+        - "F-04-01-008"
+      x-evidence:
+        network: "Network通信で確認: GET /api/suppliers?page=0&size=20 [200]"
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:91-123"
+      x-confidence: "High"
+      x-tech-debt:
+        - "ページネーションがDB層ではなくREST層のsubListで実装（全件取得後にスライス）"
+        - "email/phoneがprimary contactから取得だがコンタクトデータ未設定で全件空文字"
+        - "ratingが常に0（enrichDtoの計算ロジックとMapperのignore設定の不整合）"
+        - "ソート固定（名前昇順のみ、ソートパラメータ未対応）"
+        - "検索・フィルタがクライアントサイド実装（BE側のsearchByName等が未使用）"
+        - "@RolesAllowed未設定（全ユーザーアクセス可能）"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: "ページ番号（0始まり）"
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          x-evidence: "Network通信 + ソースコード: SupplierResource.java:93"
+        - name: size
+          in: query
+          description: "1ページあたりの件数"
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+          x-evidence: "Network通信 + ソースコード: SupplierResource.java:94"
+        - name: status
+          in: query
+          description: |
+            サプライヤーステータスでフィルタ。
+            サーバーサイドでfindByStatus()を使用。
+            DB値: ACTIVE, INACTIVE, SUSPENDED, PENDING_APPROVAL
+            注意: フロントエンドのフィルタ内部値（ACTIVE, INACTIVE, PENDING, BLOCKED）とDB値が不一致（技術的負債）。
+            フロントエンドはこのパラメータを使用せず、クライアントサイドでフィルタしている。
+          required: false
+          schema:
+            type: string
+            enum:
+              - ACTIVE
+              - INACTIVE
+              - SUSPENDED
+              - PENDING_APPROVAL
+          x-evidence: "ソースコード: SupplierResource.java:95, Supplier.java:59"
+          x-tech-debt: |
+            ステータス値の三重不一致:
+            - DB/API値: ACTIVE, INACTIVE, SUSPENDED, PENDING_APPROVAL
+            - テーブル表示ラベル: 有効, 停止中, 承認待ち
+            - FEフィルタ選択肢: 取引中, 取引停止, 審査中, ブロック済み
+            - FEフィルタ内部値: ACTIVE, INACTIVE, PENDING, BLOCKED
+            - BLOCKEDはDBに存在しないステータス値
+            - SUSPENDED/PENDING_APPROVALに対応するフィルタ値がない
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResultSupplierDto"
+              example:
+                content:
+                  - id: 1
+                    code: "SUP-001"
+                    name: "大塚商会"
+                    status: "ACTIVE"
+                    rating: 0
+                    email: ""
+                    phone: ""
+                  - id: 12
+                    code: "SUP-012"
+                    name: "テクノアルファ"
+                    status: "SUSPENDED"
+                    rating: 0
+                    email: ""
+                    phone: ""
+                totalElements: 12
+                totalPages: 1
+                number: 0
+                size: 20
+                first: true
+                last: true
+                empty: false
+          x-evidence: "Network通信で確認: 12件のサプライヤー、3ステータス（ACTIVE 10, SUSPENDED 1, PENDING_APPROVAL 1）"
+        "500":
+          description: "サーバー内部エラー"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/suppliers/compare:
+    get:
+      summary: "サプライヤー比較（パフォーマンスレポート）"
+      description: |
+        指定した複数サプライヤー（2〜3件）のパフォーマンスレポートを取得する。
+        F-04-01-006（比較ボタン）から遷移する比較画面で使用。
+
+        実装上の注意点:
+        - getPerformanceReport()内で複数のN+1クエリが発生（totalOrders, totalAmount, recentRatings等）。
+        - currentRatingは常にnull（Supplierエンティティからratingフィールドが削除されたため）。
+        - completionRateは常に0.0（計算ロジックが未完成）。
+      operationId: compareSuppliers
+      tags:
+        - "F-04-01"
+      x-feature-ids:
+        - "F-04-01-005"
+        - "F-04-01-006"
+      x-evidence:
+        network: "Network通信で確認: GET /api/suppliers/compare?supplierIds=1,5 [200]"
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:549-576, proquip-ejb/.../service/SupplierServiceBean.java:441-494"
+      x-confidence: "High"
+      x-tech-debt:
+        - "currentRatingが常にnull（Supplierエンティティからratingフィールド削除済み）"
+        - "completionRateが常に0.0（計算ロジック未完成）"
+        - "N+1クエリパターン（サプライヤーごとに複数クエリ発生）"
+        - "@RolesAllowed未設定"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: supplierIds
+          in: query
+          description: "比較対象のサプライヤーIDをカンマ区切りで指定（2〜3件）"
+          required: true
+          schema:
+            type: string
+            example: "1,5,10"
+          x-evidence: "Network通信 + ソースコード: SupplierResource.java:551"
+      responses:
+        "200":
+          description: "成功（パフォーマンスレポートの配列）"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupplierPerformanceReport"
+              example:
+                - supplierName: "大塚商会"
+                  supplierCode: "SUP-001"
+                  status: "ACTIVE"
+                  currentRating: null
+                  totalOrders: 7
+                  totalAmount: 12724250.0
+                  activeContractCount: 0
+                  completionRate: 0.0
+                  recentRatings:
+                    - id: 4
+                      qualityScore: 4.5
+                      deliveryScore: 4.5
+                      priceScore: 4.0
+                      serviceScore: 4.8
+                      overallScore: 4.5
+                      comments: "年末の大量発注にも柔軟に対応。"
+                      ratingDate: "2025-01-10"
+                      ratingPeriod: "2024Q4"
+                      ratedBy: 3
+          x-evidence: "Network通信で確認: supplierIds=1,5 で2件のレポート返却"
+        "400":
+          description: "supplierIdsパラメータ未指定"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "supplierIdsパラメータは必須です。"
+          x-evidence: "Network通信で確認: パラメータなしで400エラー"
+
+  /api/suppliers/{id}:
+    get:
+      summary: "サプライヤー詳細取得"
+      description: |
+        指定IDのサプライヤー詳細情報を取得する。
+        F-04-01-008（行クリック）で詳細画面に遷移した際に使用。
+        このAPIはF-04-02（詳細画面）でも使用されるが、
+        F-04-01から遷移する際のエントリーポイントとして記録。
+      operationId: getSupplier
+      tags:
+        - "F-04-01"
+      x-feature-ids:
+        - "F-04-01-008"
+      x-evidence:
+        network: "Network通信で確認: GET /api/suppliers/1 [200]"
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:135-142"
+      x-confidence: "High"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+          x-evidence: "Network通信 + ソースコード: SupplierResource.java:136"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierDto"
+              example:
+                id: 1
+                code: "SUP-001"
+                name: "大塚商会"
+                status: "ACTIVE"
+                rating: 0
+                email: ""
+                phone: ""
+          x-evidence: "Network通信で確認"
+        "500":
+          description: "サプライヤーが見つからない場合（EntityNotFoundException）"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: 500
+                errorCode: "INTERNAL_ERROR"
+                message: "サーバー内部エラーが発生しました。"
+                details:
+                  - "EJBException: com.proquip.common.exception.EntityNotFoundException: Supplierが見つかりません。ID: 9999"
+                timestamp: "2026-05-31T05:04:24"
+          x-evidence: "Network通信で確認: 存在しないID=9999で500エラー"
+          x-tech-debt: "EntityNotFoundExceptionが500で返される（本来は404が適切）"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Keycloak OIDC Bearer Token"
+
+  schemas:
+    SupplierDto:
+      type: object
+      description: "サプライヤーDTO"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "サプライヤーID"
+          x-evidence: "Network通信"
+        code:
+          type: string
+          maxLength: 50
+          description: "サプライヤーコード（例: SUP-001）。ユニーク制約あり。"
+          x-evidence: "Network通信 + ソースコード: Supplier.java"
+        name:
+          type: string
+          maxLength: 200
+          description: "会社名"
+          x-evidence: "Network通信 + ソースコード: Supplier.java"
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - INACTIVE
+            - SUSPENDED
+            - PENDING_APPROVAL
+          description: |
+            サプライヤーステータス。
+            ACTIVE=有効、INACTIVE=取引停止、SUSPENDED=停止中、PENDING_APPROVAL=承認待ち
+          x-evidence: "Network通信（ACTIVE/SUSPENDED/PENDING_APPROVAL確認） + ソースコード: Supplier.java:59"
+        rating:
+          type: number
+          format: double
+          description: |
+            総合評価（0.0〜5.0）。
+            enrichDto()でSupplierRatingのoverallScoreの平均値を計算。
+            現在のデータでは全サプライヤーで0が返る。
+          x-evidence: "Network通信（全件0確認） + ソースコード: SupplierResource.java:578-619"
+        email:
+          type: string
+          description: |
+            主担当者のメールアドレス。
+            enrichDto()でprimary contactのemailから取得。
+            現在はコンタクトデータ未設定で全件空文字。
+          x-evidence: "Network通信（全件空文字確認） + ソースコード: SupplierResource.java:589-596"
+        phone:
+          type: string
+          description: |
+            主担当者の電話番号。
+            enrichDto()でprimary contactのphoneから取得。
+            現在はコンタクトデータ未設定で全件空文字。
+          x-evidence: "Network通信（全件空文字確認） + ソースコード: SupplierResource.java:589-596"
+      x-source-mapping:
+        entity: "proquip-ejb/.../entity/supplier/Supplier.java"
+        dto: "proquip-common/.../dto/SupplierDTO.java"
+        mapper: "proquip-ejb/.../mapper/SupplierMapper.java"
+        enricher: "SupplierResource.enrichDto() L578-619"
+
+    PageResultSupplierDto:
+      type: object
+      description: "ページネーション付きサプライヤー一覧レスポンス"
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupplierDto"
+          description: "サプライヤーの配列"
+        totalElements:
+          type: integer
+          format: int64
+          description: "総件数"
+          x-evidence: "Network通信: 12"
+        totalPages:
+          type: integer
+          description: "総ページ数（ceil(totalElements / size)）"
+          x-evidence: "Network通信: 1（size=20, 12件の場合）"
+        number:
+          type: integer
+          description: "現在のページ番号（0始まり）"
+          x-evidence: "Network通信: 0"
+        size:
+          type: integer
+          description: "1ページあたりの件数"
+          x-evidence: "Network通信: 20"
+        first:
+          type: boolean
+          description: "最初のページかどうか"
+          x-evidence: "Network通信: true"
+        last:
+          type: boolean
+          description: "最後のページかどうか"
+          x-evidence: "Network通信: true"
+        empty:
+          type: boolean
+          description: "空かどうか"
+          x-evidence: "Network通信: false"
+      x-evidence: "Network通信 + ソースコード: proquip-common/.../dto/PageResultDto.java"
+      x-pagination-note: |
+        ページネーションはDB層ではなくREST層で実装。
+        findAllSuppliers()で全件取得後、statusフィルタ適用後にsubListでスライス。
+        page=0&size=2で確認: totalPages=6, content=2件。
+        page=1&size=2で確認: number=1, first=false, last=false。
+
+    SupplierPerformanceReport:
+      type: object
+      description: "サプライヤーパフォーマンスレポート（比較画面用）"
+      properties:
+        supplierName:
+          type: string
+          description: "サプライヤー名"
+        supplierCode:
+          type: string
+          description: "サプライヤーコード"
+        status:
+          type: string
+          description: "ステータス"
+        currentRating:
+          type: number
+          nullable: true
+          description: "現在の評価（常にnull - エンティティからフィールド削除済み）"
+          x-tech-debt: "Supplierエンティティからratingフィールドが削除されたため常にnull"
+        totalOrders:
+          type: integer
+          format: int64
+          description: "総発注数"
+        totalAmount:
+          type: number
+          format: double
+          description: "総発注金額"
+        activeContractCount:
+          type: integer
+          description: "有効契約数"
+        completionRate:
+          type: number
+          format: double
+          description: "完了率（0-100%。現在は常に0.0 - 計算ロジック未完成）"
+          x-tech-debt: "計算ロジック未完成で常に0.0"
+        recentRatings:
+          type: array
+          maxItems: 5
+          items:
+            $ref: "#/components/schemas/SupplierRating"
+          description: "直近の評価（最大5件、日付降順）"
+      x-evidence: "Network通信 + ソースコード: SupplierServiceBean.java:441-494"
+
+    SupplierRating:
+      type: object
+      description: "サプライヤー評価"
+      properties:
+        id:
+          type: integer
+          format: int64
+        qualityScore:
+          type: number
+          format: double
+          description: "品質スコア（0.0〜5.0）"
+        deliveryScore:
+          type: number
+          format: double
+          description: "納期スコア（0.0〜5.0）"
+        priceScore:
+          type: number
+          format: double
+          description: "価格スコア（0.0〜5.0）"
+        serviceScore:
+          type: number
+          format: double
+          description: "サービススコア（0.0〜5.0）"
+        overallScore:
+          type: number
+          format: double
+          description: "総合スコア（4項目の平均、0.0〜5.0）"
+        comments:
+          type: string
+          maxLength: 2000
+          description: "コメント"
+        ratingDate:
+          type: string
+          format: date
+          description: "評価日（yyyy-MM-dd）"
+        ratingPeriod:
+          type: string
+          description: "評価期間（例: 2024Q4）"
+        ratedBy:
+          type: integer
+          format: int64
+          description: "評価者ユーザーID"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        version:
+          type: integer
+      x-evidence: "Network通信 + ソースコード: proquip-ejb/.../entity/supplier/SupplierRating.java"
+
+    ErrorResponse:
+      type: object
+      description: "エラーレスポンス"
+      properties:
+        status:
+          type: integer
+          description: "HTTPステータスコード"
+        errorCode:
+          type: string
+          description: "エラーコード"
+        message:
+          type: string
+          description: "エラーメッセージ"
+        details:
+          type: array
+          items:
+            type: string
+          description: "エラー詳細"
+        timestamp:
+          type: string
+          format: date-time
+          description: "エラー発生日時"
+      x-evidence: "Network通信で確認: 存在しないID指定時の500エラーレスポンス"
+
+x-client-side-features:
+  description: |
+    以下の機能はAPIを呼び出さず、クライアントサイド（Angular）で実装されている。
+    初期ロード時のGET /api/suppliers?page=0&size=20のレスポンスデータに対して
+    ブラウザ側でフィルタリングを行う。
+  features:
+    - feature-id: "F-04-01-001"
+      name: "検索テキストボックス"
+      implementation: |
+        supplier-list.component.ts onSearch() (L136), loadSuppliers() (L96, L105-111)
+        name, code, email に対してtoLowerCase()部分一致フィルタリング。
+        BE側にsearchByName() (SupplierDao.java L66) があるが未使用。
+    - feature-id: "F-04-01-002"
+      name: "ステータスフィルタ"
+      implementation: |
+        supplier-list.component.ts onFilterChange() (L145), statusOptions (L63)
+        フィルタ内部値: ACTIVE, INACTIVE, PENDING, BLOCKED
+        supplier.statusとフィルタ値を===で比較。
+        注意: DB値との不一致によりSUSPENDED/PENDING_APPROVALのサプライヤーはどのフィルタにも一致しない。
+    - feature-id: "F-04-01-003"
+      name: "最低評価フィルタ"
+      implementation: |
+        supplier-list.component.ts ratingOptions (L72), loadSuppliers() (L96)
+        supplier.rating >= minRating でフィルタリング。
+        現在は全サプライヤーのrating=0のため、1以上を選択すると0件になる。
+    - feature-id: "F-04-01-005"
+      name: "比較チェックボックス"
+      implementation: |
+        supplier-list.component.ts toggleCompareSelection() (L197)
+        最大3件まで選択可能 (L203)。selectedForCompare配列で管理。
+        APIは呼び出さない（選択状態はコンポーネント内の配列で保持）。
+    - feature-id: "F-04-01-007"
+      name: "新規登録ボタン"
+      implementation: |
+        supplier-list.component.ts navigateToCreate() (L178)
+        router.navigate(['/suppliers/new']) でページ遷移のみ。
+        POST /api/suppliers は新規登録画面（別中分類）で使用。
+    - feature-id: "F-04-01-008"
+      name: "サプライヤー行クリック"
+      implementation: |
+        supplier-list.component.ts onRowClick() (L171)
+        router.navigate(['/suppliers', supplier.id]) でページ遷移のみ。
+        GET /api/suppliers/{id} は詳細画面（F-04-02）で使用。

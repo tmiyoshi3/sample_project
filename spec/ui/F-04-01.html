@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>F-04-01: サプライヤー一覧画面 - UI仕様</title>
+  <style>
+    body { font-family: sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .feature { border: 1px solid #ccc; border-radius: 8px; padding: 20px; margin-bottom: 30px; }
+    table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 14px; }
+    th { background-color: #f5f5f5; }
+    h2 { color: #1a5276; border-bottom: 2px solid #1a5276; padding-bottom: 8px; }
+    h3 { color: #2c3e50; margin-top: 20px; }
+    .tech-debt { background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px; margin: 8px 0; }
+    .screenshot-item { margin-bottom: 16px; border: 1px solid #ddd; border-radius: 4px; padding: 12px; }
+  </style>
+</head>
+<body>
+
+<h1>F-04-01: サプライヤー一覧画面 - UI仕様</h1>
+
+<!-- ============================================================ -->
+<!-- F-04-01-001: 検索テキストボックス -->
+<!-- ============================================================ -->
+<div class="feature" id="F-04-01-001">
+  <h2>F-04-01-001: 検索テキストボックス</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-04-01-001</li>
+    <li>大分類: F-04 サプライヤー</li>
+    <li>中分類: F-04-01 サプライヤー一覧画面</li>
+    <li>小分類: 検索テキストボックス</li>
+    <li>画面名: サプライヤー管理</li>
+    <li>URL: /suppliers</li>
+    <li>対象ロール: 全ロール（ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER）</li>
+    <li>関連ユースケース: UC-020</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">サプライヤー一覧画面の初期表示。検索テキストボックスはページ上部に配置。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-04/F-04-01_suppliers_list_initial.png</p>
+    <img src="../../screenshots/F-04/F-04-01_suppliers_list_initial.png" alt="F-04-01 サプライヤー一覧 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>サプライヤーの会社名・コード・メールアドレスをキーワードで検索し、一覧テーブルをフィルタリングする入力欄。</p>
+
+  <h3>WHY</h3>
+  <p>多数のサプライヤーから目的のサプライヤーを素早く見つけるため。</p>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr>
+      <td>検索テキストボックス</td>
+      <td>テキスト</td>
+      <td>任意</td>
+      <td>制約なし</td>
+      <td>空</td>
+      <td>なし</td>
+      <td>placeholder: "検索"（HTML上は "会社名、コード、メールで検索..."）</td>
+    </tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>キーワード入力</td>
+      <td>テキスト入力（リアルタイム）</td>
+      <td>クライアントサイドで name, code, email に対して部分一致フィルタリング</td>
+      <td>一致するサプライヤーのみテーブルに表示</td>
+      <td>該当なしの場合「サプライヤーが見つかりませんでした」表示</td>
+      <td>テーブル行数が変化、件数表示が更新</td>
+    </tr>
+    <tr>
+      <td>クリアボタン</td>
+      <td>検索欄右のクリアボタンクリック</td>
+      <td>検索キーワードを空にしてフィルタリング解除</td>
+      <td>全件表示に戻る</td>
+      <td>-</td>
+      <td>検索欄が空になる</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>「大塚」と入力すると「大塚商会」1件のみ表示される。クリアすると全12件に戻る。</p>
+
+  <h3>異常系</h3>
+  <p>該当なしの場合、「サプライヤーが見つかりませんでした」と空状態メッセージが表示される。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。全ロールで利用可能（ただしBE側に@RolesAllowedなし）。</p>
+
+  <h3>状態変化</h3>
+  <p>入力ありの場合、クリアボタンが出現する。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>検索はクライアントサイドフィルタリング。APIは初期ロード時のGET /api/suppliers?page=0&amp;size=20のみ。</td>
+    </tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/suppliers/supplier-list/supplier-list.component.ts</td><td>onSearch() (L136), loadSuppliers() (L96, L105-111)</td><td>クライアントサイドフィルタ: name, code, email の部分一致</td></tr>
+    <tr><td>proquip-frontend/src/app/features/suppliers/supplier-list/supplier-list.component.html</td><td>L11</td><td>検索入力欄のplaceholder</td></tr>
+    <tr><td>proquip-ejb/src/main/java/com/proquip/ejb/dao/SupplierDao.java</td><td>searchByName() (L66)</td><td>BE側にもLIKE検索あるが未使用（クライアント側で実装）</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 「大塚」で検索後 ／
+        <strong>備考:</strong> 1件に絞り込み
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-04/F-04-01-001_search_filtered.png</p>
+      <img src="../../screenshots/F-04/F-04-01-001_search_filtered.png" alt="F-04-01-001 検索フィルタ結果" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 「大塚」入力で1件に絞り込み確認</li>
+    <li>スクリーンショット: screenshots/F-04/F-04-01-001_search_filtered.png</li>
+    <li>ソースコード: supplier-list.component.ts L96-136（クライアントサイドフィルタ）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>なし</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<!-- F-04-01-002: ステータスフィルタ -->
+<!-- ============================================================ -->
+<div class="feature" id="F-04-01-002">
+  <h2>F-04-01-002: ステータスフィルタ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-04-01-002</li>
+    <li>大分類: F-04 サプライヤー</li>
+    <li>中分類: F-04-01 サプライヤー一覧画面</li>
+    <li>小分類: ステータスフィルタ</li>
+    <li>画面名: サプライヤー管理</li>
+    <li>URL: /suppliers</li>
+    <li>対象ロール: 全ロール</li>
+    <li>関連ユースケース: UC-020</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">ステータスフィルタはテーブル左上のドロップダウン。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-04/F-04-01_suppliers_list_initial.png</p>
+    <img src="../../screenshots/F-04/F-04-01_suppliers_list_initial.png" alt="F-04-01 サプライヤー一覧 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>サプライヤーのステータスで一覧をフィルタリングするドロップダウン。</p>
+
+  <h3>WHY</h3>
+  <p>取引状態に応じてサプライヤーを絞り込み、管理業務を効率化するため。</p>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr>
+      <td>ステータスフィルタ</td>
+      <td>セレクト</td>
+      <td>任意</td>
+      <td>選択肢: すべて / 取引中 / 取引停止 / 審査中 / ブロック済み</td>
+      <td>すべて</td>
+      <td>なし</td>
+      <td>フィルタリセットボタンで「すべて」に戻る</td>
+    </tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>ステータス選択</td>
+      <td>ドロップダウン選択変更</td>
+      <td>クライアントサイドでsupplier.statusと選択値を比較フィルタリング</td>
+      <td>該当ステータスのサプライヤーのみ表示</td>
+      <td>該当なしの場合「サプライヤーが見つかりませんでした」表示</td>
+      <td>テーブル行数・件数が変化、フィルターリセットボタン出現</td>
+    </tr>
+    <tr>
+      <td>フィルターリセット</td>
+      <td>「フィルターをリセット」ボタンクリック</td>
+      <td>全フィルタ（検索・ステータス・評価）を初期値に戻す</td>
+      <td>全件表示</td>
+      <td>-</td>
+      <td>全フィルタ初期化</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>「すべて」選択で全12件表示。ステータス選択で対応するステータスのサプライヤーに絞り込まれる。</p>
+
+  <h3>異常系</h3>
+  <p>該当なしの場合、空状態メッセージ表示。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。</p>
+
+  <h3>状態変化</h3>
+  <p>「すべて」以外が選択されると「フィルターをリセット」ボタンが出現する。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../supplier-list.component.ts</td><td>onFilterChange() (L145), statusOptions (L63)</td><td>フィルタオプション定義: ACTIVE→取引中, INACTIVE→取引停止, PENDING→審査中, BLOCKED→ブロック済み</td></tr>
+    <tr><td>proquip-ejb/.../entity/supplier/Supplier.java</td><td>status (L59)</td><td>実際のDB値: ACTIVE, INACTIVE, SUSPENDED, PENDING_APPROVAL</td></tr>
+  </table>
+
+  <div class="tech-debt">
+    <strong>技術的負債:</strong> ステータス値の三重不一致
+    <ul>
+      <li>API/DBステータス値: ACTIVE, INACTIVE, SUSPENDED, PENDING_APPROVAL</li>
+      <li>テーブル表示ラベル: 有効, 停止中, 承認待ち</li>
+      <li>フィルタ選択肢: 取引中, 取引停止, 審査中, ブロック済み</li>
+      <li>フィルタ内部値(L63): ACTIVE, INACTIVE, PENDING, BLOCKED</li>
+      <li>SUSPENDED（停止中）に対応するフィルタ値がない（INACTIVE≠SUSPENDED）</li>
+      <li>PENDING_APPROVAL（承認待ち）に対応するフィルタ値がない（PENDING≠PENDING_APPROVAL）</li>
+      <li>BLOCKEDはDBに存在しないステータス値</li>
+    </ul>
+  </div>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 「取引中」フィルタ選択後 ／
+        <strong>備考:</strong> ACTIVE 10件中1件のみ表示（フィルタ不具合の可能性）
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-04/F-04-01-002_status_filter_active.png</p>
+      <img src="../../screenshots/F-04/F-04-01-002_status_filter_active.png" alt="F-04-01-002 ステータスフィルタ 取引中" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 全4フィルタオプションをテスト（取引中→1件、取引停止→0件、審査中→0件、ブロック済み→0件）</li>
+    <li>スクリーンショット: screenshots/F-04/F-04-01-002_status_filter_active.png</li>
+    <li>Network通信: GET /api/suppliers?page=0&amp;size=20 レスポンスでstatus値確認</li>
+    <li>ソースコード: supplier-list.component.ts L63（フィルタ定義）、Supplier.java L59（Entity status）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>「取引中」フィルタで10件中1件しか表示されない原因（MCP操作のアーティファクトか実際のバグか要確認）</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<!-- F-04-01-003: 最低評価フィルタ -->
+<!-- ============================================================ -->
+<div class="feature" id="F-04-01-003">
+  <h2>F-04-01-003: 最低評価フィルタ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-04-01-003</li>
+    <li>大分類: F-04 サプライヤー</li>
+    <li>中分類: F-04-01 サプライヤー一覧画面</li>
+    <li>小分類: 最低評価フィルタ</li>
+    <li>画面名: サプライヤー管理</li>
+    <li>URL: /suppliers</li>
+    <li>対象ロール: 全ロール</li>
+    <li>関連ユースケース: UC-020</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-04/F-04-01_suppliers_list_initial.png</p>
+    <img src="../../screenshots/F-04/F-04-01_suppliers_list_initial.png" alt="F-04-01 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>サプライヤーの総合評価（0.0〜5.0）の最低値で一覧をフィルタリングするドロップダウン。</p>
+
+  <h3>WHY</h3>
+  <p>評価の低いサプライヤーを除外し、一定水準以上のサプライヤーに絞り込むため。</p>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr>
+      <td>最低評価フィルタ</td>
+      <td>セレクト</td>
+      <td>任意</td>
+      <td>選択肢: 指定なし / 1以上 / 2以上 / 3以上 / 4以上 / 5</td>
+      <td>指定なし</td>
+      <td>なし</td>
+      <td>クライアントサイドフィルタ</td>
+    </tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>評価選択</td>
+      <td>ドロップダウン選択変更</td>
+      <td>supplier.rating >= 選択値 でフィルタリング</td>
+      <td>該当サプライヤーのみ表示</td>
+      <td>該当なしの場合、空状態メッセージ表示</td>
+      <td>テーブル行数・件数が変化</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>「指定なし」で全件表示。「3以上」を選択するとrating >= 3.0のサプライヤーのみ表示。現在のシードデータでは全サプライヤーのrating=0.0のため、1以上〜5の全選択で0件となる。</p>
+
+  <h3>異常系</h3>
+  <p>該当なしの場合、空状態メッセージ表示。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。</p>
+
+  <h3>状態変化</h3>
+  <p>「指定なし」以外選択時、フィルターリセットボタン出現。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../supplier-list.component.ts</td><td>ratingOptions (L72), loadSuppliers() (L96)</td><td>クライアントサイドでrating >= minRating フィルタ</td></tr>
+    <tr><td>proquip-ejb/.../service/SupplierServiceBean.java</td><td>addRating() (L227)</td><td>rating = quality/delivery/price/serviceの平均（0.00〜5.00）</td></tr>
+    <tr><td>proquip-web/.../resource/SupplierResource.java</td><td>enrichDto() (L578)</td><td>overallRating = SupplierRating.overallScoreの平均値</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 「3以上」選択で0件表示を確認（全rating=0.0のため正常動作）</li>
+    <li>ソースコード: supplier-list.component.ts L72, SupplierServiceBean.java L227-260</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>なし</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<!-- F-04-01-004: サプライヤー一覧テーブル -->
+<!-- ============================================================ -->
+<div class="feature" id="F-04-01-004">
+  <h2>F-04-01-004: サプライヤー一覧テーブル</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-04-01-004</li>
+    <li>大分類: F-04 サプライヤー</li>
+    <li>中分類: F-04-01 サプライヤー一覧画面</li>
+    <li>小分類: サプライヤー一覧テーブル</li>
+    <li>画面名: サプライヤー管理</li>
+    <li>URL: /suppliers</li>
+    <li>対象ロール: 全ロール</li>
+    <li>関連ユースケース: UC-020, UC-021</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-04/F-04-01_suppliers_list_initial.png</p>
+    <img src="../../screenshots/F-04/F-04-01_suppliers_list_initial.png" alt="F-04-01 一覧テーブル" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>全サプライヤーを一覧表示するテーブル。比較チェックボックス・コード・会社名・ステータス・評価・メールアドレス・電話番号の7列で構成。</p>
+
+  <h3>WHY</h3>
+  <p>サプライヤー全体を俯瞰し、詳細画面へのナビゲーションや比較選択の起点とするため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>比較チェックボックス</td><td>常時</td><td>-</td><td>F-04-01-005で詳述</td></tr>
+    <tr><td>コード</td><td>常時</td><td>API: supplier.code</td><td>例: SUP-001〜SUP-012</td></tr>
+    <tr><td>会社名</td><td>常時</td><td>API: supplier.name</td><td>行クリック可能（cursor: pointer）</td></tr>
+    <tr><td>ステータス</td><td>常時</td><td>API: supplier.status → 表示ラベル変換</td><td>バッジ表示。ACTIVE→有効、SUSPENDED→停止中、PENDING_APPROVAL→承認待ち</td></tr>
+    <tr><td>評価</td><td>常時</td><td>API: supplier.rating</td><td>星5つ + 数値（例: ☆☆☆☆☆ 0.0）</td></tr>
+    <tr><td>メールアドレス</td><td>常時</td><td>API: supplier.email</td><td>現在全件空文字（enrichDto()で主担当者emailから取得だがデータ未設定）</td></tr>
+    <tr><td>電話番号</td><td>常時</td><td>API: supplier.phone</td><td>現在全件空文字（同上）</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>行クリック</td>
+      <td>テーブル行クリック</td>
+      <td>/suppliers/{id}へ遷移</td>
+      <td>サプライヤー詳細画面表示</td>
+      <td>-</td>
+      <td>ページ遷移</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>ページロード時にGET /api/suppliers?page=0&amp;size=20で取得。全12件表示。ページ下部に「全 12 件」と件数表示。</p>
+
+  <h3>異常系</h3>
+  <p>データなしの場合「サプライヤーが見つかりませんでした」（📄アイコン付き）。</p>
+
+  <h3>権限制御</h3>
+  <p>BE側に@RolesAllowed未設定。全ロールでアクセス可能。</p>
+
+  <h3>状態変化</h3>
+  <p>検索・フィルタにより行数が動的に変化。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr>
+      <td>-</td>
+      <td>GET</td>
+      <td>/api/suppliers</td>
+      <td>page=0&amp;size=20</td>
+      <td>PageResult&lt;SupplierDto&gt;: {content[], totalElements, totalPages, ...}</td>
+      <td>-</td>
+      <td>Network通信観測</td>
+    </tr>
+  </table>
+
+  <div class="tech-debt">
+    <strong>技術的負債:</strong>
+    <ul>
+      <li>ページネーションUI未実装: APIはpage/sizeパラメータ対応だが、画面にページネーションコントロールがない。size=20固定で全件取得。</li>
+      <li>ページネーションがREST層のsubList実装（DB層ではない）</li>
+      <li>メール・電話が全件空: enrichDto()がprimary contactから取得するが、コンタクトデータが未設定</li>
+      <li>ソート機能なし: テーブルヘッダークリックでのソートが未実装</li>
+    </ul>
+  </div>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../supplier-list.component.ts</td><td>loadSuppliers() (L96)</td><td>API呼び出しとクライアントサイドフィルタ</td></tr>
+    <tr><td>proquip-frontend/.../supplier.service.ts</td><td>getSuppliers(page, size) (L21)</td><td>GET /suppliers?page={page}&amp;size={size}</td></tr>
+    <tr><td>proquip-web/.../SupplierResource.java</td><td>listSuppliers() (L91), enrichDto() (L578)</td><td>ページネーションはsubList、email/phoneはprimary contactから取得</td></tr>
+    <tr><td>proquip-ejb/.../service/SupplierServiceBean.java</td><td>findAllSuppliers() (L206)</td><td>全件取得（ページネーションなし）</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 初期表示で12件確認、行クリックで詳細遷移確認</li>
+    <li>Network通信: GET /api/suppliers?page=0&amp;size=20 レスポンス構造確認</li>
+    <li>ソースコード: SupplierResource.java, supplier-list.component.ts</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>12件超のサプライヤーがある場合のページネーション動作（現在size=20で全件収まる）</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<!-- F-04-01-005: 比較チェックボックス -->
+<!-- ============================================================ -->
+<div class="feature" id="F-04-01-005">
+  <h2>F-04-01-005: 比較チェックボックス</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-04-01-005</li>
+    <li>大分類: F-04 サプライヤー</li>
+    <li>中分類: F-04-01 サプライヤー一覧画面</li>
+    <li>小分類: 比較チェックボックス</li>
+    <li>画面名: サプライヤー管理</li>
+    <li>URL: /suppliers</li>
+    <li>対象ロール: 全ロール</li>
+    <li>関連ユースケース: UC-021</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-04/F-04-01-005_comparison_selected.png</p>
+    <img src="../../screenshots/F-04/F-04-01-005_comparison_selected.png" alt="F-04-01-005 比較チェックボックス 2件選択" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>各サプライヤー行の左端に配置されたチェックボックス。サプライヤー比較画面に送る対象を選択する。</p>
+
+  <h3>WHY</h3>
+  <p>複数サプライヤーを並べて比較検討するための選択手段。</p>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr>
+      <td>比較チェックボックス</td>
+      <td>チェックボックス</td>
+      <td>任意</td>
+      <td>最大3件まで選択可</td>
+      <td>未チェック</td>
+      <td>3件選択時、残りのチェックボックスはdisabled</td>
+      <td>テーブル行ごとに1つ</td>
+    </tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>チェック追加</td>
+      <td>チェックボックスクリック</td>
+      <td>selectedForCompare配列にサプライヤーIDを追加</td>
+      <td>比較ボタンのカウンタ更新（例: 比較 (1/3)）</td>
+      <td>-</td>
+      <td>比較ボタンが2件以上で有効化</td>
+    </tr>
+    <tr>
+      <td>チェック解除</td>
+      <td>チェックボックスクリック</td>
+      <td>selectedForCompare配列からサプライヤーIDを除去</td>
+      <td>比較ボタンのカウンタ更新</td>
+      <td>-</td>
+      <td>1件以下になると比較ボタン無効化</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>0件: 比較ボタン「比較 (0/3)」disabled。1件: 「比較 (1/3)」disabled。2件: 「比較 (2/3)」enabled。3件: 「比較 (3/3)」enabled、残りチェックボックスdisabled。</p>
+
+  <h3>異常系</h3>
+  <p>3件選択済みの場合、未選択チェックボックスがdisabledになり追加選択不可。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。</p>
+
+  <h3>状態変化</h3>
+  <p>選択数に応じて比較ボタンのラベルとdisabled状態が連動。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../supplier-list.component.ts</td><td>toggleCompareSelection() (L197)</td><td>最大3件制限 (L203)</td></tr>
+    <tr><td>proquip-frontend/.../supplier-list.component.html</td><td>L74</td><td>disabled条件: selectedForCompare.length >= 3</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 2件チェックして「比較 (2/3)」enabled確認</li>
+    <li>スクリーンショット: screenshots/F-04/F-04-01-005_comparison_selected.png</li>
+    <li>ソースコード: supplier-list.component.ts L197-203</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>なし</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<!-- F-04-01-006: 比較ボタン -->
+<!-- ============================================================ -->
+<div class="feature" id="F-04-01-006">
+  <h2>F-04-01-006: 比較ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-04-01-006</li>
+    <li>大分類: F-04 サプライヤー</li>
+    <li>中分類: F-04-01 サプライヤー一覧画面</li>
+    <li>小分類: 比較ボタン</li>
+    <li>画面名: サプライヤー管理</li>
+    <li>URL: /suppliers</li>
+    <li>対象ロール: 全ロール</li>
+    <li>関連ユースケース: UC-021</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-04/F-04-01-005_comparison_selected.png</p>
+    <img src="../../screenshots/F-04/F-04-01-005_comparison_selected.png" alt="F-04-01-006 比較ボタン 有効状態" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>選択したサプライヤー（2〜3件）を比較画面で並べて表示するボタン。</p>
+
+  <h3>WHY</h3>
+  <p>サプライヤーの評価・パフォーマンス・条件を横並びで比較し、最適なサプライヤーを選定するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ボタンラベル</td><td>常時</td><td>selectedForCompare.length</td><td>「比較 (N/3)」形式。Nは選択件数。</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>比較画面遷移</td>
+      <td>ボタンクリック（2件以上選択時）</td>
+      <td>/suppliers/compare?ids={id1},{id2}[,{id3}] へ遷移</td>
+      <td>サプライヤー比較画面表示（総合評価・評価詳細・パフォーマンス・連絡先・支払条件の比較）</td>
+      <td>-</td>
+      <td>ページ遷移</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>2件選択して比較ボタンクリック → /suppliers/compare?ids=10,5 に遷移。比較画面にはサプライヤー名・総合評価・評価詳細・パフォーマンス・連絡先・メールアドレス・電話番号・支払条件が表示される。</p>
+
+  <h3>異常系</h3>
+  <p>0〜1件選択時はボタンdisabledでクリック不可。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。</p>
+
+  <h3>状態変化</h3>
+  <p>disabled（0〜1件選択） ↔ enabled（2〜3件選択）。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr>
+      <td>-</td>
+      <td>GET</td>
+      <td>/api/suppliers/compare</td>
+      <td>supplierIds={id1,id2,id3}</td>
+      <td>比較データ（パフォーマンスレポート）</td>
+      <td>-</td>
+      <td>ソースコード: SupplierResource.java L551, supplier.service.ts L71</td>
+    </tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../supplier-list.component.ts</td><td>navigateToCompare() (L185)</td><td>query params: ids=id1,id2[,id3]</td></tr>
+    <tr><td>proquip-frontend/.../supplier.service.ts</td><td>compareSuppliers() (L71)</td><td>GET /suppliers/compare?supplierIds=...</td></tr>
+    <tr><td>proquip-web/.../SupplierResource.java</td><td>compareSuppliers() (L551)</td><td>カンマ区切りID受取、パフォーマンスレポート返却</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 比較ボタンクリック後の比較画面 ／
+        <strong>備考:</strong> 比較画面はローディング中のスクリーンショット
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-04/F-04-01-006_comparison_page.png</p>
+      <img src="../../screenshots/F-04/F-04-01-006_comparison_page.png" alt="F-04-01-006 比較画面" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 2件選択→比較ボタンクリック→/suppliers/compare?ids=10,5 に遷移確認</li>
+    <li>スクリーンショット: screenshots/F-04/F-04-01-006_comparison_page.png</li>
+    <li>ソースコード: supplier-list.component.ts L185, SupplierResource.java L551</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>比較画面の詳細表示内容（ローディング中で確認不完全。比較画面自体は別中分類として扱う可能性あり）</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<!-- F-04-01-007: 新規登録ボタン -->
+<!-- ============================================================ -->
+<div class="feature" id="F-04-01-007">
+  <h2>F-04-01-007: 新規登録ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-04-01-007</li>
+    <li>大分類: F-04 サプライヤー</li>
+    <li>中分類: F-04-01 サプライヤー一覧画面</li>
+    <li>小分類: 新規登録ボタン</li>
+    <li>画面名: サプライヤー管理</li>
+    <li>URL: /suppliers</li>
+    <li>対象ロール: 全ロール</li>
+    <li>関連ユースケース: UC-020</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-04/F-04-01_suppliers_list_initial.png</p>
+    <img src="../../screenshots/F-04/F-04-01_suppliers_list_initial.png" alt="F-04-01 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>新しいサプライヤーを登録する画面へ遷移するボタン。ラベルは「+ 新規登録」。</p>
+
+  <h3>WHY</h3>
+  <p>新規取引先のサプライヤー情報をシステムに登録するため。</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>新規登録画面遷移</td>
+      <td>ボタンクリック</td>
+      <td>/suppliers/new へ遷移</td>
+      <td>サプライヤー新規登録画面表示</td>
+      <td>-</td>
+      <td>ページ遷移</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>ボタンクリックで /suppliers/new に遷移。</p>
+
+  <h3>異常系</h3>
+  <p>なし（常にクリック可能）。</p>
+
+  <h3>権限制御</h3>
+  <p>現在は全ロールでボタンが表示・クリック可能。BE側にも@RolesAllowed未設定。</p>
+
+  <h3>状態変化</h3>
+  <p>なし。常時enabled。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../supplier-list.component.ts</td><td>navigateToCreate() (L178)</td><td>this.router.navigate(['/suppliers/new'])</td></tr>
+    <tr><td>proquip-frontend/.../supplier-list.component.html</td><td>L22-24</td><td>「+ 新規登録」ボタン</td></tr>
+    <tr><td>proquip-web/.../SupplierResource.java</td><td>createSupplier() (L152)</td><td>POST /api/suppliers</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 新規登録ボタンクリック後 ／
+        <strong>備考:</strong> /suppliers/new への遷移確認
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-04/F-04-01-007_new_supplier_page.png</p>
+      <img src="../../screenshots/F-04/F-04-01-007_new_supplier_page.png" alt="F-04-01-007 新規登録画面" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ボタンクリックで /suppliers/new 遷移確認</li>
+    <li>スクリーンショット: screenshots/F-04/F-04-01-007_new_supplier_page.png</li>
+    <li>ソースコード: supplier-list.component.ts L178</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>新規登録画面の詳細（別中分類として扱う可能性あり、features.mdでの機能ID追加要検討）</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<!-- F-04-01-008: サプライヤー行クリック -->
+<!-- ============================================================ -->
+<div class="feature" id="F-04-01-008">
+  <h2>F-04-01-008: サプライヤー行クリック</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-04-01-008</li>
+    <li>大分類: F-04 サプライヤー</li>
+    <li>中分類: F-04-01 サプライヤー一覧画面</li>
+    <li>小分類: サプライヤー行クリック</li>
+    <li>画面名: サプライヤー管理</li>
+    <li>URL: /suppliers</li>
+    <li>対象ロール: 全ロール</li>
+    <li>関連ユースケース: UC-020</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-04/F-04-01_suppliers_list_initial.png</p>
+    <img src="../../screenshots/F-04/F-04-01_suppliers_list_initial.png" alt="F-04-01 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>テーブル行をクリックしてサプライヤー詳細画面（/suppliers/:id）へ遷移する操作。</p>
+
+  <h3>WHY</h3>
+  <p>一覧から個別のサプライヤーの詳細情報にアクセスするため。</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>詳細画面遷移</td>
+      <td>テーブル行クリック</td>
+      <td>onRowClick(supplier)でrouter.navigate(['/suppliers', supplier.id])</td>
+      <td>/suppliers/{id} へ遷移</td>
+      <td>-</td>
+      <td>ページ遷移</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>大塚商会（SUP-001, id=1）の行クリックで /suppliers/1 に遷移。cursor: pointer でクリック可能であることを視覚的に示す。</p>
+
+  <h3>異常系</h3>
+  <p>なし。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。全行クリック可能。</p>
+
+  <h3>状態変化</h3>
+  <p>ページ遷移。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../supplier-list.component.ts</td><td>onRowClick() (L171)</td><td>this.router.navigate(['/suppliers', supplier.id])</td></tr>
+    <tr><td>proquip-frontend/.../supplier-list.component.html</td><td>L69</td><td>(click)="onRowClick(supplier)"、cursor: pointer</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 大塚商会の行クリックで /suppliers/1 遷移確認</li>
+    <li>ソースコード: supplier-list.component.ts L171, .html L69</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>なし</li>
+  </ul>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F-03-01: 製品一覧画面 - UI仕様</title>
+  <style>
+    body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; margin: 24px; line-height: 1.6; color: #333; }
+    h1 { border-bottom: 3px solid #2196F3; padding-bottom: 8px; }
+    h2 { border-bottom: 2px solid #64B5F6; padding-bottom: 4px; margin-top: 48px; }
+    h3 { border-left: 4px solid #90CAF9; padding-left: 8px; margin-top: 24px; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; font-size: 14px; }
+    th { background: #E3F2FD; }
+    .feature { margin-bottom: 64px; }
+    .screenshot-item { margin-bottom: 16px; border: 1px solid #ddd; border-radius: 4px; padding: 12px; }
+    .screenshot-list { margin-top: 12px; }
+    ul { margin: 4px 0; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<h1>F-03-01: 製品一覧画面 - UI仕様</h1>
+<p>最終更新: 2026-05-24</p>
+
+<!-- ================================================================== -->
+<!-- F-03-01-001: 検索テキストボックス -->
+<!-- ================================================================== -->
+<div class="feature" id="F-03-01-001">
+  <h2>F-03-01-001: 検索テキストボックス</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-01-001</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-01 製品一覧画面</li>
+    <li>小分類: 検索テキストボックス</li>
+    <li>画面名: 製品カタログ</li>
+    <li>URL: /products</li>
+    <li>対象ロール: 全認証ユーザー（ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER）</li>
+    <li>関連ユースケース: UC-008</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">製品一覧画面の初期表示状態。検索ボックスは画面上部左側に配置される。</p>
+  <div class="screenshot-item" style="margin-bottom:16px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-01_products_list_initial.png</p>
+    <img src="../../screenshots/F-03/F-03-01_products_list_initial.png" alt="F-03-01 製品一覧 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>SKUまたは製品名のキーワードで製品一覧をフィルタリングするテキスト入力欄。</p>
+
+  <h3>WHY</h3>
+  <p>100件の製品から目的の製品を素早く見つけるため。SKUコードと製品名の両方で検索できることで、管理者・購買担当者いずれの運用フローにも対応する。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>プレースホルダー「SKU、製品名で検索...」</td><td>入力値が空の場合</td><td>固定文字列</td><td></td></tr>
+    <tr><td>クリアボタン（×）</td><td>入力値がある場合</td><td>-</td><td>入力値をクリアしてフィルタ解除</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>検索キーワード</td><td>text</td><td>任意</td><td>制限なし</td><td>空</td><td>なし（フロント側）</td><td>入力のたびにフィルタ実行（リアクティブ）</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>検索実行</td><td>テキスト入力（inputイベント）</td><td>keyword パラメータ付きでGET /api/products を呼び出し</td><td>一致する製品のみテーブルに表示、ページ1にリセット</td><td>-</td><td>テーブル内容がフィルタ結果に変化、「フィルターをリセット」リンクが表示される</td></tr>
+    <tr><td>クリア</td><td>×ボタンクリック</td><td>検索キーワードをクリアし再検索</td><td>全製品が表示される</td><td>-</td><td>フィルタ解除</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>「Dell」と入力すると、製品名にDellを含む製品（Dell Inspiron 14 5430, Dell Latitude 5540, Dell Latitude 7440, Dell OptiPlex 5000 MT, Dell OptiPlex 7010 SFF, Dell P2723QE等）のみが表示される。</p>
+
+  <h3>異常系</h3>
+  <p>該当する製品がない場合、テーブルに空状態が表示される（「該当する製品がありません」等）。</p>
+
+  <h3>権限制御</h3>
+  <p>全認証ユーザーが利用可能。ロール別の制限なし。</p>
+
+  <h3>状態変化</h3>
+  <p>キーワード入力中は結果がリアルタイムでフィルタされる。フィルタ適用中は「フィルターをリセット」リンクが表示される。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products</td><td>keyword=Dell&page=0&size=20&sort=name,asc</td><td>PageResult&lt;ProductDTO&gt;</td><td>-</td><td>Network通信 + ソースコード</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-list/product-list.component.ts</td><td>onSearchChange() :157-160</td><td>検索キーワード変更時にpage=1リセット＋loadProducts()呼び出し</td></tr>
+    <tr><td>proquip-frontend/src/app/shared/services/product.service.ts</td><td>getProducts() :22-35</td><td>keywordパラメータ付きでAPIリクエスト</td></tr>
+    <tr><td>proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java</td><td>getProducts() :123-171</td><td>keyword検索: 製品名/説明のLIKE検索</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item" style="margin-bottom:24px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 「Dell」で検索した状態 ／
+        <strong>備考:</strong> Dell製品のみ表示、フィルターをリセットリンク表示
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-01-001_search_dell.png</p>
+      <img src="../../screenshots/F-03/F-03-01-001_search_dell.png" alt="F-03-01-001 Dell検索" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPで検索ボックスに「Dell」入力、結果フィルタを確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-01-001_search_dell.png</li>
+    <li>Network通信: GET /api/products?keyword=Dell&page=0&size=20&sort=name,asc</li>
+    <li>ソースコード: product-list.component.ts:157-160, product.service.ts:22-35</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>検索がSKUコードに対しても有効か（バックエンドのkeyword検索対象はname/descriptionのみの可能性）</li>
+    <li>検索のデバウンス有無（入力文字数が少ない場合のAPI呼び出し頻度）</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-03-01-002: カテゴリフィルタ -->
+<!-- ================================================================== -->
+<div class="feature" id="F-03-01-002">
+  <h2>F-03-01-002: カテゴリフィルタ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-01-002</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-01 製品一覧画面</li>
+    <li>小分類: カテゴリフィルタ</li>
+    <li>画面名: 製品カタログ</li>
+    <li>URL: /products</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-008</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>カテゴリで製品一覧を絞り込むドロップダウンセレクト。</p>
+
+  <h3>WHY</h3>
+  <p>20カテゴリ・100製品の中から特定のカテゴリに属する製品群を素早く一覧表示するため。</p>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>カテゴリ</td><td>select</td><td>任意</td><td>20カテゴリ + 「すべて」</td><td>すべて（空値）</td><td>なし</td><td>GET /api/products/categories から取得。親子関係あり（parentId）だがフラットに表示</td></tr>
+  </table>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ラベル「カテゴリ」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+    <tr><td>選択肢リスト</td><td>常時</td><td>GET /api/products/categories</td><td>すべて, HDD, OS, SSD, アクセスポイント, オフィスソフト, キーボード, コンピュータ, サプライ品, スイッチ, ストレージ, ソフトウェア, デスクトップPC, ネットワーク, ノートPC, プリンター, マウス, モニター, ルーター, ワークステーション, 周辺機器（計21件）</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>カテゴリ選択</td><td>ドロップダウン変更（changeイベント）</td><td>categoryId パラメータ付きでGET /api/products を呼び出し</td><td>選択カテゴリの製品のみ表示、ページ1にリセット</td><td>-</td><td>「フィルターをリセット」リンクが表示される</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>「ノートPC」を選択すると、ノートPCカテゴリに属する製品（Apple MacBook Air, Dell Latitude等）のみが表示される。</p>
+
+  <h3>異常系</h3>
+  <p>該当カテゴリに製品がない場合（例: ネットワーク（productCount=0））、空のテーブルが表示される。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。全認証ユーザーが利用可能。</p>
+
+  <h3>状態変化</h3>
+  <p>カテゴリ選択中はドロップダウンに選択値が表示され、「フィルターをリセット」リンクが表示される。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/categories</td><td>なし</td><td>Category[] (id, code, name, description, parentId, productCount)</td><td>-</td><td>Network通信</td></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products</td><td>categoryId=8&page=0&size=20</td><td>PageResult&lt;ProductDTO&gt;</td><td>-</td><td>ソースコード</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-list/product-list.component.ts</td><td>loadCategories(), onFilterChange()</td><td>カテゴリリスト取得、フィルタ変更時のAPIリクエスト</td></tr>
+    <tr><td>proquip-frontend/src/app/shared/services/product.service.ts</td><td>getCategories() :67-69</td><td>GET /api/products/categories</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item" style="margin-bottom:24px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> カテゴリ「ノートPC」選択時 ／
+        <strong>備考:</strong> ノートPCのみ表示、フィルターをリセットリンク表示
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-01-002_filter_category_notebook.png</p>
+      <img src="../../screenshots/F-03/F-03-01-002_filter_category_notebook.png" alt="F-03-01-002 カテゴリフィルタ ノートPC" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPでカテゴリ「ノートPC」選択を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-01-002_filter_category_notebook.png</li>
+    <li>Network通信: GET /api/products/categories → 20カテゴリのレスポンス確認</li>
+    <li>ソースコード: product-list.component.ts, product.service.ts:67-69</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>親カテゴリ選択時に子カテゴリの製品も含まれるか（例: コンピュータ選択でデスクトップPC・ノートPC・ワークステーションの製品も表示されるか）</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-03-01-003: メーカーフィルタ -->
+<!-- ================================================================== -->
+<div class="feature" id="F-03-01-003">
+  <h2>F-03-01-003: メーカーフィルタ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-01-003</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-01 製品一覧画面</li>
+    <li>小分類: メーカーフィルタ</li>
+    <li>画面名: 製品カタログ</li>
+    <li>URL: /products</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-008</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>メーカーで製品一覧を絞り込むドロップダウンセレクト。</p>
+
+  <h3>WHY</h3>
+  <p>特定メーカーの取扱製品を一覧で確認し、メーカー別の在庫状況や価格帯を把握するため。</p>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>メーカー</td><td>select</td><td>任意</td><td>15メーカー + 「すべて」</td><td>すべて（空値）</td><td>なし</td><td>メーカーリストの取得方法に技術的負債あり（後述）</td></tr>
+  </table>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ラベル「メーカー」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+    <tr><td>選択肢リスト</td><td>常時</td><td>GET /api/products?page=0&size=1000 → 製品のmanufacturerNameからユニーク抽出</td><td>Apple, ASUS, Cisco Systems, Dell Technologies, EIZO, HP Inc., Lenovo, Microsoft, NEC, エプソン, エレコム, キヤノン, バッファロー, ブラザー工業, 富士通（計15社）</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>メーカー選択</td><td>ドロップダウン変更</td><td>manufacturerId パラメータ付きでGET /api/products を呼び出し</td><td>選択メーカーの製品のみ表示</td><td>-</td><td>「フィルターをリセット」リンクが表示される</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>メーカー選択により当該メーカーの製品のみが表示される。他のフィルタ（カテゴリ・ステータス・検索）との組み合わせも可能。</p>
+
+  <h3>異常系</h3>
+  <p>該当メーカーの製品がない場合、空テーブル表示。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。全認証ユーザーが利用可能。</p>
+
+  <h3>状態変化</h3>
+  <p>メーカー選択中は「フィルターをリセット」リンクが表示される。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products</td><td>page=0&size=1000</td><td>PageResult&lt;ProductDTO&gt;（メーカー名抽出用に全件取得）</td><td>-</td><td>Network通信</td></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products</td><td>manufacturerId=1&page=0&size=20</td><td>PageResult&lt;ProductDTO&gt;</td><td>-</td><td>ソースコード</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-list/product-list.component.ts</td><td>loadManufacturers() :71</td><td>全製品(size=1000)を取得し、manufacturerNameでユニーク抽出（技術的負債）</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPでドロップダウン選択肢15社を確認</li>
+    <li>Network通信: GET /api/products?page=0&size=1000 → reqid=33</li>
+    <li>ソースコード: product-list.component.ts:71（全件取得でメーカーリスト構築）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>製品にmanufacturerIdが未設定の場合の表示（一部製品のmanufacturerNameが空）</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-03-01-004: ステータスフィルタ -->
+<!-- ================================================================== -->
+<div class="feature" id="F-03-01-004">
+  <h2>F-03-01-004: ステータスフィルタ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-01-004</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-01 製品一覧画面</li>
+    <li>小分類: ステータスフィルタ</li>
+    <li>画面名: 製品カタログ</li>
+    <li>URL: /products</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-008</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>製品ステータスで一覧を絞り込むドロップダウンセレクト。</p>
+
+  <h3>WHY</h3>
+  <p>有効な製品のみ、または廃番製品のみを表示するなど、製品のライフサイクル状態に基づいた管理を行うため。</p>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>ステータス</td><td>select</td><td>任意</td><td>4ステータス + 「すべて」</td><td>すべて（空値）</td><td>なし</td><td>フロントエンドで固定定義</td></tr>
+  </table>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ラベル「ステータス」</td><td>常時</td><td>固定文字列</td><td></td></tr>
+    <tr><td>選択肢: すべて</td><td>常時</td><td>固定</td><td>value=""</td></tr>
+    <tr><td>選択肢: 有効</td><td>常時</td><td>固定</td><td>value="ACTIVE"</td></tr>
+    <tr><td>選択肢: 無効</td><td>常時</td><td>固定</td><td>value="INACTIVE"</td></tr>
+    <tr><td>選択肢: 廃番</td><td>常時</td><td>固定</td><td>value="DISCONTINUED"</td></tr>
+    <tr><td>選択肢: 保留</td><td>常時</td><td>固定</td><td>value="PENDING"</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>ステータス選択</td><td>ドロップダウン変更</td><td>status パラメータ付きでGET /api/products を呼び出し</td><td>選択ステータスの製品のみ表示</td><td>-</td><td>「フィルターをリセット」リンクが表示される</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>ステータス選択で該当ステータスの製品のみ表示される。カテゴリ・メーカー・検索との組み合わせフィルタが可能。</p>
+
+  <h3>異常系</h3>
+  <p>該当ステータスの製品がない場合、空テーブル表示。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。全認証ユーザーが利用可能。</p>
+
+  <h3>状態変化</h3>
+  <p>ステータス選択中は「フィルターをリセット」リンクが表示される。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/product-list/product-list.component.ts</td><td>statusLabels :75-79</td><td>ACTIVE→有効, INACTIVE→無効, DISCONTINUED→廃番, PENDING→保留</td></tr>
+    <tr><td>proquip-frontend/src/app/shared/utils/status.utils.ts</td><td>getProductStatusLabel() :51-56</td><td>同上のマッピング</td></tr>
+    <tr><td>proquip-common/.../ProductStatus.java</td><td>enum ProductStatus</td><td>DISCONTINUED→"販売終了" ※フロントとバックエンドで表示名不一致</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPでドロップダウンの選択肢4件を確認</li>
+    <li>ソースコード: product-list.component.ts:75-79（ステータスラベル定義）</li>
+    <li>ソースコード: ProductStatus.java（バックエンドEnum定義）</li>
+    <li>推測: ステータスフィルタの実際の絞り込み動作はDOM操作によるテストが不完全だったため、ソースコードの実装から仕様を確認。confidence: High</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>ステータス表示名の不一致: フロントエンドではDISCONTINUED=「廃番」、バックエンドEnum(ProductStatus.java)ではDISCONTINUED=「販売終了」。テーブル内の表示は「販売終了」、フィルタ選択肢は「廃番」と混在している可能性</li>
+    <li>DRAFT（下書き）ステータスがProductServiceBeanのインポート機能で使用されているが、フィルタ選択肢に含まれていない</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-03-01-005: 製品一覧テーブル -->
+<!-- ================================================================== -->
+<div class="feature" id="F-03-01-005">
+  <h2>F-03-01-005: 製品一覧テーブル</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-01-005</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-01 製品一覧画面</li>
+    <li>小分類: 製品一覧テーブル</li>
+    <li>画面名: 製品カタログ</li>
+    <li>URL: /products</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-008</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>製品の主要情報を一覧表示するデータテーブル。SKU・製品名・カテゴリ・メーカー・単価・ステータス・在庫数の7列構成。</p>
+
+  <h3>WHY</h3>
+  <p>製品カタログの全体像を把握し、個別製品の状態（価格・在庫・ステータス）を比較確認するため。行クリックで詳細画面に遷移する入口として機能する。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>SKU</td><td>常時</td><td>ProductDTO.sku</td><td>幅120px。例: DPC-001007, NPC-002005</td></tr>
+    <tr><td>製品名</td><td>常時</td><td>ProductDTO.name</td><td>可変幅。デフォルトソート列</td></tr>
+    <tr><td>カテゴリ</td><td>常時</td><td>ProductDTO.categoryName</td><td>幅140px。例: デスクトップPC, ノートPC</td></tr>
+    <tr><td>メーカー</td><td>常時</td><td>ProductDTO.manufacturerName</td><td>幅140px。メーカー未設定の場合は空欄</td></tr>
+    <tr><td>単価</td><td>常時</td><td>ProductDTO.unitPrice</td><td>幅120px。通貨フォーマット: ¥84,800</td></tr>
+    <tr><td>ステータス</td><td>常時</td><td>ProductDTO.status → ラベル変換</td><td>幅100px。有効（緑）, 無効, 廃番/販売終了（灰）, 保留</td></tr>
+    <tr><td>在庫数</td><td>常時</td><td>ProductDTO.stockQuantity</td><td>幅80px。数値フォーマット</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>行クリック</td><td>テーブル行クリック</td><td>/products/:id へルーター遷移</td><td>製品詳細画面に遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>初期表示で全100件中1〜20件を製品名昇順で表示。各行にはSKU・製品名・カテゴリ・メーカー・単価（¥カンマ区切り）・ステータス（色付きラベル）・在庫数が表示される。行にカーソルを合わせるとポインタに変化。</p>
+
+  <h3>異常系</h3>
+  <p>フィルタ結果が0件の場合、テーブル本体の代わりに空状態メッセージが表示される。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。全認証ユーザーが全製品を閲覧可能。ユーザーごとのデータフィルタリングなし。</p>
+
+  <h3>状態変化</h3>
+  <p>検索・フィルタ・ソート・ページ切替でテーブル内容が動的に更新される。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products</td><td>page=0&size=20&sort=name,asc</td><td>PageResult: content[](id,sku,name,categoryName,manufacturerName,unitPrice,status,stockQuantity...), totalElements:100, totalPages:5</td><td>-</td><td>Network通信 + ソースコード</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-list.component.html</td><td>テンプレート :67-78</td><td>7列テーブル定義、行クリック遷移</td></tr>
+    <tr><td>proquip-frontend/.../product-list.component.ts</td><td>loadProducts() :110-130</td><td>APIリクエスト、結果バインド</td></tr>
+    <tr><td>proquip-web/.../ProductResource.java</td><td>getProducts() :123-171</td><td>ページング、フィルタ、在庫数N+1取得</td></tr>
+    <tr><td>proquip-common/.../ProductDTO.java</td><td>class ProductDTO</td><td>レスポンスフィールド定義</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPで初期表示の20行テーブルを確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-01_products_list_initial.png</li>
+    <li>Network通信: GET /api/products?page=0&size=20&sort=name,asc → reqid=34</li>
+    <li>ソースコード: product-list.component.html:67-78（テーブル構造）</li>
+    <li>ソースコード: ProductResource.java:123-171（サーバーサイドページング）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>ステータス表示の色分け詳細（CSSクラス: status-active(緑), status-inactive, status-discontinued(灰), status-pending）</li>
+    <li>テーブルが空の場合の表示メッセージの正確な文言</li>
+    <li>在庫数の取得がN+1クエリ（ProductResource.java:157-164）でパフォーマンス影響</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-03-01-006: テーブルソート -->
+<!-- ================================================================== -->
+<div class="feature" id="F-03-01-006">
+  <h2>F-03-01-006: テーブルソート</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-01-006</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-01 製品一覧画面</li>
+    <li>小分類: テーブルソート</li>
+    <li>画面名: 製品カタログ</li>
+    <li>URL: /products</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-008</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>テーブルの列ヘッダクリックによるソート切り替え機能。</p>
+
+  <h3>WHY</h3>
+  <p>製品をSKU順・名前順・単価順・カテゴリ順など、目的に応じた並び替えで効率的に確認するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ソートインジケータ ▲</td><td>昇順ソート中の列</td><td>-</td><td>列名の右に表示</td></tr>
+    <tr><td>ソートインジケータ ▼</td><td>降順ソート中の列</td><td>-</td><td>列名の右に表示</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>ソート切替</td><td>ソート可能列ヘッダクリック</td><td>sort パラメータ変更でGET /api/products を呼び出し</td><td>テーブルがソート順に再表示</td><td>-</td><td>アクティブ列にソートインジケータ表示（▲/▼）</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>初期状態: 製品名 ▲（昇順）。SKUヘッダクリック → SKU ▲（昇順）。再度SKUクリック → SKU ▼（降順）。ソートはサーバーサイドで実行（sort=sku,desc 等のパラメータ）。</p>
+
+  <h3>ソート可能列</h3>
+  <table>
+    <tr><th>列名</th><th>ソートパラメータ</th><th>CSS class</th></tr>
+    <tr><td>SKU</td><td>sku</td><td>sortable</td></tr>
+    <tr><td>製品名</td><td>name</td><td>sortable</td></tr>
+    <tr><td>カテゴリ</td><td>categoryName</td><td>sortable</td></tr>
+    <tr><td>メーカー</td><td>manufacturerName</td><td>sortable</td></tr>
+    <tr><td>単価</td><td>unitPrice</td><td>sortable</td></tr>
+    <tr><td>ステータス</td><td>status</td><td>sortable</td></tr>
+    <tr><td>在庫数</td><td>-</td><td>（ソート不可）</td></tr>
+  </table>
+
+  <h3>権限制御</h3>
+  <p>なし。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-list.component.ts</td><td>onSortChange() :183-187</td><td>ソート列・方向更新、loadProducts()再呼び出し</td></tr>
+    <tr><td>proquip-frontend/.../product-list.component.ts</td><td>loadProducts() :115</td><td>sort="${sortColumn},${sortDirection}" 形式でAPIパラメータ構築</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item" style="margin-bottom:24px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> SKU昇順ソート時 ／
+        <strong>備考:</strong> SKU ▲ インジケータ表示
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-01-006_sort_sku_asc.png</p>
+      <img src="../../screenshots/F-03/F-03-01-006_sort_sku_asc.png" alt="F-03-01-006 SKUソート昇順" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPでSKUヘッダクリック → 昇順(▲)、再クリック → 降順(▼)を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-01-006_sort_sku_asc.png</li>
+    <li>ソースコード: product-list.component.ts:183-187（ソートハンドラ）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>なし</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-03-01-007: ページング -->
+<!-- ================================================================== -->
+<div class="feature" id="F-03-01-007">
+  <h2>F-03-01-007: ページング</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-01-007</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-01 製品一覧画面</li>
+    <li>小分類: ページング</li>
+    <li>画面名: 製品カタログ</li>
+    <li>URL: /products</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-008</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>製品一覧のページ切り替えナビゲーション。20件/ページ表示で、全100件を5ページに分割。</p>
+
+  <h3>WHY</h3>
+  <p>全100件の製品を一度に表示するとパフォーマンスとユーザビリティが低下するため、ページ分割で管理する。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>件数情報「100件中 1〜20件を表示」</td><td>常時</td><td>APIレスポンスのtotalElements, page, size</td><td>テーブル下部左側</td></tr>
+    <tr><td>全件表示「全 100 件中 1 - 20 件を表示」</td><td>常時</td><td>同上</td><td>ページネーション下部右寄り</td></tr>
+    <tr><td>先頭ページボタン «</td><td>常時</td><td>-</td><td>1ページ目の場合はdisabled</td></tr>
+    <tr><td>前ページボタン ‹</td><td>常時</td><td>-</td><td>1ページ目の場合はdisabled</td></tr>
+    <tr><td>ページ番号ボタン 1〜5</td><td>常時</td><td>totalPages</td><td>現在ページはactiveクラス（青背景）</td></tr>
+    <tr><td>次ページボタン ›</td><td>常時</td><td>-</td><td>最終ページの場合はdisabled</td></tr>
+    <tr><td>末尾ページボタン »</td><td>常時</td><td>-</td><td>最終ページの場合はdisabled</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>ページ番号クリック</td><td>ページ番号ボタンクリック</td><td>page パラメータ変更でGET /api/products を呼び出し</td><td>指定ページの20件が表示</td><td>-</td><td>アクティブページ番号が切り替わる</td></tr>
+    <tr><td>先頭ページ</td><td>« ボタンクリック</td><td>page=0 でAPI呼び出し</td><td>1ページ目を表示</td><td>-</td><td>1ページ目でdisabled</td></tr>
+    <tr><td>前ページ</td><td>‹ ボタンクリック</td><td>page=currentPage-1 でAPI呼び出し</td><td>前ページを表示</td><td>-</td><td></td></tr>
+    <tr><td>次ページ</td><td>› ボタンクリック</td><td>page=currentPage+1 でAPI呼び出し</td><td>次ページを表示</td><td>-</td><td></td></tr>
+    <tr><td>末尾ページ</td><td>» ボタンクリック</td><td>page=totalPages-1 でAPI呼び出し</td><td>最終ページを表示</td><td>-</td><td>最終ページでdisabled</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>初期表示: 1ページ目（100件中 1〜20件）。ページ番号2をクリック → 21〜40件目を表示。検索・フィルタを適用するとページは1にリセットされる。</p>
+
+  <h3>異常系</h3>
+  <p>フィルタ結果が20件以下の場合、ページングは「1件中 1〜N件を表示」となり、ページ番号は1のみ。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-list.component.ts</td><td>onPageChange() :174-178</td><td>ページ変更時のAPIリクエスト</td></tr>
+    <tr><td>proquip-frontend/.../product-list.component.ts</td><td>pageSize :44</td><td>デフォルトページサイズ: 20</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPで「100件中 1〜20件を表示」、ページ番号ボタン1〜5、«‹›»を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-01_products_list_initial.png（ページング部分はスクロール下部）</li>
+    <li>ソースコード: product-list.component.ts:174-178</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>ページサイズ変更機能の有無（現状は20件固定）</li>
+    <li>ページ数が多い場合（6ページ以上）のページ番号ボタンの省略表示</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-03-01-008: カテゴリ管理ボタン -->
+<!-- ================================================================== -->
+<div class="feature" id="F-03-01-008">
+  <h2>F-03-01-008: カテゴリ管理ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-01-008</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-01 製品一覧画面</li>
+    <li>小分類: カテゴリ管理ボタン</li>
+    <li>画面名: 製品カタログ</li>
+    <li>URL: /products</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: F-03-03のユースケースへのエントリーポイント</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>カテゴリ管理画面（/products/categories）へ遷移するボタン。</p>
+
+  <h3>WHY</h3>
+  <p>製品カタログのカテゴリ体系を管理（追加・編集・削除・並び替え）するための入口。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ボタンラベル「カテゴリ管理」</td><td>常時</td><td>固定文字列</td><td>btn-secondary スタイル（白背景、ボーダー付き）</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>カテゴリ管理画面遷移</td><td>ボタンクリック</td><td>router.navigate(['/products/categories'])</td><td>カテゴリ管理画面に遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>権限制御</h3>
+  <p>なし。全認証ユーザーが表示・クリック可能。カテゴリ管理画面側の権限制御は F-03-03 で確認。</p>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPで「カテゴリ管理」ボタン表示確認（btn-secondary）</li>
+    <li>ソースコード: product-list.component.html（routerLink='/products/categories'）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>なし</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-03-01-009: バンドル管理ボタン -->
+<!-- ================================================================== -->
+<div class="feature" id="F-03-01-009">
+  <h2>F-03-01-009: バンドル管理ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-01-009</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-01 製品一覧画面</li>
+    <li>小分類: バンドル管理ボタン</li>
+    <li>画面名: 製品カタログ</li>
+    <li>URL: /products</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: F-03-04のユースケースへのエントリーポイント</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>バンドル管理画面（/products/bundles）へ遷移するボタン。</p>
+
+  <h3>WHY</h3>
+  <p>複数製品をセットにしたバンドル商品の管理（作成・編集・削除）を行うための入口。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ボタンラベル「バンドル管理」</td><td>常時</td><td>固定文字列</td><td>btn-secondary スタイル</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>バンドル管理画面遷移</td><td>ボタンクリック</td><td>router.navigate(['/products/bundles'])</td><td>バンドル管理画面に遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>権限制御</h3>
+  <p>なし。全認証ユーザーが表示・クリック可能。</p>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPで「バンドル管理」ボタン表示確認</li>
+    <li>ソースコード: product-list.component.html</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>なし</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-03-01-010: CSV出力ボタン -->
+<!-- ================================================================== -->
+<div class="feature" id="F-03-01-010">
+  <h2>F-03-01-010: CSV出力ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-01-010</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-01 製品一覧画面</li>
+    <li>小分類: CSV出力ボタン</li>
+    <li>画面名: 製品カタログ</li>
+    <li>URL: /products</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-009</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>製品一覧をCSVファイルとしてダウンロードするボタン。</p>
+
+  <h3>WHY</h3>
+  <p>製品カタログのデータをExcel等の外部ツールで分析・加工するため。在庫棚卸や価格見直しの業務に利用。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ボタンラベル「CSV出力」</td><td>常時</td><td>固定文字列</td><td>btn-export スタイル（オレンジ枠線）</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>CSV出力</td><td>ボタンクリック</td><td>GET /api/products?page=0&size=10000 を呼び出し、クライアントサイドでCSV生成・ダウンロード</td><td>products_YYYY-MM-DD.csv がダウンロードされる</td><td>-</td><td>ブラウザのダウンロードダイアログ表示</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>クリックで最大10,000件の製品データをCSV形式でダウンロード。CSV内容: SKU, 製品名, カテゴリ, メーカー, 単価, ステータス。UTF-8 BOM付きでExcel互換。現在のフィルタ条件は適用されず全件エクスポート。</p>
+
+  <h3>異常系</h3>
+  <p>APIエラー時の挙動はソースコードからは未確認。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。全認証ユーザーがCSV出力可能。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-list.component.ts</td><td>exportCsv() :221-267</td><td>クライアントサイドCSV生成。size=10000で全件取得→BOM付きCSV文字列生成→Blobダウンロード</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPで「CSV出力」ボタン表示確認（btn-export, オレンジ枠）</li>
+    <li>ソースコード: product-list.component.ts:221-267（CSV生成ロジック全体）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>バックエンド側にも GET /api/products/export エンドポイントが存在する（ProductResource.java:994-1006）が、フロントエンドはそれを使用せずクライアントサイドでCSV生成している。二重実装の可能性</li>
+    <li>現在のフィルタ条件が出力に反映されるか（ソースコード上はフィルタなしで全件取得）</li>
+    <li>10,000件超の場合のデータ欠損</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-03-01-011: 新規登録ボタン -->
+<!-- ================================================================== -->
+<div class="feature" id="F-03-01-011">
+  <h2>F-03-01-011: 新規登録ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-01-011</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-01 製品一覧画面</li>
+    <li>小分類: 新規登録ボタン</li>
+    <li>画面名: 製品カタログ</li>
+    <li>URL: /products</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: F-03-05のユースケースへのエントリーポイント</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>製品新規登録画面（/products/new）へ遷移するボタン。</p>
+
+  <h3>WHY</h3>
+  <p>新しい製品をカタログに追加するための入口。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ボタンラベル「+ 新規登録」</td><td>常時</td><td>固定文字列</td><td>btn-primary スタイル（緑背景、白文字）</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>新規登録画面遷移</td><td>ボタンクリック</td><td>router.navigate(['/products/new'])</td><td>製品新規登録画面に遷移</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>権限制御</h3>
+  <p>なし。全認証ユーザーが表示・クリック可能。本来はADMIN/BUYER等に限定すべきだが、@RolesAllowed未設定（技術的負債）。</p>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPで「+ 新規登録」ボタン表示確認（btn-primary, 緑背景）</li>
+    <li>ソースコード: product-list.component.html</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>なし</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-03-01-012: 製品行クリック -->
+<!-- ================================================================== -->
+<div class="feature" id="F-03-01-012">
+  <h2>F-03-01-012: 製品行クリック</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-01-012</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-01 製品一覧画面</li>
+    <li>小分類: 製品行クリック</li>
+    <li>画面名: 製品カタログ</li>
+    <li>URL: /products</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: UC-008</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>テーブルの製品行をクリックして製品詳細画面に遷移する操作。</p>
+
+  <h3>WHY</h3>
+  <p>一覧から個別製品の詳細情報（仕様・画像・サプライヤー・在庫・変更履歴など）を確認するための導線。</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>製品詳細遷移</td><td>テーブル行（tr.data-row）クリック</td><td>router.navigate(['/products', product.id])</td><td>/products/:id に遷移（例: /products/98）</td><td>-</td><td>画面遷移</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>Apple iPad Air M2行クリック → /products/98 に遷移し、製品詳細画面が表示される（製品名、SKU、7タブ構成の詳細情報）。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。全認証ユーザーが全製品の詳細を閲覧可能。</p>
+
+  <h3>状態変化</h3>
+  <p>行ホバー時にカーソルがポインタに変化（cursor: pointer）。クリックで製品詳細画面に遷移。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../product-list.component.html</td><td>tr.data-row (click)="onProductClick(product)"</td><td>行クリックイベントバインド</td></tr>
+    <tr><td>proquip-frontend/.../product-list.component.ts</td><td>onProductClick()</td><td>router.navigate(['/products', product.id])</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPで3行目（Apple iPad Air M2）クリック → /products/98 に遷移確認</li>
+    <li>ソースコード: product-list.component.ts（行クリックハンドラ）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>なし</li>
+  </ul>
+</div>
+
+</body>
+</html>

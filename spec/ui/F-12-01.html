@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F-12-01: ヘッダー・グローバル機能 - UI仕様</title>
+  <style>
+    body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; margin: 24px; line-height: 1.6; color: #333; }
+    h1 { border-bottom: 3px solid #2196F3; padding-bottom: 8px; }
+    h2 { border-bottom: 2px solid #64B5F6; padding-bottom: 4px; margin-top: 48px; }
+    h3 { border-left: 4px solid #90CAF9; padding-left: 8px; margin-top: 24px; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; font-size: 14px; }
+    th { background: #E3F2FD; }
+    .feature { margin-bottom: 64px; }
+    .screenshot-item { margin-bottom: 16px; border: 1px solid #ddd; border-radius: 4px; padding: 12px; }
+    .screenshot-list { margin-top: 12px; }
+    ul { margin: 4px 0; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<h1>F-12-01: ヘッダー・グローバル機能 - UI仕様</h1>
+<p>最終更新: 2026-05-22</p>
+
+<!-- ================================================================== -->
+<!-- F-12-01-001: メニュー切替ボタン -->
+<!-- ================================================================== -->
+<div class="feature" id="F-12-01-001">
+  <h2>F-12-01-001: メニュー切替ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-12-01-001</li>
+    <li>大分類: F-12 共通機能</li>
+    <li>中分類: F-12-01 ヘッダー・グローバル機能</li>
+    <li>小分類: メニュー切替ボタン</li>
+    <li>画面名: ヘッダー（全画面共通）</li>
+    <li>URL: 全画面共通</li>
+    <li>対象ロール: 全認証ユーザー（ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER）</li>
+    <li>関連ユースケース: UC-001（目的の業務画面にナビゲーションする）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">ヘッダー左端のハンバーガーメニューボタン。サイドナビゲーションの展開・折りたたみを切り替える。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-12/F-12-01_header_initial.png</p>
+    <img src="../../screenshots/F-12/F-12-01_header_initial.png" alt="F-12-01 ヘッダー 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>ヘッダー左端に配置されたハンバーガーアイコン（☰）のボタン。クリックするとサイドナビゲーションの展開・折りたたみを切り替える。</p>
+
+  <h3>WHY</h3>
+  <p>画面の作業領域を広げたいときにサイドナビゲーションを折りたたみ、メインコンテンツの表示領域を最大化するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ハンバーガーアイコン（☰）</td><td>常時</td><td>HTMLエンティティ <code>&amp;#9776;</code></td><td>テキストベースのアイコン</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>サイドバー切替</td>
+      <td>ボタンクリック</td>
+      <td><code>toggleSidebar</code> EventEmitterを発火。親コンポーネントがサイドバーの <code>collapsed</code> プロパティを反転</td>
+      <td>サイドナビゲーションが展開⇔折りたたみを切り替え</td>
+      <td>-</td>
+      <td>サイドバー展開時: アイコン+ラベル+バージョン表示。折りたたみ時: アイコンのみ表示</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>ボタンクリックでサイドバーが折りたたみ状態と展開状態をトグルする。折りたたみ時はメインコンテンツ領域が広がる。</p>
+
+  <h3>異常系</h3>
+  <p>なし（クライアントサイドの状態切り替えのみでAPI通信なし）</p>
+
+  <h3>権限制御</h3>
+  <p>なし。全認証ユーザーが利用可能。</p>
+
+  <h3>状態変化</h3>
+  <p>サイドバーの <code>collapsed</code> プロパティが <code>true</code>/<code>false</code> でトグル。CSSクラス <code>.collapsed</code> がサイドバーに付与/除去される。</p>
+
+  <h3>関連API</h3>
+  <p>なし</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/header.component.ts</td><td>HeaderComponent.onToggleSidebar()</td><td>toggleSidebar EventEmitter発火</td></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/header.component.html</td><td>button.sidebar-toggle</td><td>aria-label="メニュー切替"、クリックで onToggleSidebar() 呼び出し</td></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/sidebar.component.ts</td><td>SidebarComponent.collapsed (Input)</td><td>親コンポーネントからの折りたたみ状態受け取り</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <p style="font-size:14px; color:#555;">サイドバー折りたたみ時の表示。</p>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> メニュー切替ボタンをクリックしてサイドバーを折りたたんだ状態 ／
+        <strong>備考:</strong> アイコンのみ表示、ラベル・バージョン非表示
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-12/F-12-02_sidebar_collapsed.png</p>
+      <img src="../../screenshots/F-12/F-12-02_sidebar_collapsed.png" alt="F-12-02 サイドバー 折りたたみ状態" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ダッシュボード画面でメニュー切替ボタンをクリックし、サイドバーの折りたたみ・展開を確認</li>
+    <li>スクリーンショット: screenshots/F-12/F-12-01_header_initial.png, screenshots/F-12/F-12-02_sidebar_collapsed.png</li>
+    <li>ソースコード: proquip-frontend/src/app/core/layout/header.component.ts:14（@Output toggleSidebar）, :70-72（onToggleSidebar）</li>
+    <li>ソースコード: proquip-frontend/src/app/core/layout/sidebar.component.ts:25（@Input collapsed）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>折りたたみ状態の永続化（ブラウザリロード時にリセットされるか）</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-12-01-002: システムロゴ・タイトル -->
+<!-- ================================================================== -->
+<div class="feature" id="F-12-01-002">
+  <h2>F-12-01-002: システムロゴ・タイトル</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-12-01-002</li>
+    <li>大分類: F-12 共通機能</li>
+    <li>中分類: F-12-01 ヘッダー・グローバル機能</li>
+    <li>小分類: システムロゴ・タイトル</li>
+    <li>画面名: ヘッダー（全画面共通）</li>
+    <li>URL: 全画面共通</li>
+    <li>対象ロール: 全認証ユーザー（ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER）</li>
+    <li>関連ユースケース: UC-005（システムバージョン・識別情報を確認する）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">ヘッダー左側、メニュー切替ボタンの隣に表示されるシステム名称。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-12/F-12-01_header_initial.png</p>
+    <img src="../../screenshots/F-12/F-12-01_header_initial.png" alt="F-12-01 ヘッダー 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>ヘッダー左側に表示されるシステム名「ProQuip」とサブタイトル「調達・在庫管理」。</p>
+
+  <h3>WHY</h3>
+  <p>ユーザーが現在どのシステムを利用しているかを常時視認できるようにするため。ブランドアイデンティティの表示。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>システム名「ProQuip」</td><td>常時</td><td>固定文字列（テンプレート直書き）</td><td>CSSクラス: <code>.logo-text</code></td></tr>
+    <tr><td>サブタイトル「調達・在庫管理」</td><td>常時</td><td>固定文字列（テンプレート直書き）</td><td>CSSクラス: <code>.logo-subtitle</code></td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし（表示専用）</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>（なし）</td><td>-</td><td>-</td><td>-</td><td>-</td><td>クリックイベント未設定（ダッシュボードへの遷移なし）</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>常時「ProQuip」と「調達・在庫管理」が表示される。</p>
+
+  <h3>異常系</h3>
+  <p>なし（固定文字列のため）</p>
+
+  <h3>権限制御</h3>
+  <p>なし。全認証ユーザーに表示。</p>
+
+  <h3>状態変化</h3>
+  <p>なし</p>
+
+  <h3>関連API</h3>
+  <p>なし</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/header.component.html</td><td>div.logo</td><td>span.logo-text="ProQuip", span.logo-subtitle="調達・在庫管理"</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <p>なし（固定表示のため状態変化なし）</p>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ダッシュボード画面でヘッダー左側のロゴ・タイトルを確認</li>
+    <li>スクリーンショット: screenshots/F-12/F-12-01_header_initial.png</li>
+    <li>ソースコード: proquip-frontend/src/app/core/layout/header.component.html:6-9（div.logo内のspan要素）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>ロゴクリックでダッシュボード（ホーム）に遷移する動作が未実装（routerLinkなし）</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-12-01-003: グローバル検索 -->
+<!-- ================================================================== -->
+<div class="feature" id="F-12-01-003">
+  <h2>F-12-01-003: グローバル検索</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-12-01-003</li>
+    <li>大分類: F-12 共通機能</li>
+    <li>中分類: F-12-01 ヘッダー・グローバル機能</li>
+    <li>小分類: グローバル検索</li>
+    <li>画面名: ヘッダー（全画面共通）</li>
+    <li>URL: 全画面共通</li>
+    <li>対象ロール: 全認証ユーザー（ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER）</li>
+    <li>関連ユースケース: UC-001（目的の業務画面にナビゲーションする）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">ヘッダー中央の検索バー。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-12/F-12-01_header_initial.png</p>
+    <img src="../../screenshots/F-12/F-12-01_header_initial.png" alt="F-12-01 ヘッダー 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>ヘッダー中央に配置された検索ボックス。キーワードに応じて製品・サプライヤー・調達管理の各画面にルーティングする簡易検索。</p>
+
+  <h3>WHY</h3>
+  <p>ユーザーがどの画面にいても、キーワードを入力するだけで関連画面に素早く遷移できるようにするため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>検索ボックス</td><td>常時</td><td>-</td><td>type="search"、プレースホルダー: 「製品・サプライヤー・注文番号を検索...」</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr>
+      <td>検索キーワード</td>
+      <td>テキスト（search）</td>
+      <td>任意</td>
+      <td>制限なし</td>
+      <td>空文字</td>
+      <td>空文字の場合は検索実行しない（<code>keyword.trim()</code> が空なら return）</td>
+      <td>ngModelでsearchKeywordにバインド。aria-label="グローバル検索"</td>
+    </tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>検索実行</td>
+      <td>Enterキー押下 または 検索ボタンクリック</td>
+      <td>キーワードをtrimし、以下のルーティングルールで遷移:
+        <ul>
+          <li>"po-" または "po"+数字 で始まる → <code>/procurement?search=keyword</code></li>
+          <li>"サプライヤー" または "仕入" を含む → <code>/suppliers?search=keyword</code></li>
+          <li>その他 → <code>/products?search=keyword</code></li>
+        </ul>
+      </td>
+      <td>対応する一覧画面にクエリパラメータ付きで遷移</td>
+      <td>-</td>
+      <td>検索実行後、searchKeywordが空文字にリセットされる</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>キーワードを入力してEnterまたは検索ボタンで遷移する。遷移先はキーワードの内容によって自動判定される。検索後は入力欄がクリアされる。</p>
+
+  <h3>異常系</h3>
+  <p>空文字入力時は何もしない（遷移しない）。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。全認証ユーザーが利用可能。遷移先の画面はAuthGuardで保護されている。</p>
+
+  <h3>状態変化</h3>
+  <p>検索実行後、searchKeywordプロパティが空文字にリセットされ、入力欄がクリアされる。</p>
+
+  <h3>関連API</h3>
+  <p>検索自体はAPI呼び出しを行わず、クライアントサイドのルーティングのみ。遷移先の画面がクエリパラメータを解釈してAPI呼び出しを行う。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/header.component.ts</td><td>HeaderComponent.onSearch()</td><td>検索キーワードのルーティングロジック（:89-103）</td></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/header.component.html</td><td>div.search-bar</td><td>input[type=search] + button.search-btn</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <p>なし（検索は遷移動作であり、検索結果は遷移先画面の責務）</p>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ヘッダー中央の検索バーを確認、プレースホルダーテキストを確認</li>
+    <li>スクリーンショット: screenshots/F-12/F-12-01_header_initial.png</li>
+    <li>ソースコード: proquip-frontend/src/app/core/layout/header.component.ts:89-103（onSearch メソッド内のルーティングロジック）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>遷移先の画面でクエリパラメータ <code>search</code> を受け取って検索を実行するか（各画面コンポーネントの実装依存）</li>
+    <li>検索キーワードのルーティングルールの演算子優先度に潜在的バグ: <code>lower.startsWith('po') && /\d/.test(lower)</code> の条件が意図通りか（括弧なし）</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-12-01-004: 検索ボタン -->
+<!-- ================================================================== -->
+<div class="feature" id="F-12-01-004">
+  <h2>F-12-01-004: 検索ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-12-01-004</li>
+    <li>大分類: F-12 共通機能</li>
+    <li>中分類: F-12-01 ヘッダー・グローバル機能</li>
+    <li>小分類: 検索ボタン</li>
+    <li>画面名: ヘッダー（全画面共通）</li>
+    <li>URL: 全画面共通</li>
+    <li>対象ロール: 全認証ユーザー（ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER）</li>
+    <li>関連ユースケース: UC-001（目的の業務画面にナビゲーションする）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">検索バー右端の「検索」ボタン。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-12/F-12-01_header_initial.png</p>
+    <img src="../../screenshots/F-12/F-12-01_header_initial.png" alt="F-12-01 ヘッダー 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>検索バー右端に配置された「検索」ラベルのボタン。クリックでグローバル検索を実行する。</p>
+
+  <h3>WHY</h3>
+  <p>Enterキー以外にもマウス操作で検索を実行できるようにするため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>「検索」ラベル</td><td>常時</td><td>固定文字列</td><td>CSSクラス: <code>.search-btn</code></td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>検索実行</td>
+      <td>ボタンクリック</td>
+      <td>F-12-01-003 グローバル検索の <code>onSearch()</code> を呼び出し</td>
+      <td>F-12-01-003 と同一</td>
+      <td>-</td>
+      <td>F-12-01-003 と同一</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>F-12-01-003 グローバル検索と同一の動作。</p>
+
+  <h3>異常系</h3>
+  <p>F-12-01-003 と同一。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。</p>
+
+  <h3>状態変化</h3>
+  <p>F-12-01-003 と同一。</p>
+
+  <h3>関連API</h3>
+  <p>なし（F-12-01-003 と同一）</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/header.component.html</td><td>button.search-btn</td><td>(click)="onSearch()" バインディング</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <p>なし</p>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ヘッダーの検索バー右端に「検索」ボタンを確認</li>
+    <li>ソースコード: proquip-frontend/src/app/core/layout/header.component.html:22（button.search-btn）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>なし</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-12-01-005: 通知ボタン -->
+<!-- ================================================================== -->
+<div class="feature" id="F-12-01-005">
+  <h2>F-12-01-005: 通知ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-12-01-005</li>
+    <li>大分類: F-12 共通機能</li>
+    <li>中分類: F-12-01 ヘッダー・グローバル機能</li>
+    <li>小分類: 通知ボタン</li>
+    <li>画面名: ヘッダー（全画面共通）</li>
+    <li>URL: 全画面共通</li>
+    <li>対象ロール: 全認証ユーザー（ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER）</li>
+    <li>関連ユースケース: UC-002（システム通知を確認して対応する）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">ヘッダー右側のベルアイコンボタン。未読通知がある場合はバッジが表示される。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-12/F-12-01_header_initial.png</p>
+    <img src="../../screenshots/F-12/F-12-01_header_initial.png" alt="F-12-01 ヘッダー 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>ヘッダー右側に表示されるベルアイコン（🔔）のボタン。未読通知件数をバッジで表示する。現在はクリック時の動作が未実装。</p>
+
+  <h3>WHY</h3>
+  <p>承認依頼、在庫アラート、発注遅延等のシステム通知をユーザーに即座に知らせるため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ベルアイコン（🔔）</td><td>常時</td><td>HTMLエンティティ <code>&amp;#128276;</code></td><td>テキストベースのアイコン</td></tr>
+    <tr><td>未読件数バッジ</td><td><code>notificationCount > 0</code> の場合のみ表示（*ngIf）</td><td>GET /api/notifications/unread-count → <code>result.unreadCount</code></td><td>CSSクラス: <code>.notification-badge</code>。絶対位置でベルアイコン右上に重ねて表示</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>（クリック）</td>
+      <td>ボタンクリック</td>
+      <td>クリックハンドラ未設定</td>
+      <td>-</td>
+      <td>-</td>
+      <td>なし（通知パネル表示は未実装）</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>ページロード時にGET /api/notifications/unread-count を呼び出し、未読件数を取得。0件の場合はバッジ非表示。1件以上の場合はバッジに件数表示。60秒ごとにポーリングで最新件数を取得。</p>
+
+  <h3>異常系</h3>
+  <p>API呼び出し失敗時（エラーコールバック）: <code>notificationCount = 0</code> にフォールバックし、バッジ非表示。エラーメッセージは表示しない。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。全認証ユーザーに表示。通知データ自体のフィルタはバックエンドAPI側の責務。</p>
+
+  <h3>状態変化</h3>
+  <p><code>notificationCount</code> が60秒ごとのポーリングで更新される。0↔正数の変化でバッジの表示/非表示が切り替わる。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr>
+      <td>-</td>
+      <td>GET</td>
+      <td>/api/notifications/unread-count</td>
+      <td>なし</td>
+      <td><code>{ "unreadCount": number }</code></td>
+      <td>エラー時はcatchで notificationCount=0 にフォールバック</td>
+      <td>ソースコード: header.component.ts:42-50, Network通信確認: reqid=26</td>
+    </tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/header.component.ts</td><td>HeaderComponent.loadUnreadCount()</td><td>未読件数取得API呼び出し（:42-50）</td></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/header.component.ts</td><td>HeaderComponent.ngOnInit()</td><td>初回ロード + 60秒ポーリング設定（:30-33）</td></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/header.component.ts</td><td>HeaderComponent.ngOnDestroy()</td><td>ポーリングタイマー解除（:36-39）</td></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/header.component.html</td><td>button.notification-btn</td><td>ベルアイコン + バッジ表示（:27-31）</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <p style="font-size:14px; color:#555;">現在の確認時点では未読通知が0件のため、バッジ非表示状態のみ確認。</p>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ダッシュボード画面でベルアイコンを確認、バッジ非表示（未読0件）</li>
+    <li>スクリーンショット: screenshots/F-12/F-12-01_header_initial.png</li>
+    <li>Network通信: GET /api/notifications/unread-count → 200（reqid=26）</li>
+    <li>ソースコード: proquip-frontend/src/app/core/layout/header.component.ts:30-50（ポーリング + API呼び出し）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>通知ボタンクリック時の通知パネル表示が未実装（クリックハンドラなし）</li>
+    <li>未読バッジが表示される場合の見た目（現在0件のため未確認）</li>
+    <li>通知の既読化はどの画面・操作で行われるか</li>
+  </ul>
+</div>
+
+<!-- ================================================================== -->
+<!-- F-12-01-006: ユーザーメニュー -->
+<!-- ================================================================== -->
+<div class="feature" id="F-12-01-006">
+  <h2>F-12-01-006: ユーザーメニュー</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-12-01-006</li>
+    <li>大分類: F-12 共通機能</li>
+    <li>中分類: F-12-01 ヘッダー・グローバル機能</li>
+    <li>小分類: ユーザーメニュー</li>
+    <li>画面名: ヘッダー（全画面共通）</li>
+    <li>URL: 全画面共通</li>
+    <li>対象ロール: 全認証ユーザー（ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER）</li>
+    <li>関連ユースケース: UC-003（システムからログアウトする）, UC-004（自身のログイン状態とロールを確認する）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">ヘッダー右端のユーザー名表示とドロップダウンメニュー。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-12/F-12-01-006_usermenu_open.png</p>
+    <img src="../../screenshots/F-12/F-12-01-006_usermenu_open.png" alt="F-12-01-006 ユーザーメニュー展開時" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>ヘッダー右端に表示されるユーザー情報エリア。アバター（名前の頭文字）、ユーザー名、キャレットを表示し、クリックでドロップダウンメニューを開く。ドロップダウンにはユーザー名・ロール表示、設定リンク、ログアウトボタンがある。</p>
+
+  <h3>WHY</h3>
+  <p>ログイン中のユーザーを視覚的に確認し、設定やログアウトへの導線を提供するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>アバター（頭文字）</td><td>常時</td><td><code>username.charAt(0)</code></td><td>CSSクラス: <code>.user-avatar</code>。円形32px</td></tr>
+    <tr><td>ユーザー名</td><td>常時</td><td>Keycloakプロファイル: <code>profile.lastName + " " + profile.firstName</code>。取得失敗時は <code>authService.getUsername()</code>。例外時は「ゲスト」</td><td>CSSクラス: <code>.user-name</code></td></tr>
+    <tr><td>キャレット（▼）</td><td>常時</td><td>HTMLエンティティ <code>&amp;#9660;</code></td><td></td></tr>
+    <tr><td>【ドロップダウン】ユーザーフルネーム</td><td>メニュー展開時</td><td>usernameと同一</td><td>CSSクラス: <code>.user-fullname</code></td></tr>
+    <tr><td>【ドロップダウン】ロール名</td><td>メニュー展開時</td><td><code>authService.getRoles()[0]</code>。ロールなしの場合は「一般ユーザー」</td><td>CSSクラス: <code>.user-role</code>。最初のロールのみ表示</td></tr>
+    <tr><td>【ドロップダウン】設定リンク</td><td>メニュー展開時</td><td>固定テキスト「⚙ 設定」</td><td>routerLink="/admin"</td></tr>
+    <tr><td>【ドロップダウン】ログアウトボタン</td><td>メニュー展開時</td><td>固定テキスト「➜ ログアウト」</td><td>CSSクラス: <code>.logout-btn</code></td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>メニュー開閉</td>
+      <td>ユーザーボタンクリック</td>
+      <td><code>showUserMenu</code> を反転</td>
+      <td>ドロップダウンメニューの表示/非表示をトグル</td>
+      <td>-</td>
+      <td><code>showUserMenu: true/false</code></td>
+    </tr>
+    <tr>
+      <td>メニュー外クリックで閉じる</td>
+      <td>メニュー領域外クリック</td>
+      <td><code>appClickOutside</code> ディレクティブが <code>onCloseUserMenu()</code> を呼び出し</td>
+      <td>ドロップダウンが閉じる</td>
+      <td>-</td>
+      <td><code>showUserMenu = false</code></td>
+    </tr>
+    <tr>
+      <td>設定画面遷移</td>
+      <td>「⚙ 設定」クリック</td>
+      <td>routerLink="/admin" で管理者設定画面に遷移</td>
+      <td>/admin に遷移</td>
+      <td>-</td>
+      <td>画面遷移</td>
+    </tr>
+    <tr>
+      <td>ログアウト</td>
+      <td>「➜ ログアウト」クリック</td>
+      <td><code>authService.logout()</code> を呼び出し。Keycloakのログアウトエンドポイントにリダイレクト</td>
+      <td>Keycloakログイン画面にリダイレクト</td>
+      <td>-</td>
+      <td>セッション終了、ログイン画面に遷移</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>ページロード時に Keycloak プロファイルから「姓 名」形式のユーザー名とロール（最初の1つ）を取得して表示する。ボタンクリックでドロップダウンが開き、設定とログアウトの操作が可能。メニュー外クリックで自動的に閉じる。</p>
+
+  <h3>異常系</h3>
+  <p>Keycloakプロファイル取得失敗時: ユーザー名は「ゲスト」、ロールは空文字にフォールバック。現環境では Keycloak /account エンドポイントが401を返すため、「ゲスト」表示となっている。</p>
+
+  <h3>権限制御</h3>
+  <p>なし。全認証ユーザーに表示。「⚙ 設定」リンクもロールに関係なく表示される（遷移先の /admin 画面側で制御）。</p>
+
+  <h3>状態変化</h3>
+  <p><code>showUserMenu</code> プロパティが true/false でトグル。*ngIf で <code>div.user-dropdown</code> の表示/非表示を制御。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr>
+      <td>-</td>
+      <td>GET</td>
+      <td>/auth/realms/proquip/account</td>
+      <td>Bearer token</td>
+      <td>KeycloakProfile (firstName, lastName, email等)</td>
+      <td>401 → フォールバック「ゲスト」表示</td>
+      <td>Network通信: reqid=24（401）</td>
+    </tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/header.component.ts</td><td>HeaderComponent.loadUserInfo()</td><td>Keycloakプロファイル取得、ユーザー名・ロール設定（:54-67）</td></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/header.component.ts</td><td>HeaderComponent.onToggleUserMenu()</td><td>メニュー開閉トグル（:75-77）</td></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/header.component.ts</td><td>HeaderComponent.onCloseUserMenu()</td><td>メニュー閉じる（:80-82）</td></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/header.component.ts</td><td>HeaderComponent.onLogout()</td><td>ログアウト呼び出し（:85-87）</td></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/header.component.html</td><td>div.user-menu</td><td>ユーザーボタン + ドロップダウン（:34-54）</td></tr>
+    <tr><td>proquip-frontend/src/app/core/auth/auth.service.ts</td><td>AuthService.getUserProfile()</td><td>Keycloakプロファイル取得</td></tr>
+    <tr><td>proquip-frontend/src/app/core/auth/auth.service.ts</td><td>AuthService.getRoles()</td><td>ロール配列取得</td></tr>
+    <tr><td>proquip-frontend/src/app/shared/directives/click-outside.directive.ts</td><td>appClickOutside</td><td>要素外クリック検知ディレクティブ</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> ユーザーボタンクリックでドロップダウン展開 ／
+        <strong>備考:</strong> ユーザー名「ゲスト」（プロファイル取得失敗時のフォールバック）、ロール未表示、設定リンク・ログアウトボタン表示
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-12/F-12-01-006_usermenu_open.png</p>
+      <img src="../../screenshots/F-12/F-12-01-006_usermenu_open.png" alt="F-12-01-006 ユーザーメニュー展開" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ユーザーボタンクリックでドロップダウン展開を確認。設定リンク・ログアウトボタンの存在を確認</li>
+    <li>スクリーンショット: screenshots/F-12/F-12-01-006_usermenu_open.png</li>
+    <li>Network通信: GET /auth/realms/proquip/account → 401（reqid=24）</li>
+    <li>ソースコード: proquip-frontend/src/app/core/layout/header.component.ts:54-87</li>
+    <li>ソースコード: proquip-frontend/src/app/core/layout/header.component.html:34-54</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>Keycloakプロファイルが正常に取得できた場合の表示（姓 名形式でのユーザー名表示）</li>
+    <li>ロール名の表示形式（ADMIN/MANAGER等の英語表記がそのまま表示されるか、日本語変換されるか）</li>
+    <li>「⚙ 設定」リンクが全ロールのユーザーに表示されるが、ADMIN以外のユーザーが /admin にアクセスした場合の挙動</li>
+  </ul>
+</div>
+
+</body>
+</html>

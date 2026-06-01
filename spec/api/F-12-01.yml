@@ -1,0 +1,444 @@
+openapi: "3.0.3"
+info:
+  title: "Existing System API - F-12-01 ヘッダー・グローバル機能"
+  version: "1.0.0"
+  description: "既存システムのAPI仕様（マイグレーション用） - F-12-01 ヘッダー・グローバル機能（通知API）"
+
+servers:
+  - url: http://localhost:4200
+    description: "既存システム（nginx経由）"
+
+paths:
+  /api/notifications:
+    get:
+      summary: "未読通知一覧取得"
+      description: |
+        指定ユーザーの未読通知一覧を取得する。
+        userIdクエリパラメータが未指定の場合、SecurityContext（Keycloak JWT）からユーザーIDを解決する。
+        解決方法: Keycloak principal name → UserProfile.keycloakId で検索 → 未発見時は username で検索 → 未発見時はデフォルトID=1L。
+        通知はpriority DESC, createdAt DESC の順にソートされる。
+      operationId: listNotifications
+      tags:
+        - "F-12-01-005"
+      x-feature-ids:
+        - "F-12-01-005"
+      x-evidence:
+        source: "ソースコード: proquip-web/.../resource/NotificationResource.java:68-81"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "フロントエンドから直接呼び出す画面が未実装（通知パネル未実装のため、現在はunread-countのみ使用）"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          required: false
+          description: "ユーザーID。省略時はSecurityContextから自動解決"
+          schema:
+            type: integer
+            format: int64
+          x-evidence: "ソースコード: NotificationResource.java:70"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+              example:
+                - id: 1
+                  userId: 1
+                  title: "承認依頼があります"
+                  message: "発注書 PO-20260001 の承認をお願いします。"
+                  type: "APPROVAL_REQUEST"
+                  status: "UNREAD"
+                  priority: 2
+                  referenceType: "PurchaseOrder"
+                  referenceId: 1
+                  readAt: null
+                  expiresAt: "2026-06-21T00:00:00.000Z"
+                  createdAt: "2026-05-22T00:00:00.000Z"
+                  updatedAt: "2026-05-22T00:00:00.000Z"
+          x-evidence: "ソースコード: NotificationResource.java:79-80, NotificationServiceBean.java:234-243"
+        "401":
+          description: "認証エラー（Bearerトークンなし・期限切れ）"
+          x-evidence: "ソースコード: proquip-web/.../filter/AuthenticationFilter.java"
+        "500":
+          description: "サーバーエラー"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/notifications/{id}/read:
+    put:
+      summary: "通知を既読にする"
+      description: |
+        指定した通知IDの通知を既読（READ）にする。
+        SecurityContextからユーザーIDを解決し、通知の所有者と一致するか検証する。
+        所有者不一致の場合は警告ログを出力して何もせず200を返す（エラーにはならない）。
+        既に既読の場合も200を返す（冪等）。
+      operationId: markAsRead
+      tags:
+        - "F-12-01-005"
+      x-feature-ids:
+        - "F-12-01-005"
+      x-evidence:
+        source: "ソースコード: proquip-web/.../resource/NotificationResource.java:94-107"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "フロントエンドから呼び出す画面が未実装（通知パネル未実装）"
+        - "所有者不一致時にエラーレスポンスではなく成功レスポンスを返す挙動が意図的か不明"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "通知ID"
+          schema:
+            type: integer
+            format: int64
+          x-evidence: "ソースコード: NotificationResource.java:96"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "通知を既読にしました。"
+          x-evidence: "ソースコード: NotificationResource.java:104-106"
+        "401":
+          description: "認証エラー"
+          x-evidence: "ソースコード: proquip-web/.../filter/AuthenticationFilter.java"
+        "404":
+          description: "通知が見つからない"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 404
+                errorCode: "ENTITY_NOT_FOUND"
+                message: "Notification with id XX was not found."
+                details: []
+          x-evidence: "ソースコード: NotificationServiceBean.java:180-182, GlobalExceptionMapper.java"
+
+  /api/notifications/mark-all-read:
+    post:
+      summary: "全通知を一括既読にする"
+      description: |
+        指定ユーザーの全未読通知を一括で既読（READ）にする。
+        ユーザーIDはリクエストボディから取得する（技術的負債: SecurityContextから解決すべき）。
+        バルクUPDATEクエリで一括更新する。
+      operationId: markAllAsRead
+      tags:
+        - "F-12-01-005"
+      x-feature-ids:
+        - "F-12-01-005"
+      x-evidence:
+        source: "ソースコード: proquip-web/.../resource/NotificationResource.java:116-139"
+      x-confidence: "Medium"
+      x-unconfirmed:
+        - "フロントエンドから呼び出す画面が未実装（通知パネル未実装）"
+        - "ユーザーIDをリクエストボディから取得する設計が意図的か不明（技術的負債として記載あり）"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: integer
+                  format: int64
+                  description: "対象ユーザーID"
+            example:
+              userId: 1
+        x-evidence: "ソースコード: NotificationResource.java:118,122-124"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "全通知を既読にしました。"
+                  updatedCount:
+                    type: integer
+                    description: "既読にした件数"
+                    example: 5
+          x-evidence: "ソースコード: NotificationResource.java:134-138"
+        "400":
+          description: "バリデーションエラー（userIdが未指定）"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "userIdは必須です。"
+          x-evidence: "ソースコード: NotificationResource.java:126-130"
+        "401":
+          description: "認証エラー"
+          x-evidence: "ソースコード: proquip-web/.../filter/AuthenticationFilter.java"
+
+  /api/notifications/unread-count:
+    get:
+      summary: "未読通知件数取得"
+      description: |
+        指定ユーザーの未読通知件数を取得する。
+        フロントエンドのヘッダーコンポーネントから60秒ごとにポーリングで呼び出される。
+        userIdクエリパラメータが未指定の場合、SecurityContextから自動解決する。
+        NamedQuery "Notification.countUnread" で status='UNREAD' の件数をCOUNT。
+        技術的負債: レスポンスがHashMap（型安全なDTOではない）。
+      operationId: getUnreadCount
+      tags:
+        - "F-12-01-005"
+      x-feature-ids:
+        - "F-12-01-005"
+      x-evidence:
+        network: "Network通信で確認: GET /api/notifications/unread-count [200]"
+        source: "ソースコード: proquip-web/.../resource/NotificationResource.java:153-168"
+      x-confidence: "High"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          required: false
+          description: "ユーザーID。省略時はSecurityContextから自動解決"
+          schema:
+            type: integer
+            format: int64
+          x-evidence: "ソースコード: NotificationResource.java:155"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnreadCountResponse"
+              example:
+                unreadCount: 0
+                userId: 1
+          headers:
+            content-type:
+              schema:
+                type: string
+              example: "application/json"
+              x-evidence: "Network通信"
+            cache-control:
+              schema:
+                type: string
+              example: "no-store, no-cache, must-revalidate"
+              x-evidence: "Network通信"
+          x-evidence: "Network通信 + ソースコード: NotificationResource.java:162-167"
+        "401":
+          description: "認証エラー（Bearerトークンなし・期限切れ）"
+          x-evidence: "ソースコード: proquip-web/.../filter/AuthenticationFilter.java"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Keycloak OIDC Bearer JWT認証。
+        AuthenticationFilter（ContainerRequestFilter）で全APIエンドポイントに適用。
+        技術的負債: JWT署名検証が未実装。
+      x-evidence: "ソースコード: proquip-web/.../filter/AuthenticationFilter.java"
+
+  schemas:
+    Notification:
+      type: object
+      description: |
+        通知エンティティ。
+        DB定義: notification テーブル（V007__create_notification_tables.sql）
+        JPA: Notification.java extends AuditableEntity
+        技術的負債: userId/templateIdが生の外部キー、type/statusが文字列型
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "通知ID（BIGSERIAL）"
+          x-evidence: "ソースコード: BaseEntity.java（@Id @GeneratedValue）"
+        userId:
+          type: integer
+          format: int64
+          description: "通知先ユーザーID（user_profile.id への外部キー）"
+          x-evidence: "ソースコード: Notification.java:64-65"
+        title:
+          type: string
+          maxLength: 300
+          description: "通知タイトル"
+          x-evidence: "ソースコード: Notification.java:68（DB定義では500文字、Entityでは300文字制限）"
+        message:
+          type: string
+          description: "通知本文（TEXT型）"
+          x-evidence: "ソースコード: Notification.java:72"
+        type:
+          type: string
+          description: "通知種別"
+          enum:
+            - "INFO"
+            - "WARNING"
+            - "ERROR"
+            - "APPROVAL_REQUEST"
+          x-evidence: "ソースコード: Notification.java:80-81, NotificationServiceBean.java:80,87-93"
+        status:
+          type: string
+          description: "通知ステータス"
+          enum:
+            - "UNREAD"
+            - "READ"
+            - "ARCHIVED"
+          x-evidence: "ソースコード: Notification.java:88-89"
+          x-unconfirmed:
+            - "DB定義ではPENDING/SENT/DELIVERED/READ/FAILED/CANCELLED/EXPIREDだが、Entity/Serviceコードでは UNREAD/READ/ARCHIVED のみ使用。不一致あり"
+        priority:
+          type: integer
+          description: "優先度（数値。1=INFO, 2=WARNING/APPROVAL_REQUEST, 3=ERROR）"
+          x-evidence: "ソースコード: Notification.java:92, NotificationServiceBean.java:87-93"
+          x-unconfirmed:
+            - "DB定義ではVARCHAR(10)でLOW/NORMAL/HIGH/URGENTだが、EntityではInteger型。不一致あり"
+        referenceType:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: "参照先エンティティ種別（例: PurchaseOrder, ApprovalRequest）"
+          x-evidence: "ソースコード: Notification.java:96-97"
+        referenceId:
+          type: integer
+          format: int64
+          nullable: true
+          description: "参照先エンティティのID"
+          x-evidence: "ソースコード: Notification.java:100-101"
+        readAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "既読日時"
+          x-evidence: "ソースコード: Notification.java:104-106"
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "有効期限（デフォルト: 作成から30日後）"
+          x-evidence: "ソースコード: Notification.java:109-111, NotificationServiceBean.java:96-98"
+        templateId:
+          type: integer
+          format: int64
+          nullable: true
+          description: "通知テンプレートID（notification_template.id への参照）"
+          x-evidence: "ソースコード: Notification.java:117-118"
+        createdAt:
+          type: string
+          format: date-time
+          description: "作成日時"
+          x-evidence: "ソースコード: AuditableEntity.java"
+        createdBy:
+          type: string
+          description: "作成者"
+          x-evidence: "ソースコード: AuditableEntity.java"
+        updatedAt:
+          type: string
+          format: date-time
+          description: "更新日時"
+          x-evidence: "ソースコード: AuditableEntity.java"
+        updatedBy:
+          type: string
+          description: "更新者"
+          x-evidence: "ソースコード: AuditableEntity.java"
+        version:
+          type: integer
+          description: "楽観ロックバージョン"
+          x-evidence: "ソースコード: BaseEntity.java（@Version）"
+      required:
+        - id
+        - userId
+        - title
+        - message
+        - type
+        - status
+
+    UnreadCountResponse:
+      type: object
+      description: |
+        未読通知件数レスポンス。
+        技術的負債#12: 型安全なDTOではなくHashMapで返している。
+      properties:
+        unreadCount:
+          type: integer
+          format: int64
+          description: "未読通知件数"
+        userId:
+          type: integer
+          format: int64
+          description: "対象ユーザーID"
+      required:
+        - unreadCount
+        - userId
+      x-evidence: "Network通信 + ソースコード: NotificationResource.java:164-167"
+
+    ErrorResponse:
+      type: object
+      description: "共通エラーレスポンス形式"
+      properties:
+        code:
+          type: integer
+          description: "HTTPステータスコード"
+        errorCode:
+          type: string
+          description: "エラーコード"
+        message:
+          type: string
+          description: "エラーメッセージ"
+        details:
+          type: array
+          items:
+            type: string
+          description: "追加のエラー詳細"
+      x-evidence: "ソースコード: proquip-web/.../filter/GlobalExceptionMapper.java"
+
+x-technical-debt:
+  - id: "TD-12"
+    description: "NotificationResource の未読件数エンドポイントが HashMap を返しており、型安全なDTOを使用していない"
+    evidence: "ソースコード: NotificationResource.java:36,148,164-167"
+  - id: "TD-entity-mismatch"
+    description: "Notification エンティティのフィールド型がDB定義と不一致（priority: DB=VARCHAR, Entity=Integer。status: DB=PENDING/SENT等, Entity=UNREAD/READ/ARCHIVED）"
+    evidence: "ソースコード: Notification.java vs V007__create_notification_tables.sql"
+  - id: "TD-userid-resolution"
+    description: "resolveUserId がユーザー解決失敗時にデフォルトID=1Lを返す。セキュリティリスク"
+    evidence: "ソースコード: NotificationResource.java:180-204"
+  - id: "TD-mark-all-read"
+    description: "mark-all-readエンドポイントがユーザーIDをリクエストボディから取得しており、SecurityContextから解決すべき"
+    evidence: "ソースコード: NotificationResource.java:122-124"
+
+x-frontend-integration:
+  polling:
+    endpoint: "GET /api/notifications/unread-count"
+    interval: "60000ms (60秒)"
+    component: "proquip-frontend/src/app/core/layout/header.component.ts:30-50"
+    errorHandling: "notificationCount = 0 にフォールバック"
+    cleanup: "ngOnDestroy で clearInterval"
+  model:
+    file: "proquip-frontend/src/app/shared/models/notification.model.ts"
+    interfaces:
+      - "Notification: id, type, title, message, entityType, entityId, isRead, createdAt, readAt, actionUrl"
+      - "NotificationCount: total, unread, byType[]"

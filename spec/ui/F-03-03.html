@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>F-03-03: カテゴリ管理画面 - UI仕様</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; color: #1f2937; }
+    h1 { border-bottom: 2px solid #3b82f6; padding-bottom: 8px; }
+    h2 { border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; margin-top: 40px; }
+    h3 { color: #374151; margin-top: 20px; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #d1d5db; padding: 6px 10px; text-align: left; font-size: 14px; }
+    th { background-color: #f3f4f6; }
+    .feature { margin-bottom: 60px; }
+    ul { margin: 4px 0; }
+    li { margin: 2px 0; }
+    code { background: #f3f4f6; padding: 1px 4px; border-radius: 3px; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<h1>F-03-03: カテゴリ管理画面 - UI仕様</h1>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-03-001">
+  <h2>F-03-03-001: カテゴリツリー</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-03-001</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-03 カテゴリ管理画面</li>
+    <li>小分類: カテゴリツリー</li>
+    <li>画面名: カテゴリ管理</li>
+    <li>URL: /products/categories</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ、@RolesAllowed未設定）</li>
+    <li>関連ユースケース: UC-012（カテゴリの階層構造を確認して分類方針を検討する）</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">カテゴリ管理画面の初期表示。左側にカテゴリツリー、右側は編集パネル非表示。</p>
+  <div class="screenshot-item" style="margin-bottom:16px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-03_category-management_initial.png</p>
+    <img src="../../screenshots/F-03/F-03-03_category-management_initial.png" alt="F-03-03-001 カテゴリツリー 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>親子関係を持つカテゴリを階層ツリー形式で表示する領域。各カテゴリの名前・製品数を表示し、展開/折りたたみ・CRUD・並べ替えの各操作へのエントリーポイントを提供する。</p>
+
+  <h3>WHY</h3>
+  <p>製品カタログの分類体系を視覚的に把握し、カテゴリの追加・編集・削除・並べ替えを行うため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ページヘッダ「カテゴリ管理」</td><td>常時</td><td>固定文字列</td><td>app-page-headerコンポーネント、description=「製品カテゴリの階層管理」</td></tr>
+    <tr><td>パネルタイトル「カテゴリ一覧」</td><td>常時</td><td>固定文字列</td><td>tree-panelのpanel-header内</td></tr>
+    <tr><td>展開/折りたたみアイコン（▼/▶）</td><td>子カテゴリがある場合</td><td>node.expanded状態</td><td>子カテゴリなしの場合はスペーサー（20px幅）</td></tr>
+    <tr><td>カテゴリ名</td><td>常時</td><td>GET /api/products/categories → category.name</td><td>font-weight: 500</td></tr>
+    <tr><td>製品数</td><td>常時</td><td>GET /api/products/categories → category.productCount</td><td>「N 製品」形式、font-size: 12px、色: #9ca3af</td></tr>
+    <tr><td>アクションボタン群（↑↓+✎✕）</td><td>ホバー時（opacity: 0→1）</td><td>-</td><td>各ボタンは26x26px、hover時に表示</td></tr>
+    <tr><td>インデント</td><td>子カテゴリ</td><td>node.level</td><td>padding-left: (level * 28 + 16)px</td></tr>
+    <tr><td>編集中ハイライト</td><td>editingCategoryId === node.category.id</td><td>-</td><td>背景色 #eff6ff</td></tr>
+    <tr><td>空状態メッセージ</td><td>カテゴリ0件</td><td>-</td><td>app-empty-state「カテゴリが登録されていません」</td></tr>
+    <tr><td>ローディングスピナー</td><td>isLoading=true</td><td>-</td><td>app-loading-spinnerコンポーネント</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし（表示専用領域）</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>ツリー行ホバー</td><td>マウスオーバー</td><td>アクションボタン群の表示</td><td>opacity: 0→1、背景色#f9fafb</td><td>-</td><td>なし</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>ページ読み込み時にGET /api/products/categoriesを呼び出し、ルートカテゴリとその子カテゴリを再帰的に取得。ツリー構造を構築し、全ノードを展開状態（expanded=true）で表示。現行データ: ルートカテゴリ6件（コンピュータ/サプライ品/ストレージ/ソフトウェア/ネットワーク/周辺機器）、子カテゴリ含む計20件。</p>
+
+  <h3>異常系</h3>
+  <p>API呼び出し失敗時: エラーバナー「カテゴリの取得に失敗しました。」を表示（error-banner、赤背景）。</p>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardによるログイン必須のみ。CategoryResourceに@RolesAllowedは未設定のため、全ロールがアクセス可能。FE側もロール別表示制御なし。</p>
+
+  <h3>状態変化</h3>
+  <p>初期状態: isLoading=true → API完了後: isLoading=false、categoryTree/flattenedTreeが構築される。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/categories</td><td>なし</td><td>CategoryDto[]（id, name, level, active, parentId, parentName, productCount, children[]）</td><td>500</td><td>Network観測 reqid=32</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip/proquip-frontend/src/app/features/products/category-management/category-management.component.ts</td><td>CategoryManagementComponent.loadCategories()</td><td>カテゴリ取得・ツリー構築</td></tr>
+    <tr><td>同上</td><td>buildTree(), setLevels(), flattenTree()</td><td>ツリー構造の構築とフラット化</td></tr>
+    <tr><td>proquip/proquip-web/src/main/java/com/proquip/web/resource/CategoryResource.java</td><td>CategoryResource.listCategories()</td><td>NamedQuery "Category.findRootCategories" で parent IS NULL のカテゴリを取得し、再帰的にtoDto</td></tr>
+    <tr><td>proquip/proquip-ejb/src/main/java/com/proquip/ejb/entity/product/Category.java</td><td>Category</td><td>category テーブル: name(200), code(50), description(1000), level, parent_id, children(OneToMany), products(OneToMany)</td></tr>
+    <tr><td>proquip/proquip-frontend/src/app/shared/models/product.model.ts:84</td><td>Category interface</td><td>id, name, description, parentId, productCount</td></tr>
+    <tr><td>proquip/proquip-frontend/src/app/shared/services/product.service.ts:67</td><td>ProductService.getCategories()</td><td>GET /api/products/categories</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: カテゴリ管理画面にアクセスし、ツリー表示を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-03_category-management_initial.png</li>
+    <li>Network通信: GET /api/products/categories (reqid=32, 200)</li>
+    <li>ソースコード: category-management.component.ts, CategoryResource.java, Category.java</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>CategoryResourceのGETエンドポイントはfindRootCategoriesのみ（子カテゴリは再帰的にtoDtoで展開）。FE側のbuildTree()はフラットなリストからparentIdで親子関係を再構築しているが、APIレスポンスは階層構造（children[]付き）で返却される。FE側のbuildTree()が正しく動作するかはchildren[]の扱い次第（推測: APIレスポンスをフラット化してからbuildTree()で再構築している可能性あり、confidence: Medium）</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-03-002">
+  <h2>F-03-03-002: 新規カテゴリボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-03-002</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-03 カテゴリ管理画面</li>
+    <li>小分類: 新規カテゴリボタン</li>
+    <li>画面名: カテゴリ管理</li>
+    <li>URL: /products/categories</li>
+    <li>対象ロール: 全ロール（@RolesAllowed未設定）</li>
+    <li>関連ユースケース: UC-013（カテゴリを追加・編集して製品分類体系を整備する）</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">新規カテゴリ作成フォーム表示状態。</p>
+  <div class="screenshot-item" style="margin-bottom:16px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-03-002_create-form.png</p>
+    <img src="../../screenshots/F-03/F-03-03-002_create-form.png" alt="F-03-03-002 新規カテゴリ作成フォーム" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>「+ 新規カテゴリ」ボタン。クリックすると右側に「カテゴリ作成」フォームを表示し、新しいルートカテゴリまたは子カテゴリを作成する。</p>
+
+  <h3>WHY</h3>
+  <p>新しい製品分類を追加するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>「+ 新規カテゴリ」ボタン</td><td>常時</td><td>固定文字列</td><td>btn-add: 青背景(#3b82f6)、白文字、panel-header右側</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>カテゴリ名</td><td>text</td><td>必須</td><td>最大100文字</td><td>空</td><td>required, maxLength(100)</td><td>エラーメッセージ「カテゴリ名は必須です」</td></tr>
+    <tr><td>説明</td><td>textarea</td><td>任意</td><td>最大500文字</td><td>空</td><td>maxLength(500)</td><td>3行表示</td></tr>
+    <tr><td>親カテゴリ</td><td>select</td><td>任意</td><td>-</td><td>（ルートカテゴリ）</td><td>-</td><td>全カテゴリを階層インデント付きで表示。「（ルートカテゴリ）」選択時はparentId=null</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>新規作成開始</td><td>「+ 新規カテゴリ」ボタンクリック</td><td>startCreate(null)を実行</td><td>右側に「カテゴリ作成」フォーム表示、親カテゴリ=ルート</td><td>-</td><td>editMode='create', editingCategoryId=null</td></tr>
+    <tr><td>保存</td><td>「保存」ボタンクリック</td><td>POST /api/products/categories</td><td>成功バナー「カテゴリを作成しました。」、フォーム閉じる、カテゴリ再読込</td><td>エラーバナー「カテゴリの作成に失敗しました。」</td><td>editMode=null, loadCategories()呼び出し</td></tr>
+    <tr><td>キャンセル</td><td>「キャンセル」ボタンクリック</td><td>cancelEdit()を実行</td><td>フォームを閉じる</td><td>-</td><td>editMode=null</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>ボタンクリック → 右側に作成フォーム表示 → カテゴリ名入力 → 保存 → 成功バナー表示 → ツリー再読込。</p>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>カテゴリ名未入力で保存: バリデーションエラー「カテゴリ名は必須です」を表示（form-error、赤文字#ef4444）。APIは呼ばれない。</li>
+    <li>API失敗: エラーバナー「カテゴリの作成に失敗しました。」</li>
+  </ul>
+
+  <h3>権限制御</h3>
+  <p>全ロールが作成可能（@RolesAllowed未設定）。</p>
+
+  <h3>状態変化</h3>
+  <p>ボタンクリック: editMode=null → 'create'。保存成功/キャンセル: editMode='create' → null。保存中: isSubmitting=true（ボタン「保存中...」、disabled）。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>POST</td><td>/api/products/categories</td><td>{ name: string, description: string, parentId: number|null }</td><td>Category</td><td>500</td><td>ソースコード: product.service.ts:113</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>category-management.component.ts</td><td>startCreate(), saveCategory()</td><td>作成モード開始、フォーム送信</td></tr>
+    <tr><td>category-management.component.ts:82-88</td><td>initializeForm()</td><td>バリデーションルール: name=required+maxLength(100), description=maxLength(500)</td></tr>
+    <tr><td>product.service.ts:113</td><td>ProductService.createCategory()</td><td>POST /api/products/categories</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <p style="font-size:14px; color:#555;">バリデーションエラー状態。</p>
+  <div class="screenshot-list">
+    <div class="screenshot-item" style="margin-bottom:24px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> カテゴリ名未入力で保存ボタン押下 ／
+        <strong>備考:</strong> 「カテゴリ名は必須です」エラー表示
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-03-002_validation-error.png</p>
+      <img src="../../screenshots/F-03/F-03-03-002_validation-error.png" alt="F-03-03-002 バリデーションエラー" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 新規カテゴリボタンクリック→フォーム表示→空保存→バリデーションエラー確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-03-002_create-form.png, screenshots/F-03/F-03-03-002_validation-error.png</li>
+    <li>ソースコード: category-management.component.ts:82-88（バリデーション）, :254-299（保存処理）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>BE側のカテゴリ作成エンドポイント（POST /api/products/categories）はCategoryResourceに存在しない（GETのみ）。FEのProductServiceはPOSTを呼んでいるが、BE側の実装が不明（推測: 別リソースまたは未実装の可能性あり、confidence: Low）</li>
+    <li>カテゴリコード（category_code）の自動生成ルールが不明。DB定義ではNOT NULL+UNIQUEだが、FEのフォームにカテゴリコード入力欄がない</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-03-003">
+  <h2>F-03-03-003: カテゴリ折りたたみ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-03-003</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-03 カテゴリ管理画面</li>
+    <li>小分類: カテゴリ折りたたみ</li>
+    <li>画面名: カテゴリ管理</li>
+    <li>URL: /products/categories</li>
+    <li>対象ロール: 全ロール</li>
+    <li>関連ユースケース: UC-012（カテゴリの階層構造を確認して分類方針を検討する）</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">「コンピュータ」を折りたたんだ状態。子カテゴリ（デスクトップPC/ノートPC/ワークステーション）が非表示。</p>
+  <div class="screenshot-item" style="margin-bottom:16px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-03-003_collapsed.png</p>
+    <img src="../../screenshots/F-03/F-03-03-003_collapsed.png" alt="F-03-03-003 折りたたみ状態" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>カテゴリツリーの展開/折りたたみ操作。子カテゴリを持つノードの▼/▶ボタンをクリックして、子カテゴリの表示/非表示を切り替える。</p>
+
+  <h3>WHY</h3>
+  <p>カテゴリ数が多い場合に、関心のある部分のみ展開して視認性を向上させるため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>展開アイコン ▼</td><td>node.expanded=true かつ children.length > 0</td><td>node.expanded</td><td>btn-toggle: 20x20px、色#9ca3af</td></tr>
+    <tr><td>折りたたみアイコン ▶</td><td>node.expanded=false かつ children.length > 0</td><td>node.expanded</td><td>同上</td></tr>
+    <tr><td>スペーサー</td><td>children.length === 0</td><td>-</td><td>toggle-spacer: 20px幅（アイコンと同じ幅を確保）</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>折りたたみ</td><td>▼アイコンクリック</td><td>toggleExpand(node) → node.expanded=false → flattenTree()</td><td>子カテゴリが非表示になる、アイコンが▶に変化</td><td>-</td><td>node.expanded: true→false</td></tr>
+    <tr><td>展開</td><td>▶アイコンクリック</td><td>toggleExpand(node) → node.expanded=true → flattenTree()</td><td>子カテゴリが表示される、アイコンが▼に変化</td><td>-</td><td>node.expanded: false→true</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>初期状態は全ノード展開（expanded=true）。クリックで即座にトグル。API呼び出しなし（クライアントサイドのみ）。</p>
+
+  <h3>異常系</h3>
+  <p>なし</p>
+
+  <h3>権限制御</h3>
+  <p>なし（全ロール共通）</p>
+
+  <h3>状態変化</h3>
+  <p>node.expandedのトグル。flattenedTreeの再構築（折りたたまれたノードの子孫はflattenedTreeに含まれない）。</p>
+
+  <h3>関連API</h3>
+  <p>なし（クライアントサイド操作のみ）</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>category-management.component.ts:207-209</td><td>toggleExpand()</td><td>expanded反転 → flattenTree()呼び出し</td></tr>
+    <tr><td>category-management.component.ts:163-178</td><td>flattenTree(), flattenNodes()</td><td>expanded=trueのノードのみ子を含める</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: コンピュータの▼クリック→子カテゴリ非表示→▶に変化を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-03-003_collapsed.png</li>
+    <li>ソースコード: category-management.component.ts:207-209</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>なし</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-03-004">
+  <h2>F-03-03-004: 上下移動ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-03-004</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-03 カテゴリ管理画面</li>
+    <li>小分類: 上下移動ボタン</li>
+    <li>画面名: カテゴリ管理</li>
+    <li>URL: /products/categories</li>
+    <li>対象ロール: 全ロール</li>
+    <li>関連ユースケース: UC-013（カテゴリを追加・編集して製品分類体系を整備する）</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>カテゴリの表示順を同一階層内で上下に移動するボタン（↑/↓）。同じ親を持つ兄弟ノード間でのみ移動可能。</p>
+
+  <h3>WHY</h3>
+  <p>カテゴリの表示順序を調整するため。技術的負債としてドラッグ&ドロップではなくボタンによる並べ替えとなっている。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>↑ボタン</td><td>ホバー時</td><td>-</td><td>title="上へ移動"、btn-icon: 26x26px</td></tr>
+    <tr><td>↓ボタン</td><td>ホバー時</td><td>-</td><td>title="下へ移動"、btn-icon: 26x26px</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>上へ移動</td><td>↑ボタンクリック</td><td>moveUp(node): 兄弟配列内で前の要素と入れ替え</td><td>カテゴリが1つ上に移動</td><td>先頭の場合は何も起きない</td><td>siblings配列の要素入れ替え → flattenTree()</td></tr>
+    <tr><td>下へ移動</td><td>↓ボタンクリック</td><td>moveDown(node): 兄弟配列内で次の要素と入れ替え</td><td>カテゴリが1つ下に移動</td><td>末尾の場合は何も起きない</td><td>siblings配列の要素入れ替え → flattenTree()</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>クリックで即座に表示順が変わる。API呼び出しなし（クライアントサイドのみ）。ページリロードで元に戻る。</p>
+
+  <h3>異常系</h3>
+  <p>先頭ノードの↑クリック/末尾ノードの↓クリック: 何も起きない（index境界チェックあり）。</p>
+
+  <h3>権限制御</h3>
+  <p>なし（全ロール共通）</p>
+
+  <h3>状態変化</h3>
+  <p>categoryTree/flattenedTreeの配列内の順序変更のみ。サーバーへの永続化なし。</p>
+
+  <h3>関連API</h3>
+  <p>なし（クライアントサイド操作のみ。並べ替え結果はサーバーに保存されない）</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>category-management.component.ts:345-368</td><td>moveUp(), moveDown()</td><td>兄弟配列内の要素入れ替え</td></tr>
+    <tr><td>category-management.component.ts:374-396</td><td>getSiblings(), findParentNode()</td><td>同一階層ノードの取得（再帰検索）</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>ソースコード: category-management.component.ts:345-396（移動ロジック、API呼び出しなし）</li>
+    <li>ソースコード: コメント「技術的負債: 実際のDnDではなくボタンによる並べ替え」</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>並べ替え結果がサーバーに永続化されない（API未実装）。リロードで元に戻る。移行時に永続化が必要か要判断</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-03-005">
+  <h2>F-03-03-005: 子カテゴリ追加ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-03-005</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-03 カテゴリ管理画面</li>
+    <li>小分類: 子カテゴリ追加ボタン</li>
+    <li>画面名: カテゴリ管理</li>
+    <li>URL: /products/categories</li>
+    <li>対象ロール: 全ロール</li>
+    <li>関連ユースケース: UC-013（カテゴリを追加・編集して製品分類体系を整備する）</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">コンピュータの子カテゴリ追加フォーム。親カテゴリが「コンピュータ」にプリセットされている。</p>
+  <div class="screenshot-item" style="margin-bottom:16px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-03-005_add-child.png</p>
+    <img src="../../screenshots/F-03/F-03-03-005_add-child.png" alt="F-03-03-005 子カテゴリ追加" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>各カテゴリ行の「+」ボタン。クリックすると「カテゴリ作成」フォームを表示し、親カテゴリに対象カテゴリがプリセットされた状態で子カテゴリを作成する。</p>
+
+  <h3>WHY</h3>
+  <p>既存カテゴリの下に子カテゴリを追加し、階層分類を細分化するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>+ボタン</td><td>ホバー時</td><td>-</td><td>title="子カテゴリを追加"、btn-icon: 26x26px</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>F-03-03-002と同一のフォーム。ただし親カテゴリの初期値がクリックしたカテゴリのIDにプリセットされる。</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>子カテゴリ作成開始</td><td>+ボタンクリック</td><td>startCreate(node.category.id)</td><td>右側に「カテゴリ作成」フォーム表示、親カテゴリ=対象カテゴリ</td><td>-</td><td>editMode='create', categoryForm.parentId=対象ID</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>コンピュータの+ボタンクリック → フォーム表示 → 親カテゴリ「コンピュータ」がプリセット → 名前入力 → 保存 → コンピュータの子として追加。</p>
+
+  <h3>異常系</h3>
+  <p>F-03-03-002と同一。</p>
+
+  <h3>権限制御</h3>
+  <p>なし（全ロール共通）</p>
+
+  <h3>状態変化</h3>
+  <p>F-03-03-002と同一。parentIdが対象カテゴリIDにセットされる点が異なる。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>POST</td><td>/api/products/categories</td><td>{ name, description, parentId: 対象ID }</td><td>Category</td><td>500</td><td>ソースコード</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>category-management.component.ts:215-225</td><td>startCreate(parentId)</td><td>parentId引数でフォームのparentIdフィールドを初期設定</td></tr>
+    <tr><td>category-management.component.html:46</td><td>(click)="startCreate(node.category.id)"</td><td>テンプレートからのparentId受け渡し</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: コンピュータの+ボタンクリック→フォーム表示→親カテゴリ「コンピュータ」がプリセットされていることを確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-03-005_add-child.png</li>
+    <li>ソースコード: category-management.component.ts:215-225, html:46</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>F-03-03-002と同一（BE側POSTエンドポイント未確認）</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-03-006">
+  <h2>F-03-03-006: カテゴリ編集ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-03-006</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-03 カテゴリ管理画面</li>
+    <li>小分類: カテゴリ編集ボタン</li>
+    <li>画面名: カテゴリ管理</li>
+    <li>URL: /products/categories</li>
+    <li>対象ロール: 全ロール</li>
+    <li>関連ユースケース: UC-013（カテゴリを追加・編集して製品分類体系を整備する）</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">「サプライ品」の編集フォーム。既存値がプリフィルされている。</p>
+  <div class="screenshot-item" style="margin-bottom:16px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-03-006_edit-form.png</p>
+    <img src="../../screenshots/F-03/F-03-03-006_edit-form.png" alt="F-03-03-006 カテゴリ編集フォーム" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>各カテゴリ行の「✎」ボタン。クリックすると右側に「カテゴリ編集」フォームを表示し、既存カテゴリの名前・説明・親カテゴリを変更する。</p>
+
+  <h3>WHY</h3>
+  <p>カテゴリ名の修正、説明の追加・変更、親カテゴリの変更（階層移動）を行うため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>✎ボタン</td><td>ホバー時</td><td>-</td><td>title="編集"、btn-icon: 26x26px</td></tr>
+    <tr><td>フォームタイトル「カテゴリ編集」</td><td>editMode='edit'</td><td>-</td><td>edit-panel内</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>カテゴリ名</td><td>text</td><td>必須</td><td>最大100文字</td><td>対象カテゴリのname</td><td>required, maxLength(100)</td><td>-</td></tr>
+    <tr><td>説明</td><td>textarea</td><td>任意</td><td>最大500文字</td><td>対象カテゴリのdescription</td><td>maxLength(500)</td><td>例: 「トナー・ケーブル・消耗品」</td></tr>
+    <tr><td>親カテゴリ</td><td>select</td><td>任意</td><td>-</td><td>対象カテゴリのparentId</td><td>-</td><td>自身を親に選択可能（循環参照の防止がFE/BEともになし）</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>編集開始</td><td>✎ボタンクリック</td><td>startEdit(category)</td><td>右側に「カテゴリ編集」フォーム表示、既存値プリフィル、ツリー上の対象行がハイライト</td><td>-</td><td>editMode='edit', editingCategoryId=対象ID</td></tr>
+    <tr><td>保存</td><td>「保存」ボタンクリック</td><td>PUT /api/products/categories/{id}</td><td>成功バナー「カテゴリを更新しました。」、フォーム閉じる、カテゴリ再読込</td><td>エラーバナー「カテゴリの更新に失敗しました。」</td><td>editMode=null, loadCategories()呼び出し</td></tr>
+    <tr><td>キャンセル</td><td>「キャンセル」ボタンクリック</td><td>cancelEdit()</td><td>フォーム閉じる</td><td>-</td><td>editMode=null</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>✎クリック → フォーム表示（既存値プリフィル）→ 値変更 → 保存 → 成功バナー表示 → ツリー再読込。ツリー上の対象行は背景色#eff6ffでハイライトされる。</p>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>カテゴリ名を空にして保存: バリデーションエラー表示</li>
+    <li>API失敗: エラーバナー表示</li>
+  </ul>
+
+  <h3>権限制御</h3>
+  <p>なし（全ロール共通）</p>
+
+  <h3>状態変化</h3>
+  <p>editMode: null → 'edit'。editingCategoryId: null → 対象ID（ツリー行ハイライト用）。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>PUT</td><td>/api/products/categories/{id}</td><td>{ name, description, parentId }</td><td>Category</td><td>500</td><td>ソースコード: product.service.ts:118</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>category-management.component.ts:230-239</td><td>startEdit(category)</td><td>editMode='edit'設定、フォームにpatchValue</td></tr>
+    <tr><td>category-management.component.ts:281-299</td><td>saveCategory() (editモード)</td><td>PUT呼び出し、成功/エラーハンドリング</td></tr>
+    <tr><td>product.service.ts:118</td><td>ProductService.updateCategory()</td><td>PUT /api/products/categories/{id}</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: サプライ品の✎クリック→フォーム表示→既存値（名前「サプライ品」、説明「トナー・ケーブル・消耗品」、親=ルート）がプリフィルされていることを確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-03-006_edit-form.png</li>
+    <li>ソースコード: category-management.component.ts:230-299</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>BE側のPUTエンドポイント（PUT /api/products/categories/{id}）はCategoryResourceに存在しない（GETのみ）。FEのProductServiceはPUTを呼んでいるが、BE側の実装が不明（推測: 未実装、confidence: Low）</li>
+    <li>自身を親カテゴリに選択した場合の循環参照防止がFE/BEともに未実装</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-03-007">
+  <h2>F-03-03-007: カテゴリ削除ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-03-007</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-03 カテゴリ管理画面</li>
+    <li>小分類: カテゴリ削除ボタン</li>
+    <li>画面名: カテゴリ管理</li>
+    <li>URL: /products/categories</li>
+    <li>対象ロール: 全ロール</li>
+    <li>関連ユースケース: UC-014（不要なカテゴリを削除してカタログ分類を整理する）</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">「サプライ品」の削除確認ダイアログ。</p>
+  <div class="screenshot-item" style="margin-bottom:16px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-03-007_delete-confirm.png</p>
+    <img src="../../screenshots/F-03/F-03-03-007_delete-confirm.png" alt="F-03-03-007 削除確認ダイアログ" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>各カテゴリ行の「✕」ボタン。クリックすると確認ダイアログを表示し、承認後にカテゴリを削除する。</p>
+
+  <h3>WHY</h3>
+  <p>不要になったカテゴリをカタログから除外するため。誤操作防止のため確認ダイアログを挟む。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>✕ボタン</td><td>ホバー時</td><td>-</td><td>title="削除"、btn-icon btn-icon-danger: hover時に赤表示</td></tr>
+    <tr><td>確認ダイアログ</td><td>showDeleteConfirm=true</td><td>-</td><td>app-confirm-dialogコンポーネント</td></tr>
+    <tr><td>ダイアログタイトル</td><td>ダイアログ表示時</td><td>固定文字列</td><td>「カテゴリの削除」</td></tr>
+    <tr><td>ダイアログメッセージ</td><td>ダイアログ表示時</td><td>deletingCategory.name</td><td>「「{カテゴリ名}」を削除してもよろしいですか？」</td></tr>
+    <tr><td>削除するボタン</td><td>ダイアログ表示時</td><td>-</td><td>confirmLabel="削除する"</td></tr>
+    <tr><td>キャンセルボタン</td><td>ダイアログ表示時</td><td>-</td><td>cancelLabel="キャンセル"</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>削除確認表示</td><td>✕ボタンクリック</td><td>confirmDelete(category)</td><td>確認ダイアログ表示</td><td>-</td><td>showDeleteConfirm=true, deletingCategory=対象</td></tr>
+    <tr><td>削除実行</td><td>「削除する」ボタンクリック</td><td>DELETE /api/products/categories/{id}</td><td>成功バナー「カテゴリを削除しました。」、ダイアログ閉じる、カテゴリ再読込</td><td>エラーバナー（error.error?.error || 「カテゴリの削除に失敗しました。」）</td><td>showDeleteConfirm=false, loadCategories()呼び出し</td></tr>
+    <tr><td>削除キャンセル</td><td>「キャンセル」ボタンクリック</td><td>cancelDelete()</td><td>ダイアログ閉じる</td><td>-</td><td>showDeleteConfirm=false, deletingCategory=null</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>✕クリック → 確認ダイアログ「「サプライ品」を削除してもよろしいですか？」→ 「削除する」クリック → API呼び出し → 成功バナー → ツリー再読込。</p>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>子カテゴリまたは製品が紐付いている場合: BE側で制約エラーが返る可能性あり → エラーバナー表示（error.error?.errorをメッセージとして使用）</li>
+    <li>API失敗: エラーバナー「カテゴリの削除に失敗しました。」</li>
+  </ul>
+
+  <h3>権限制御</h3>
+  <p>なし（全ロール共通）</p>
+
+  <h3>状態変化</h3>
+  <p>showDeleteConfirm: false → true → false。削除成功時はloadCategories()でツリー再構築。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>DELETE</td><td>/api/products/categories/{id}</td><td>なし</td><td>204 No Content</td><td>400/500（error.error?.error）</td><td>ソースコード: product.service.ts:123</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>category-management.component.ts:305-308</td><td>confirmDelete(category)</td><td>確認ダイアログ表示</td></tr>
+    <tr><td>category-management.component.ts:313-331</td><td>deleteCategory()</td><td>DELETE呼び出し、成功/エラーハンドリング</td></tr>
+    <tr><td>category-management.component.ts:336-339</td><td>cancelDelete()</td><td>ダイアログ閉じる</td></tr>
+    <tr><td>product.service.ts:123</td><td>ProductService.deleteCategory()</td><td>DELETE /api/products/categories/{id}</td></tr>
+    <tr><td>category-management.component.html:102-110</td><td>app-confirm-dialog</td><td>ダイアログのtitle/message/confirmLabel/cancelLabel</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: サプライ品の✕クリック→確認ダイアログ表示→「キャンセル」で閉じることを確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-03-007_delete-confirm.png</li>
+    <li>ソースコード: category-management.component.ts:305-339, html:102-110</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>BE側のDELETEエンドポイント（DELETE /api/products/categories/{id}）はCategoryResourceに存在しない（GETのみ）。FEのProductServiceはDELETEを呼んでいるが、BE側の実装が不明（推測: 未実装、confidence: Low）</li>
+    <li>子カテゴリがある場合のカスケード削除 or 削除拒否の仕様が不明</li>
+    <li>製品が紐付いているカテゴリの削除時の振る舞いが不明</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-03-008">
+  <h2>F-03-03-008: 製品数表示</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-03-008</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-03 カテゴリ管理画面</li>
+    <li>小分類: 製品数表示</li>
+    <li>画面名: カテゴリ管理</li>
+    <li>URL: /products/categories</li>
+    <li>対象ロール: 全ロール</li>
+    <li>関連ユースケース: UC-012（カテゴリの階層構造を確認して分類方針を検討する）</li>
+    <li>ステータス: usecase-linked</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>各カテゴリ行に表示される製品数ラベル。「N 製品」形式でそのカテゴリに直接属する製品数を表示する。</p>
+
+  <h3>WHY</h3>
+  <p>各カテゴリにどれだけの製品が分類されているかを把握し、カテゴリの統廃合や製品の再分類の判断材料とするため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>製品数ラベル</td><td>常時</td><td>category.productCount</td><td>「N 製品」形式、product-countクラス: font-size:12px、色:#9ca3af</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし（表示専用）</p>
+
+  <h3>操作</h3>
+  <p>なし（表示専用）</p>
+
+  <h3>正常系</h3>
+  <p>各カテゴリの製品数が表示される。現行データの例: コンピュータ=14、サプライ品=13、ストレージ=1、ソフトウェア=4、ネットワーク=0、周辺機器=9。子カテゴリの製品数は累計ではなく直接属する製品数のみ。</p>
+
+  <h3>異常系</h3>
+  <p>products取得でLazyLoading例外が発生した場合はproductCount=0（CategoryResource.toDto()のtry-catch）。</p>
+
+  <h3>権限制御</h3>
+  <p>なし</p>
+
+  <h3>状態変化</h3>
+  <p>なし（API取得値の表示のみ）</p>
+
+  <h3>関連API</h3>
+  <p>GET /api/products/categories のレスポンスに含まれるproductCountフィールド。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>category-management.component.html:39</td><td>{{ node.category.productCount }} 製品</td><td>テンプレートでの表示</td></tr>
+    <tr><td>CategoryResource.java:58-63</td><td>toDto() productCount設定</td><td>entity.getProducts().size()でカウント。LazyLoading例外時は0</td></tr>
+    <tr><td>Category.java:73</td><td>products (OneToMany)</td><td>LAZY fetchで製品リストを保持</td></tr>
+    <tr><td>product.model.ts:89</td><td>Category.productCount</td><td>FEモデル定義</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 各カテゴリの製品数を確認（コンピュータ=14、モニター=10等）</li>
+    <li>ソースコード: CategoryResource.java:58-63（productCountの算出）、Category.java:73（products関連）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>productCountは直接属する製品数のみで、子カテゴリの製品数を含まない。移行時に累計表示が必要か要確認</li>
+  </ul>
+</div>
+
+</body>
+</html>

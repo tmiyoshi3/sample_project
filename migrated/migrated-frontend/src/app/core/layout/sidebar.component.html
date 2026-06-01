@@ -1,0 +1,16 @@
+<nav class="sidebar" [class.collapsed]="collapsed">
+  <ul class="nav-list">
+    <li *ngFor="let item of menuItems" class="nav-item" [class.active]="isActive(item.route)" [title]="item.label">
+      <a [routerLink]="item.route">
+        <span class="nav-icon">{{ item.icon }}</span>
+        <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+      </a>
+    </li>
+  </ul>
+  <div class="sidebar-footer">
+    <div class="version-info" *ngIf="!collapsed">
+      <span class="version-label">バージョン</span>
+      <span class="version-number">v1.0.0</span>
+    </div>
+  </div>
+</nav>

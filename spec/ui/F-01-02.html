@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>F-01-02: パスワードリセット画面 - UI仕様</title>
+  <style>
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 2em; line-height: 1.6; color: #333; }
+    h1 { border-bottom: 3px solid #2c3e50; padding-bottom: 0.3em; }
+    h2 { border-bottom: 2px solid #3498db; padding-bottom: 0.2em; margin-top: 2em; }
+    h3 { border-bottom: 1px solid #bdc3c7; padding-bottom: 0.2em; margin-top: 1.5em; }
+    table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+    th, td { border: 1px solid #bdc3c7; padding: 0.5em 0.8em; text-align: left; vertical-align: top; }
+    th { background-color: #ecf0f1; font-weight: bold; }
+    .feature { margin-bottom: 3em; padding: 1em; border: 1px solid #ddd; border-radius: 4px; }
+    .evidence { font-size: 0.9em; color: #7f8c8d; }
+    ul { margin: 0.5em 0; }
+  </style>
+</head>
+<body>
+
+<h1>F-01-02: パスワードリセット画面 - UI仕様</h1>
+<p>最終更新: 2026-05-22 | Phase 3 (画面操作) + Phase 5 (ソースコード補完)</p>
+
+<!-- ============================================================ -->
+<!-- F-01-02-001: パスワードリセット画面 -->
+<!-- ============================================================ -->
+<div class="feature" id="F-01-02-001">
+  <h2>F-01-02-001: パスワードリセット画面</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-01-02-001</li>
+    <li>大分類: F-01 認証</li>
+    <li>中分類: F-01-02 パスワードリセット画面</li>
+    <li>小分類: パスワードリセット画面</li>
+    <li>画面名: パスワードリセット画面（Keycloak）</li>
+    <li>URL: /realms/proquip/login-actions/reset-credentials?client_id=proquip-web&amp;tab_id=...</li>
+    <li>対象ロール: 全ロール（未認証ユーザー）</li>
+    <li>関連ユースケース: UC-003（パスワードを自助リセットする）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">通常利用時の代表的な画面状態。この画面の全体像を把握したうえで、以降の詳細仕様を参照すること。</p>
+  <div class="screenshot-item" style="margin-bottom:16px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-01/F-01-02_password-reset_initial.png</p>
+    <img src="../../screenshots/F-01/F-01-02_password-reset_initial.png" alt="F-01-02-001 パスワードリセット画面 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>パスワードを忘れたユーザーがパスワードリセットを要求する画面。Keycloakが提供。</p>
+
+  <h3>WHY</h3>
+  <p>ユーザーが自助でパスワードをリセットし、アカウントへのアクセスを回復できるようにする。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>見出し「パスワードをお忘れですか?」</td><td>常に表示</td><td>Keycloakテーマ（i18n）</td><td>h1要素</td></tr>
+    <tr><td>説明文「ユーザー名またメールアドレスを入力してください。新しいパスワードの設定方法をご案内いたします。」</td><td>常に表示</td><td>Keycloakテーマ（i18n）</td><td>送信ボタンの下に表示</td></tr>
+    <tr><td>リンク「« ログインに戻る」</td><td>常に表示</td><td>Keycloakテーマ（i18n）</td><td>ログイン画面に戻る</td></tr>
+    <tr><td>言語切替「日本語˅」</td><td>常に表示</td><td>Keycloakロケール設定</td><td>ログイン画面と同じドロップダウン</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr>
+      <td>ユーザー名またはメールアドレス</td>
+      <td>text</td>
+      <td>必須</td>
+      <td>特になし（Keycloak側で検証）</td>
+      <td>空文字</td>
+      <td>サーバーサイド: Keycloakがユーザー存在チェック</td>
+      <td>-</td>
+    </tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>送信</td>
+      <td>「送信」ボタンクリック</td>
+      <td>パスワードリセットメールの送信要求</td>
+      <td>パスワードリセットメールが送信される（推測）</td>
+      <td>ユーザー未存在時の動作は未確認</td>
+      <td>パスワードリセットフロー開始</td>
+    </tr>
+    <tr>
+      <td>ログインに戻る</td>
+      <td>「« ログインに戻る」リンククリック</td>
+      <td>ログイン画面に遷移</td>
+      <td>ログイン画面が表示される</td>
+      <td>セッションタイムアウト時: タイムアウトエラー</td>
+      <td>画面遷移</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>ユーザー名またはメールアドレスを入力し「送信」ボタンをクリックすると、パスワードリセットメールが送信される（SMTP設定が必要、動作未確認）。</p>
+
+  <h3>異常系</h3>
+  <p>未確認（SMTP設定の有無、存在しないユーザーの場合の動作）。</p>
+
+  <h3>権限制御</h3>
+  <p>未認証ユーザーがアクセス可能。</p>
+
+  <h3>状態変化</h3>
+  <p>送信成功時: パスワードリセットトークンが生成され、メールで送信される。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr>
+      <td>-</td>
+      <td>POST</td>
+      <td>/realms/proquip/login-actions/reset-credentials</td>
+      <td>username</td>
+      <td>リセットメール送信確認画面（推測）</td>
+      <td>未確認</td>
+      <td>推測: Keycloakデフォルト動作</td>
+    </tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td colspan="3">Keycloakデフォルトテーマの機能。カスタムソースなし。</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <p style="font-size:14px; color:#555;">入力状態・エラー・権限差異など、操作や条件によって変化する画面状態を記録する。</p>
+  <div class="screenshot-list">
+    <div class="screenshot-item" style="margin-bottom:24px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 初期表示 ／
+        <strong>備考:</strong> パスワードリセット画面の全体表示
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-01/F-01-02_password-reset_initial.png</p>
+      <img src="../../screenshots/F-01/F-01-02_password-reset_initial.png" alt="F-01-02-001 パスワードリセット画面 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ログイン画面の「パスワードをお忘れですか?」リンクから遷移して画面構成を確認</li>
+    <li>スクリーンショット: screenshots/F-01/F-01-02_password-reset_initial.png</li>
+    <li>推測: 送信後の動作はKeycloakデフォルトフローに基づく推測, confidence: Medium</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>Medium</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>SMTP設定の有無（メール送信が実際に機能するか）</li>
+    <li>送信後の確認画面の内容</li>
+    <li>パスワードリセットメールの内容・有効期限</li>
+    <li>新パスワード設定画面の内容</li>
+    <li>存在しないユーザー名入力時の動作（ユーザー列挙防止の考慮）</li>
+    <li>「« ログインに戻る」の遷移先がセッションタイムアウトしている場合の動作</li>
+  </ul>
+</div>
+
+</body>
+</html>

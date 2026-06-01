@@ -1,0 +1,711 @@
+openapi: "3.0.3"
+info:
+  title: "Existing System API - F-03-02 製品詳細画面"
+  version: "1.0.0"
+  description: "既存システムのAPI仕様（マイグレーション用） - F-03-02 製品詳細画面"
+
+servers:
+  - url: http://localhost:4200
+    description: "既存システム（nginx経由）"
+
+paths:
+  /api/products/{id}:
+    get:
+      summary: "製品詳細取得"
+      description: |
+        製品IDを指定して製品の詳細情報を取得する。
+        関連データ（仕様・画像・ドキュメント）をLEFT JOIN FETCHで一括取得する。
+
+        取得データ:
+        - 製品基本情報（name, sku, description, status, category, manufacturer）
+        - 価格・数量情報（unitPrice, minOrderQty, weight）
+        - 仕様情報（specifications: ProductSpecification → JSON文字列に変換）
+        - 画像情報（images: ProductImage[] → ImageDto[]）
+        - ドキュメント情報（documents: ProductDocument[] → DocumentDto[]）
+        - 代替品ID（alternatives: Long[]）
+        - タグ（tags: String[]）
+
+        実装上の注意点:
+        - specificationsはDB上ではProductSpecification別テーブル（specKey/specValue）だが、
+          APIレスポンスではJSON文字列に変換して返却する。
+        - createdAt/updatedAtはAPIレスポンスに含まれない（DTOマッピング漏れ）。
+        - unit（単位名）はAPIレスポンスに含まれない（DTOマッピング漏れ）。
+        - leadTimeDays（リードタイム）はAPIレスポンスに含まれない（DTOマッピング漏れ）。
+        - width/height/depth（寸法）はAPIレスポンスに含まれない（DTOマッピング漏れ）。
+        - suppliers/inventoryItemsはこのAPIには含まれない（別APIまたは未実装）。
+        - stockQuantityとreorderPointはAPIレスポンスに含まれない。
+      operationId: getProduct
+      tags:
+        - "F-03-02-001"
+        - "F-03-02-005"
+        - "F-03-02-006"
+        - "F-03-02-007"
+        - "F-03-02-008"
+        - "F-03-02-009"
+        - "F-03-02-010"
+        - "F-03-02-011"
+        - "F-03-02-013"
+        - "F-03-02-014"
+      x-feature-ids:
+        - "F-03-02-001"
+        - "F-03-02-005"
+        - "F-03-02-006"
+        - "F-03-02-007"
+        - "F-03-02-008"
+        - "F-03-02-009"
+        - "F-03-02-010"
+        - "F-03-02-011"
+        - "F-03-02-013"
+        - "F-03-02-014"
+      x-evidence:
+        network: "Network通信で確認: GET /api/products/1 [200], content-type: application/json, content-length: 923"
+        source: "ソースコード: proquip-web/.../resource/ProductResource.java:179-254"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "createdAt/updatedAtがAPIレスポンスに含まれない原因（DTOマッピング漏れか意図的か）"
+        - "unit/leadTimeDays/width/height/depthがAPIレスポンスに含まれない原因"
+        - "在庫がある製品でのinventoryItemsの取得方法（メインAPIに含まれるか別APIか）"
+        - "suppliersデータがメインAPIに含まれるか（現状product ID=1ではsuppliers未返却）"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "製品ID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+          x-evidence: "Network通信 + ソースコード: ProductResource.java:181 @PathParam(\"id\")"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductDetailDto"
+              example:
+                id: 1
+                skuCode: "DPC-001001"
+                name: "Dell OptiPlex 7010 SFF"
+                description: "Intel Core i5-13500T搭載 省スペース型デスクトップPC。メモリ16GB、SSD 512GB。法人向けスタンダードモデル。"
+                categoryId: 7
+                categoryName: "デスクトップPC"
+                manufacturerId: 1
+                manufacturerName: "Dell Technologies"
+                unitPrice: 148000.00
+                status: "ACTIVE"
+                weight: 5.000
+                minOrderQty: 1
+                active: false
+                specifications: '{"CPU":"Intel Core i5-13500T","メモリ":"16GB DDR5-4800","ストレージ":"512GB NVMe SSD","消費電力":"65 W"}'
+                images:
+                  - id: 1
+                    fileName: "/images/products/product-1-dell-optiplex-7010.png"
+                    mimeType: "PHOTO"
+                    primary: true
+                    sortOrder: 1
+                documents:
+                  - id: 1
+                    docType: "DATASHEET"
+                    fileName: "Dell OptiPlex 7010 SFF 仕様書"
+                    filePath: "/documents/products/dell-optiplex-7010-sff-spec.pdf"
+                    docVersion: "2024.1"
+                alternatives: []
+                tags: []
+          x-evidence: "Network通信: GET /api/products/1 → 200, レスポンスボディ全フィールド確認済み"
+        "404":
+          description: "製品が見つからない"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "商品が見つかりません。ID=999"
+          x-evidence: "ソースコード: ProductResource.java:194-196 Response.Status.NOT_FOUND"
+
+    delete:
+      summary: "製品削除（論理削除）"
+      description: |
+        製品のステータスをDISCONTINUEDに変更する（論理削除）。物理削除ではない。
+
+        処理フロー:
+        1. ProductServiceBean.changeStatus(id, "DISCONTINUED")を呼び出し
+        2. ステータス遷移バリデーション
+        3. ProductChangeLogにステータス変更履歴を記録
+        4. 監査ログに記録
+        5. 204 No Content を返却
+
+        ステータス遷移ルール:
+        - DISCONTINUEDのまま再度DISCONTINUED変更はできない（ValidationException）
+        - ACTIVEへの変更はPENDINGまたはINACTIVEからのみ可能
+
+        フロントエンド側の処理:
+        1. 削除ボタンクリック → 確認ダイアログ表示
+        2. 「削除する」ボタンクリック → DELETE API呼び出し
+        3. 成功時 → /products へ自動遷移
+        4. 失敗時 → エラーメッセージ「製品の削除に失敗しました。」表示
+      operationId: deleteProduct
+      tags:
+        - "F-03-02-004"
+      x-feature-ids:
+        - "F-03-02-004"
+      x-evidence:
+        network: "Network通信では未確認（実際の削除操作は実行せず）"
+        source: "ソースコード: proquip-web/.../resource/ProductResource.java:334-341, proquip-ejb/.../service/ProductServiceBean.java:421-466"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "在庫がある製品の削除時の挙動（制約チェックの有無）"
+        - "既にDISCONTINUEDの製品を再度削除した場合のエラーレスポンス形式"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "製品ID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+          x-evidence: "ソースコード: ProductResource.java:336 @PathParam(\"id\")"
+      responses:
+        "204":
+          description: "削除成功（論理削除: ステータスをDISCONTINUEDに変更）"
+          x-evidence: "ソースコード: ProductResource.java:341 Response.Status.NO_CONTENT"
+        "404":
+          description: "製品が見つからない"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          x-evidence: "ソースコード: ProductServiceBean.java:423 EntityNotFoundException"
+        "422":
+          description: "バリデーションエラー（既にDISCONTINUEDの製品を削除しようとした場合等）"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          x-evidence: "ソースコード: ProductServiceBean.java:427-428 ValidationException"
+
+  /api/products/{id}/change-log:
+    get:
+      summary: "製品変更履歴取得"
+      description: |
+        製品の変更履歴をcreatedAt降順で取得する。
+
+        レスポンスフィールド:
+        - id: 変更ログID
+        - changeType: 変更種別（"CREATE", "UPDATE", "STATUS_CHANGE"）
+        - field: 変更対象フィールド名（"unit_price", "status"等。CREATE時はnull）
+        - oldValue: 旧値（CREATE時はnull）
+        - newValue: 新値（CREATE時はnull）
+        - changedAt: 変更日時（ProductChangeLog.createdAtを使用）
+        - changedBy: 変更者名（UserProfile.displayNameを解決。見つからない場合はchangedByUserIdの文字列）
+
+        取得クエリ:
+        SELECT cl FROM ProductChangeLog cl WHERE cl.product.id = :productId ORDER BY cl.createdAt DESC
+      operationId: getProductChangeLog
+      tags:
+        - "F-03-02-015"
+      x-feature-ids:
+        - "F-03-02-015"
+      x-evidence:
+        network: "Network通信で確認: GET /api/products/1/change-log [200], content-type: application/json, content-length: 291"
+        source: "ソースコード: proquip-web/.../resource/ProductResource.java:615-654"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "変更履歴が多数ある場合のページング有無（現状はページングなし・全件取得）"
+        - "changeType=DELETEの場合の表示形式"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "製品ID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+          x-evidence: "Network通信 + ソースコード: ProductResource.java:617 @PathParam(\"id\")"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChangeLogEntry"
+              example:
+                - id: 8
+                  changeType: "UPDATE"
+                  field: "unit_price"
+                  oldValue: "145000"
+                  newValue: "148000"
+                  changedAt: "2024-10-01T10:00:00"
+                  changedBy: "高橋優希"
+                - id: 1
+                  changeType: "CREATE"
+                  field: null
+                  oldValue: null
+                  newValue: null
+                  changedAt: "2024-04-01T10:00:00"
+                  changedBy: "高橋優希"
+          x-evidence: "Network通信: GET /api/products/1/change-log → 200, 2件のエントリ確認済み"
+        "404":
+          description: "製品が見つからない"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          x-evidence: "ソースコード: ProductResource.java:624-625 Response.Status.NOT_FOUND"
+
+  /api/products/{id}/suppliers:
+    get:
+      summary: "製品別サプライヤー一覧取得"
+      description: |
+        製品IDを指定して、その製品を取り扱うサプライヤー一覧をrating降順で取得する。
+
+        取得クエリ:
+        SELECT sp FROM SupplierProduct sp LEFT JOIN FETCH sp.supplier
+        WHERE sp.product.id = :productId ORDER BY sp.supplier.rating DESC
+
+        実装上の注意点:
+        - EntityManagerを直接使用（サービス層を経由しない: 技術的負債）
+        - 製品が存在しない場合も404は返さず、空配列を返す
+        - フロントエンド（product-detail.component.ts）からは現状このAPIを直接呼び出していない。
+          製品詳細のサプライヤータブはproduct.suppliersを参照しているが、
+          GET /api/products/{id}のレスポンスにsuppliersフィールドが含まれない場合がある。
+      operationId: getProductSuppliers
+      tags:
+        - "F-03-02-013"
+      x-feature-ids:
+        - "F-03-02-013"
+      x-evidence:
+        network: "Network通信では未確認（フロントエンドから呼び出されていない）"
+        source: "ソースコード: proquip-web/.../resource/ProductResource.java:380-399"
+      x-confidence: "Medium"
+      x-unconfirmed:
+        - "フロントエンドからの実際の呼び出し有無（FEはproduct.suppliersを参照しているがAPIレスポンスに含まれていない可能性）"
+        - "サプライヤーが登録されている製品でのレスポンス確認（product ID=1はサプライヤー未登録）"
+        - "SupplierDTOのフィールド一覧の完全な確認"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "製品ID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+          x-evidence: "ソースコード: ProductResource.java:383 @PathParam(\"id\")"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupplierDto"
+          x-evidence: "ソースコード: ProductResource.java:398 supplierMapper.toDto()"
+
+  /api/products/{id}/alternatives:
+    get:
+      summary: "製品代替品一覧取得"
+      description: |
+        製品IDを指定して代替品の一覧を取得する。
+
+        処理フロー:
+        1. productService.findById(id)で対象製品を取得
+        2. ProductMapper.toDetailDto()で変換
+        3. detailDto.getAlternatives()から代替品IDリストを取得
+        4. 各IDについてproductService.findById()で製品取得 → ProductDTOに変換
+        5. 見つからない代替品はwarningログ出力して無視（技術的負債#7）
+
+        実装上の注意点:
+        - フロントエンド（product-detail.component.ts）からはこのAPIを呼び出していない。
+          代わりにGET /api/products?page=0&size=5（一般製品リスト先頭5件）から自身を除外して
+          代替品として表示している（技術的負債）。
+        - N+1クエリパターン（各代替品IDごとにfindById呼び出し）
+      operationId: getProductAlternatives
+      tags:
+        - "F-03-02-012"
+      x-feature-ids:
+        - "F-03-02-012"
+      x-evidence:
+        network: "Network通信では未確認（フロントエンドからはGET /api/products?page=0&size=5を使用）"
+        source: "ソースコード: proquip-web/.../resource/ProductResource.java:349-372"
+      x-confidence: "Medium"
+      x-unconfirmed:
+        - "ProductAlternativeエンティティのデータ件数（product ID=1ではalternatives=[]）"
+        - "フロントエンドがこのAPIを使わず一般製品リストで代用している理由"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "製品ID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+          x-evidence: "ソースコード: ProductResource.java:351 @PathParam(\"id\")"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductDto"
+          x-evidence: "ソースコード: ProductResource.java:370"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Keycloak OIDC Bearer JWT。AuthenticationFilterで検証。"
+      x-evidence: "Network通信: Authorization: Bearer eyJ... ヘッダ確認"
+
+  schemas:
+    ProductDetailDto:
+      type: object
+      description: "製品詳細レスポンスDTO"
+      x-evidence: "Network通信（GET /api/products/1 → 200） + ソースコード: proquip-common/.../dto/ProductDetailDto.java"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "製品ID"
+          x-evidence: "Network通信: id=1"
+        skuCode:
+          type: string
+          description: "SKUコード（ProductDTO.getSku()のエイリアス）"
+          example: "DPC-001001"
+          x-evidence: "Network通信: skuCode=\"DPC-001001\""
+        name:
+          type: string
+          description: "製品名"
+          example: "Dell OptiPlex 7010 SFF"
+          x-evidence: "Network通信"
+        description:
+          type: string
+          description: "製品説明"
+          nullable: true
+          x-evidence: "Network通信"
+        categoryId:
+          type: integer
+          format: int64
+          description: "カテゴリID"
+          x-evidence: "Network通信: categoryId=7"
+        categoryName:
+          type: string
+          description: "カテゴリ名"
+          example: "デスクトップPC"
+          x-evidence: "Network通信"
+        manufacturerId:
+          type: integer
+          format: int64
+          description: "メーカーID"
+          nullable: true
+          x-evidence: "Network通信: manufacturerId=1"
+        manufacturerName:
+          type: string
+          description: "メーカー名"
+          nullable: true
+          example: "Dell Technologies"
+          x-evidence: "Network通信"
+        unitPrice:
+          type: number
+          format: double
+          description: "単価（precision=18, scale=4）"
+          example: 148000.00
+          x-evidence: "Network通信 + ソースコード: Product.java unitPrice BigDecimal"
+        status:
+          type: string
+          description: "ステータス"
+          enum:
+            - "ACTIVE"
+            - "INACTIVE"
+            - "DISCONTINUED"
+            - "PENDING"
+          example: "ACTIVE"
+          x-evidence: "Network通信 + ソースコード: ProductServiceBean.java:427-435 ステータス遷移ルール"
+        weight:
+          type: number
+          format: double
+          description: "重量（kg）"
+          nullable: true
+          example: 5.000
+          x-evidence: "Network通信: weight=5.000"
+        minOrderQty:
+          type: integer
+          description: "最低発注数"
+          nullable: true
+          example: 1
+          x-evidence: "Network通信: minOrderQty=1"
+        active:
+          type: boolean
+          description: "有効フラグ"
+          x-evidence: "Network通信: active=false"
+        specifications:
+          type: string
+          description: "製品仕様（JSON文字列）。DB上はProductSpecificationテーブル（specKey/specValue）だが、APIではJSON文字列に変換して返却"
+          nullable: true
+          example: '{"CPU":"Intel Core i5-13500T","メモリ":"16GB DDR5-4800","ストレージ":"512GB NVMe SSD","消費電力":"65 W"}'
+          x-evidence: "Network通信 + ソースコード: ProductResource.java:225-236（specifications→JSON変換ロジック）"
+        images:
+          type: array
+          description: "製品画像リスト（sortOrder昇順）"
+          items:
+            $ref: "#/components/schemas/ImageDto"
+          x-evidence: "Network通信: images配列確認 + ソースコード: ProductResource.java:209-214"
+        documents:
+          type: array
+          description: "製品ドキュメントリスト"
+          items:
+            $ref: "#/components/schemas/DocumentDto"
+          x-evidence: "Network通信: documents配列確認 + ソースコード: ProductResource.java:216-221, 238-251"
+        alternatives:
+          type: array
+          description: "代替品IDリスト（現状product ID=1では空配列）"
+          items:
+            type: integer
+            format: int64
+          x-evidence: "Network通信: alternatives=[] + ソースコード: ProductDetailDto.java alternatives List<Long>"
+        tags:
+          type: array
+          description: "タグリスト"
+          items:
+            type: string
+          x-evidence: "Network通信: tags=[]"
+      x-missing-fields:
+        - field: "createdAt"
+          reason: "DTOにフィールド未定義。AuditableEntity.createdAtは存在するがマッピングされていない"
+          x-evidence: "Network通信で未含 + ソースコード: ProductDetailDto.java にcreatedAtフィールドなし"
+        - field: "updatedAt"
+          reason: "DTOにフィールド未定義"
+          x-evidence: "Network通信で未含"
+        - field: "notes"
+          reason: "DTOにフィールド未定義"
+          x-evidence: "Network通信で未含 + ソースコード: ProductDetailDto.java にnotesフィールドなし"
+        - field: "unit"
+          reason: "DTOにフィールド未定義（UnitOfMeasure名）"
+          x-evidence: "Network通信で未含"
+        - field: "leadTimeDays"
+          reason: "DTOにフィールド未定義"
+          x-evidence: "Network通信で未含"
+        - field: "width"
+          reason: "DTOにフィールドは定義あり（ProductDetailDto.java）だがAPIレスポンスに未含"
+          x-evidence: "Network通信で未含"
+        - field: "height"
+          reason: "同上"
+          x-evidence: "Network通信で未含"
+        - field: "depth"
+          reason: "同上"
+          x-evidence: "Network通信で未含"
+
+    ImageDto:
+      type: object
+      description: "製品画像DTO"
+      x-evidence: "Network通信 + ソースコード: ProductDetailDto.java:350-422 (inner class)"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "画像ID"
+          x-evidence: "Network通信: id=1"
+        fileName:
+          type: string
+          description: "画像ファイルパス"
+          example: "/images/products/product-1-dell-optiplex-7010.png"
+          x-evidence: "Network通信"
+        mimeType:
+          type: string
+          description: "MIMEタイプ（実際にはPHOTO等の文字列）"
+          example: "PHOTO"
+          x-evidence: "Network通信: mimeType=\"PHOTO\""
+        primary:
+          type: boolean
+          description: "メイン画像フラグ"
+          x-evidence: "Network通信: primary=true"
+        sortOrder:
+          type: integer
+          description: "表示順"
+          x-evidence: "Network通信: sortOrder=1"
+
+    DocumentDto:
+      type: object
+      description: "製品ドキュメントDTO"
+      x-evidence: "Network通信 + ソースコード: ProductDetailDto.java:427-488 (inner class)"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "ドキュメントID"
+          x-evidence: "Network通信: id=1"
+        docType:
+          type: string
+          description: "ドキュメントタイプ"
+          enum:
+            - "DATASHEET"
+            - "MANUAL"
+            - "CERTIFICATE"
+            - "WARRANTY"
+            - "OTHER"
+          example: "DATASHEET"
+          x-evidence: "Network通信: docType=\"DATASHEET\" + ソースコード: ProductDocument.java docTypeフィールド"
+        fileName:
+          type: string
+          description: "ドキュメント名"
+          example: "Dell OptiPlex 7010 SFF 仕様書"
+          x-evidence: "Network通信"
+        filePath:
+          type: string
+          description: "ファイルパス"
+          example: "/documents/products/dell-optiplex-7010-sff-spec.pdf"
+          x-evidence: "Network通信"
+        docVersion:
+          type: string
+          description: "ドキュメントバージョン"
+          example: "2024.1"
+          x-evidence: "Network通信: docVersion=\"2024.1\""
+
+    ChangeLogEntry:
+      type: object
+      description: "製品変更履歴エントリ"
+      x-evidence: "Network通信（GET /api/products/1/change-log → 200）+ ソースコード: ProductResource.java:627-652"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "変更ログID"
+          x-evidence: "Network通信: id=8, id=1"
+        changeType:
+          type: string
+          description: "変更種別"
+          enum:
+            - "CREATE"
+            - "UPDATE"
+            - "STATUS_CHANGE"
+          example: "UPDATE"
+          x-evidence: "Network通信: changeType=\"UPDATE\", changeType=\"CREATE\" + ソースコード: ProductServiceBean.java:452 \"STATUS_CHANGE\""
+        field:
+          type: string
+          description: "変更対象フィールド名（CREATE時はnull）"
+          nullable: true
+          example: "unit_price"
+          x-evidence: "Network通信: field=\"unit_price\", field=null"
+        oldValue:
+          type: string
+          description: "旧値（CREATE時はnull）"
+          nullable: true
+          example: "145000"
+          x-evidence: "Network通信"
+        newValue:
+          type: string
+          description: "新値（CREATE時はnull）"
+          nullable: true
+          example: "148000"
+          x-evidence: "Network通信"
+        changedAt:
+          type: string
+          format: date-time
+          description: "変更日時（ProductChangeLog.createdAtから取得）"
+          example: "2024-10-01T10:00:00"
+          x-evidence: "Network通信: changedAt=\"2024-10-01T10:00:00\""
+        changedBy:
+          type: string
+          description: "変更者名（UserProfile.displayNameを解決）"
+          nullable: true
+          example: "高橋優希"
+          x-evidence: "Network通信: changedBy=\"高橋優希\" + ソースコード: ProductResource.java:639-646 UserProfile名前解決ロジック"
+
+    SupplierDto:
+      type: object
+      description: "サプライヤーDTO"
+      x-evidence: "ソースコード: proquip-common/.../dto/SupplierDTO.java"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "サプライヤーID"
+        name:
+          type: string
+          description: "会社名"
+        code:
+          type: string
+          description: "サプライヤーコード"
+        status:
+          type: string
+          description: "ステータス"
+        rating:
+          type: number
+          format: double
+          description: "評価（0.00-5.00）"
+        email:
+          type: string
+          description: "メールアドレス"
+        phone:
+          type: string
+          description: "電話番号"
+        website:
+          type: string
+          description: "Webサイト"
+        address:
+          type: string
+          description: "住所（フラット文字列）"
+
+    ProductDto:
+      type: object
+      description: "製品一覧用DTO（代替品表示にも使用）"
+      x-evidence: "ソースコード: proquip-common/.../dto/ProductDTO.java"
+      properties:
+        id:
+          type: integer
+          format: int64
+        skuCode:
+          type: string
+        name:
+          type: string
+        categoryName:
+          type: string
+        manufacturerName:
+          type: string
+          nullable: true
+        unitPrice:
+          type: number
+          format: double
+        status:
+          type: string
+
+    ErrorResponse:
+      type: object
+      description: "エラーレスポンス"
+      x-evidence: "ソースコード: GlobalExceptionMapper.java"
+      properties:
+        code:
+          type: integer
+          description: "HTTPステータスコード"
+        errorCode:
+          type: string
+          description: "エラーコード"
+        message:
+          type: string
+          description: "エラーメッセージ"
+        details:
+          type: array
+          items:
+            type: string
+          description: "追加エラー詳細"
+
+  # FEから実際に呼ばれるAPI（代替品タブで使用）
+  # GET /api/products?page=0&size=5 については spec/api/F-03-01.yml に記載済み。
+  # フロントエンドの product-detail.component.ts の loadAlternativeProducts() から呼び出され、
+  # 自身（表示中の製品ID）を除外した5件を代替品として表示する。
+  # 本来は GET /api/products/{id}/alternatives を使うべきだが、技術的負債としてそうなっていない。

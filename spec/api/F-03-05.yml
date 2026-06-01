@@ -1,0 +1,1063 @@
+openapi: "3.0.3"
+info:
+  title: "Existing System API - F-03-05 製品新規登録/編集画面"
+  version: "1.0.0"
+  description: "既存システムのAPI仕様（マイグレーション用） - F-03-05 製品新規登録/編集画面"
+
+servers:
+  - url: http://localhost:4200
+    description: "既存システム（nginx経由）"
+
+paths:
+  /api/products/categories:
+    get:
+      summary: "カテゴリ一覧取得"
+      description: |
+        全カテゴリを名前順で取得する。ページングなし。
+        製品登録・編集画面のカテゴリ選択ドロップダウンの選択肢として使用する。
+
+        実装上の注意点:
+        - ProductResourceに実装されている（技術的負債: 本来はCategoryResourceに分離すべき）。
+        - 階層構造（parentId）を持つが、ドロップダウンではフラットに全カテゴリを表示する。
+        - @RolesAllowed未設定（全認証ユーザーがアクセス可能）。
+      operationId: listCategories
+      tags:
+        - "F-03-05-002"
+        - "F-03-05-009"
+      x-feature-ids:
+        - "F-03-05-002"
+        - "F-03-05-009"
+      x-evidence:
+        network: "Network通信で確認（GET /api/products/categories → 200、20件のカテゴリ配列を返却）"
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:425-458"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:66-69"
+      x-confidence: "High"
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        "200":
+          description: "成功 - カテゴリ一覧"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoryItem"
+              example:
+                - id: 7
+                  code: "CAT-DESKTOP"
+                  name: "デスクトップPC"
+                  description: "デスクトップ型パーソナルコンピュータ"
+                  parentId: 1
+                  productCount: 5
+                - id: 8
+                  code: "CAT-LAPTOP"
+                  name: "ノートPC"
+                  description: "ノート型パーソナルコンピュータ"
+                  parentId: 1
+                  productCount: 8
+        "500":
+          description: "サーバーエラー"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/products/manufacturers:
+    get:
+      summary: "メーカー一覧取得"
+      description: |
+        全メーカーを名前順で取得する。ページングなし。
+        製品登録・編集画面のメーカー選択ドロップダウンの選択肢として使用する。
+
+        実装上の注意点:
+        - @RolesAllowed未設定（全認証ユーザーがアクセス可能）。
+      operationId: listManufacturers
+      tags:
+        - "F-03-05-002"
+        - "F-03-05-009"
+      x-feature-ids:
+        - "F-03-05-002"
+        - "F-03-05-009"
+      x-evidence:
+        network: "Network通信で確認（GET /api/products/manufacturers → 200、15件のメーカー配列を返却）"
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:586-609"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:71-74"
+      x-confidence: "High"
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        "200":
+          description: "成功 - メーカー一覧"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ManufacturerItem"
+              example:
+                - id: 1
+                  code: "MFR-DELL"
+                  name: "Dell Technologies"
+                  country: "USA"
+                  website: "https://www.dell.com"
+                - id: 2
+                  code: "MFR-HP"
+                  name: "HP Inc."
+                  country: "USA"
+                  website: "https://www.hp.com"
+        "500":
+          description: "サーバーエラー"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/products/check-sku:
+    get:
+      summary: "SKU重複チェック"
+      description: |
+        指定したSKUが既存製品で使用されているかを確認する。
+        FE側でSKU入力時にdebounce付きで非同期呼び出しされる。
+
+        実装上の注意点:
+        - 単にboolean（true/false）を返す。trueはSKU使用済み、falseは利用可能。
+        - 編集画面では自身のSKUも一致するため、FE側で自身のSKUとの比較ロジックが必要。
+        - @RolesAllowed未設定。
+      operationId: checkSku
+      tags:
+        - "F-03-05-003"
+      x-feature-ids:
+        - "F-03-05-003"
+      x-evidence:
+        network: "Network通信で確認（sku=DPC-001001 → true、sku=ZZZZZ-99999 → false）"
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:401-412"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:81-84"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "debounceの時間設定（FE側の実装）"
+        - "編集画面での自身のSKU除外ロジックの詳細"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sku
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "チェック対象のSKU文字列"
+          x-evidence: "Network通信 + ソースコード"
+      responses:
+        "200":
+          description: "成功 - SKUの存在チェック結果"
+          content:
+            application/json:
+              schema:
+                type: boolean
+              example: true
+        "500":
+          description: "サーバーエラー"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/products:
+    post:
+      summary: "製品新規登録"
+      description: |
+        新しい製品を登録する。ウィザードのステップ5「確認・登録実行」で呼び出される。
+        登録後、レスポンスに含まれるidを使って画像・ドキュメントのアップロードを別途実行する。
+
+        処理フロー:
+        1. DTOからProductエンティティにマッピング
+        2. カテゴリ・メーカー・単位のエンティティを解決（名前→ID）
+        3. 仕様データ（specifications JSON文字列）をProductSpecificationエンティティに変換
+        4. ProductServiceBean.createProduct()で保存
+        5. AuditServiceBeanで監査ログ記録
+
+        バリデーション:
+        - SKU: 必須、ユニーク、パターン [A-Za-z]{2,5}-[0-9]{4,8}（BE）
+        - 製品名: 必須、最大300文字
+        - 単価: 0以上（技術的負債: 負の値がBE側で検証されないバグ）
+        - 最低発注数: 0以上
+        - ステータス: ACTIVE, INACTIVE, DISCONTINUED, PENDING のいずれか
+
+        実装上の注意点:
+        - unitフィールドにはunit_of_measure.nameの値（例: "個"）を送信する。unit_codeではない。
+        - statusのデフォルト値はサービス層で "DRAFT" にセットされるが、FE側では明示的に送信する。
+        - バリデーションエラーはValidationExceptionがスローされるが、GlobalExceptionMapperで500に変換される（技術的負債: 本来は400を返すべき）。
+        - SKU重複もValidationExceptionで500が返る（本来は409 Conflict）。
+        - @RolesAllowed未設定（全認証ユーザーが登録可能）。
+      operationId: createProduct
+      tags:
+        - "F-03-05-008"
+      x-feature-ids:
+        - "F-03-05-002"
+        - "F-03-05-003"
+        - "F-03-05-004"
+        - "F-03-05-005"
+        - "F-03-05-008"
+      x-evidence:
+        network: "Network通信で確認（POST → 201 Created、ProductDTO返却。SKU重複/バリデーションエラー → 500）"
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:263-282"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:42-45"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "空の仕様行（key/value空）送信時のBE側の挙動"
+        - "tags配列の送信時の処理（ProductTagエンティティとの関連付け）"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductCreateRequest"
+            example:
+              skuCode: "TEST-99999"
+              name: "API Test Product"
+              description: "Test from curl"
+              categoryId: 1
+              manufacturerId: 1
+              unitPrice: 12345.00
+              status: "ACTIVE"
+              unit: "個"
+              minimumOrderQuantity: 1
+              leadTimeDays: 7
+              weight: 1.5
+              dimensions: "100mm x 50mm x 30mm"
+              specifications: '{"CPU": "Intel i5", "RAM": "16GB"}'
+              notes: "test notes"
+      responses:
+        "201":
+          description: "成功 - 製品登録完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductDTO"
+              example:
+                id: 128
+                skuCode: "TEST-99999"
+                sku: "TEST-99999"
+                name: "API Test Product"
+                description: "Test from curl"
+                categoryId: 1
+                categoryName: "コンピュータ"
+                manufacturerId: 1
+                manufacturerName: "Dell Technologies"
+                unitPrice: 12345.00
+                status: "ACTIVE"
+                unit: "個"
+                minimumOrderQuantity: 1
+                leadTimeDays: 7
+                weight: 1.5
+                notes: "test notes"
+                tags: []
+        "500":
+          description: |
+            サーバーエラー（以下のケースを含む）:
+            - バリデーションエラー（名前必須、SKU必須等） — 本来は400
+            - SKU重複 — 本来は409
+            - DB制約違反（unit_id NOT NULLなど）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                validation_error:
+                  summary: "バリデーションエラー（製品名必須）"
+                  value:
+                    status: 500
+                    errorCode: "INTERNAL_ERROR"
+                    message: "サーバー内部エラーが発生しました。"
+                    details:
+                      - "EJBException: com.proquip.common.exception.ValidationException: name: 商品名は必須です。"
+                    timestamp: "2026-05-26T09:10:18"
+                duplicate_sku:
+                  summary: "SKU重複エラー"
+                  value:
+                    status: 500
+                    errorCode: "INTERNAL_ERROR"
+                    message: "サーバー内部エラーが発生しました。"
+                    details:
+                      - 'EJBException: com.proquip.common.exception.ValidationException: sku: SKU「DPC-001001」は既に使用されています。'
+                    timestamp: "2026-05-26T09:10:18"
+
+  /api/products/{id}:
+    get:
+      summary: "製品詳細取得"
+      description: |
+        指定IDの製品詳細情報を取得する。編集画面の初期表示で使用。
+        画像・ドキュメント・仕様データを含むProductDetailDtoを返す。
+
+        実装上の注意点:
+        - category, manufacturer, unitをJOIN FETCHでeager loadする。
+        - specifications, images, documentsは別クエリで取得。
+        - specificationsはJSON文字列として返される（key-valueペア）。
+      operationId: getProduct
+      tags:
+        - "F-03-05-009"
+      x-feature-ids:
+        - "F-03-05-009"
+        - "F-03-05-010"
+        - "F-03-05-011"
+      x-evidence:
+        network: "Network通信で確認（GET /api/products/1 → 200、画像1件・ドキュメント1件・仕様4件を含む）"
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:179-254"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:37-40"
+      x-confidence: "High"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: "製品ID"
+      responses:
+        "200":
+          description: "成功 - 製品詳細"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductDetailDto"
+              example:
+                id: 1
+                skuCode: "DPC-001001"
+                sku: "DPC-001001"
+                name: "Dell OptiPlex 7010 SFF"
+                description: "Intel Core i5-13500T搭載 省スペース型デスクトップPC"
+                categoryId: 7
+                categoryName: "デスクトップPC"
+                manufacturerId: 1
+                manufacturerName: "Dell Technologies"
+                unitPrice: 148000.0
+                status: "ACTIVE"
+                weight: 5.0
+                minOrderQty: 1
+                specifications: '{"CPU":"Intel Core i5-13500T","メモリ":"16GB DDR5-4800","ストレージ":"512GB NVMe SSD","消費電力":"65 W"}'
+                images:
+                  - id: 1
+                    fileName: "/images/products/product-1-dell-optiplex-7010.png"
+                    mimeType: "PHOTO"
+                    primary: true
+                    sortOrder: 1
+                documents:
+                  - id: 1
+                    docType: "DATASHEET"
+                    fileName: "Dell OptiPlex 7010 SFF 仕様書"
+                    filePath: "/documents/products/dell-optiplex-7010-sff-spec.pdf"
+                    docVersion: "2024.1"
+                alternatives: []
+                active: false
+                tags: []
+        "404":
+          description: "製品が見つからない"
+        "500":
+          description: "サーバーエラー"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      summary: "製品更新"
+      description: |
+        指定IDの製品情報を更新する。編集画面の「更新する」ボタンで呼び出される。
+        画像・ドキュメントの追加/削除は個別API（POST/DELETE）で即時実行されるため、このAPIには含まない。
+
+        処理フロー:
+        1. 既存製品をfindById()で取得（存在しない場合404）
+        2. DTOの値をエンティティにマッピング
+        3. 既存のProductSpecificationを全削除し、新しい仕様データで再作成
+        4. ProductServiceBean.updateProduct()で保存
+        5. AuditServiceBeanで監査ログ記録
+
+        バリデーション: POST /api/products と同一。
+        SKU重複チェックは自身のSKUも含めて検証される（変更なしの場合は通過する必要がある）。
+
+        実装上の注意点:
+        - @RolesAllowed未設定。
+        - 楽観的ロック（@Version）の実装有無は未確認。
+      operationId: updateProduct
+      tags:
+        - "F-03-05-012"
+      x-feature-ids:
+        - "F-03-05-009"
+        - "F-03-05-012"
+      x-evidence:
+        network: "推測: curlテストでは既削除製品のため500エラー。正常系はFE経由で動作確認済み（UI仕様記載時）"
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:292-325"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:47-50"
+      x-confidence: "Medium"
+      x-unconfirmed:
+        - "楽観的ロック（@Version）の実装有無"
+        - "更新成功時のレスポンスボディの内容（ProductDTOか空か）"
+        - "SKU変更時の重複チェック挙動（自身のSKU除外ロジック）"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: "製品ID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductCreateRequest"
+      responses:
+        "200":
+          description: "成功 - 製品更新完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductDTO"
+        "404":
+          description: "製品が見つからない"
+        "500":
+          description: |
+            サーバーエラー（バリデーションエラー、SKU重複を含む）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/products/{id}/images:
+    post:
+      summary: "製品画像アップロード"
+      description: |
+        製品に画像ファイルをアップロードする。
+        新規登録時: ステップ5の「登録する」実行後にforkJoinで呼び出される。
+        編集時: 「+ 画像を追加」ボタンで即時アップロード。
+
+        ファイル保存:
+        - 保存先: ${UPLOAD_BASE_PATH}/images/products/（デフォルト: /opt/jboss/wildfly/static-files/images/products/）
+        - ファイル名: product-{id}-{uuid8chars}{ext}
+        - DB: ProductImageエンティティ作成（mimeType="PHOTO", sortOrder=1）
+
+        実装上の注意点:
+        - @RolesAllowed未設定。
+        - ファイルサイズ上限の制限なし（技術的負債）。
+        - isPrimaryフラグを送信できるが、プライマリ画像の切り替えUIは未確認。
+      operationId: uploadProductImage
+      tags:
+        - "F-03-05-006"
+        - "F-03-05-010"
+      x-feature-ids:
+        - "F-03-05-006"
+        - "F-03-05-010"
+      x-evidence:
+        network: "推測: UI仕様記載時にPOST /api/products/{id}/imagesリクエストを確認"
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:1038-1114"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:86-92"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "ファイルサイズ上限の有無"
+        - "プライマリ画像の切り替え操作"
+        - "アップロード失敗時のリカバリー手段（製品登録成功後に画像のみ失敗のケース）"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: "製品ID"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: "画像ファイル（PNG/JPG）"
+                fileName:
+                  type: string
+                  description: "オリジナルファイル名"
+                isPrimary:
+                  type: string
+                  description: "プライマリ画像かどうか（\"true\" / \"false\"）"
+                  default: "false"
+      responses:
+        "201":
+          description: "成功 - 画像アップロード完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImageUploadResponse"
+              example:
+                id: 456
+                url: "/images/products/product-123-a1b2c3d4.jpg"
+                isPrimary: true
+        "400":
+          description: "必須パラメータ不足（fileフィールド欠落）"
+        "500":
+          description: "サーバーエラー（ファイル保存失敗等）"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/products/{id}/images/{imageId}:
+    delete:
+      summary: "製品画像削除"
+      description: |
+        指定IDの製品画像を削除する。
+        編集画面の「削除」ボタンで即時実行される（「更新する」ボタンとは独立）。
+
+        処理:
+        - ディスク上のファイルを削除
+        - ProductImageエンティティを削除
+
+        実装上の注意点:
+        - @RolesAllowed未設定。
+        - 確認ダイアログの有無は未確認。
+      operationId: deleteProductImage
+      tags:
+        - "F-03-05-010"
+      x-feature-ids:
+        - "F-03-05-010"
+      x-evidence:
+        network: "推測: UI仕様記載時にDELETE /api/products/{id}/images/{imageId}リクエストを確認"
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:1116-1136"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:94-97"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "プライマリ画像を削除した場合の代替プライマリ設定ロジック"
+        - "削除確認ダイアログの有無"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: "製品ID"
+        - name: imageId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: "画像ID"
+      responses:
+        "204":
+          description: "成功 - 画像削除完了"
+        "404":
+          description: "画像が見つからない"
+        "500":
+          description: "サーバーエラー"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/products/{id}/documents:
+    post:
+      summary: "製品ドキュメントアップロード"
+      description: |
+        製品にドキュメントファイル（PDF）をアップロードする。
+        新規登録時: ステップ5の「登録する」実行後にforkJoinで呼び出される。
+        編集時: 「+ ドキュメントを追加」ボタンで即時アップロード。
+
+        ファイル保存:
+        - 保存先: ${UPLOAD_BASE_PATH}/documents/products/
+        - ファイル名: {uuid8chars}-{originalFileName}
+        - DB: ProductDocumentエンティティ作成（docVersion="1.0", createdBy/updatedBy="system"）
+
+        実装上の注意点:
+        - @RolesAllowed未設定。
+        - docTypeのデフォルト値は "DATASHEET"。
+        - ファイルサイズ上限の制限なし。
+      operationId: uploadProductDocument
+      tags:
+        - "F-03-05-007"
+        - "F-03-05-011"
+      x-feature-ids:
+        - "F-03-05-007"
+        - "F-03-05-011"
+      x-evidence:
+        network: "推測: UI仕様記載時にPOST /api/products/{id}/documentsリクエストを確認"
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:1138-1211"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:99-105"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "ファイルサイズ上限の有無"
+        - "ドキュメントタイプの変更（既存ドキュメントのタイプ変更）が可能かどうか"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: "製品ID"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: "ドキュメントファイル（PDF）"
+                fileName:
+                  type: string
+                  description: "オリジナルファイル名"
+                docType:
+                  type: string
+                  description: "ドキュメントタイプ"
+                  default: "DATASHEET"
+                  enum:
+                    - DATASHEET
+                    - MSDS
+                    - MANUAL
+                    - DRAWING
+                    - CERTIFICATE
+                    - WARRANTY
+                    - BROCHURE
+                    - OTHER
+      responses:
+        "201":
+          description: "成功 - ドキュメントアップロード完了"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentUploadResponse"
+              example:
+                id: 789
+                fileName: "product-spec.pdf"
+                filePath: "/documents/products/a1b2c3d4-product-spec.pdf"
+                docType: "DATASHEET"
+        "400":
+          description: "必須パラメータ不足（fileフィールド欠落）"
+        "500":
+          description: "サーバーエラー（ファイル保存失敗等）"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/products/{id}/documents/{docId}:
+    delete:
+      summary: "製品ドキュメント削除"
+      description: |
+        指定IDの製品ドキュメントを削除する。
+        編集画面の「削除」ボタンで即時実行される（「更新する」ボタンとは独立）。
+
+        実装上の注意点:
+        - @RolesAllowed未設定。
+        - ディスク上のファイルも削除されるか未確認。
+      operationId: deleteProductDocument
+      tags:
+        - "F-03-05-011"
+      x-feature-ids:
+        - "F-03-05-011"
+      x-evidence:
+        network: "推測: UI仕様記載時にDELETE /api/products/{id}/documents/{docId}リクエストを確認"
+        source: "ソースコード: proquip/proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java:1213-1233"
+        frontend: "ソースコード: proquip/proquip-frontend/src/app/shared/services/product.service.ts:107-110"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "ディスク上のファイルも削除されるか"
+        - "削除確認ダイアログの有無"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: "製品ID"
+        - name: docId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: "ドキュメントID"
+      responses:
+        "204":
+          description: "成功 - ドキュメント削除完了"
+        "404":
+          description: "ドキュメントが見つからない"
+        "500":
+          description: "サーバーエラー"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Keycloak OIDC JWT token（client_id: proquip-web）"
+
+  schemas:
+    CategoryItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        code:
+          type: string
+          description: "カテゴリコード（例: CAT-DESKTOP）"
+        name:
+          type: string
+          description: "カテゴリ名（例: デスクトップPC）"
+        description:
+          type: string
+          description: "カテゴリ説明"
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+          description: "親カテゴリID（ルートカテゴリの場合null）"
+        productCount:
+          type: integer
+          description: "このカテゴリに属する製品数"
+      x-evidence: "Network通信 + ソースコード: ProductResource.java:425-458"
+
+    ManufacturerItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        code:
+          type: string
+          description: "メーカーコード（例: MFR-DELL）"
+        name:
+          type: string
+          description: "メーカー名（例: Dell Technologies）"
+        country:
+          type: string
+          description: "国コード（例: USA, JPN, TWN）"
+        website:
+          type: string
+          description: "Webサイト URL"
+      x-evidence: "Network通信 + ソースコード: ProductResource.java:586-609"
+
+    ProductCreateRequest:
+      type: object
+      required:
+        - skuCode
+        - name
+      properties:
+        skuCode:
+          type: string
+          maxLength: 50
+          pattern: "[A-Za-z]{2,5}-[0-9]{4,8}"
+          description: |
+            SKU（品番）。ユニーク制約あり。
+            技術的負債: FE create側パターン（^[A-Z0-9]{2,4}-\\d{3,8}$）と不一致。
+          x-evidence: "Network通信 + ソースコード: ProductValidator.java:137-154"
+        name:
+          type: string
+          maxLength: 300
+          description: "製品名"
+          x-evidence: "ソースコード: ProductValidator.java:69-75, Product.java: VARCHAR(300)"
+        description:
+          type: string
+          maxLength: 10000
+          description: "製品説明"
+          x-evidence: "ソースコード: ProductValidator.java:117-119, Product.java: TEXT"
+        categoryId:
+          type: integer
+          format: int64
+          description: "カテゴリID（GET /api/products/categoriesで取得したidを指定）"
+        manufacturerId:
+          type: integer
+          format: int64
+          description: "メーカーID（GET /api/products/manufacturersで取得したidを指定）"
+        unitPrice:
+          type: number
+          format: decimal
+          description: |
+            単価（税抜）。DB: NUMERIC(18,4)。
+            技術的負債: BE側で負の値のバリデーションがない。
+          x-evidence: "Network通信 + ソースコード: Product.java: precision=18, scale=4"
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - INACTIVE
+            - DISCONTINUED
+            - PENDING
+          description: |
+            製品ステータス。
+            新規登録FEでは ACTIVE/INACTIVE/ON_HOLD の3択。
+            編集FEでは ACTIVE/INACTIVE/DISCONTINUED/ON_HOLD の4択。
+            BE側デフォルト: DRAFT（FEから送信しない場合）。
+          x-evidence: "ソースコード: ProductValidator.java:78-84"
+        unit:
+          type: string
+          description: |
+            単位名（unit_of_measure.nameの値）。
+            例: "個", "台", "本", "箱", "セット", "ライセンス", "月", "年", "パック", "ロール"
+            注意: unit_codeではなくnameを送信する。
+          x-evidence: "Network通信で確認（unit: \"個\"で201 Created）+ DB: unit_of_measure.name"
+        minimumOrderQuantity:
+          type: integer
+          minimum: 0
+          description: "最低発注数"
+          x-evidence: "ソースコード: ProductValidator.java:93-100"
+        leadTimeDays:
+          type: integer
+          description: "リードタイム（日）"
+          x-evidence: "ソースコード: Product.java: lead_time_days INT"
+        weight:
+          type: number
+          format: decimal
+          description: "重量（kg）。DB: DECIMAL(10,3)"
+          x-evidence: "ソースコード: Product.java: weight_kg, precision=10, scale=3"
+        dimensions:
+          type: string
+          description: "寸法（自由入力テキスト、例: 100mm x 50mm x 30mm）"
+        specifications:
+          type: string
+          description: |
+            仕様データ（JSON文字列）。キーバリューペアのオブジェクト。
+            例: {"CPU": "Intel i5", "メモリ": "16GB"}
+            BE側ではProductSpecificationエンティティに変換して保存される。
+          x-evidence: "Network通信 + ソースコード: ProductResource.java:263-282"
+        notes:
+          type: string
+          description: "備考"
+          x-evidence: "ソースコード: Product.java: notes TEXT"
+        tags:
+          type: array
+          items:
+            type: string
+          description: "タグ名の配列"
+
+    ProductDTO:
+      type: object
+      description: "製品データ転送オブジェクト（作成・更新レスポンス用）"
+      properties:
+        id:
+          type: integer
+          format: int64
+        skuCode:
+          type: string
+          description: "SKU（品番）"
+        sku:
+          type: string
+          description: "SKU（skuCodeのエイリアス、同じ値）"
+        name:
+          type: string
+        description:
+          type: string
+        categoryId:
+          type: integer
+          format: int64
+        categoryName:
+          type: string
+          description: "非正規化カテゴリ名"
+        manufacturerId:
+          type: integer
+          format: int64
+        manufacturerName:
+          type: string
+          description: "非正規化メーカー名"
+        unitPrice:
+          type: number
+          format: decimal
+        status:
+          type: string
+        unit:
+          type: string
+          description: "単位名（例: 個）"
+        minimumOrderQuantity:
+          type: integer
+        leadTimeDays:
+          type: integer
+        weight:
+          type: number
+          format: decimal
+        stockQuantity:
+          type: integer
+          description: "在庫数量（読み取り専用、InventoryItemから計算）"
+        notes:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+      x-evidence: "Network通信 + ソースコード: proquip-common/dto/ProductDTO.java"
+
+    ProductDetailDto:
+      type: object
+      description: "製品詳細DTO（画像・ドキュメント・仕様含む）"
+      allOf:
+        - $ref: "#/components/schemas/ProductDTO"
+        - type: object
+          properties:
+            specifications:
+              type: string
+              description: "仕様データ（JSON文字列）"
+            images:
+              type: array
+              items:
+                $ref: "#/components/schemas/ImageDto"
+            documents:
+              type: array
+              items:
+                $ref: "#/components/schemas/DocumentDto"
+            alternatives:
+              type: array
+              items:
+                type: integer
+                format: int64
+              description: "代替品の製品ID配列"
+            active:
+              type: boolean
+              description: "アクティブフラグ"
+            minOrderQty:
+              type: integer
+              description: "最低発注数（minimumOrderQuantityのエイリアス）"
+      x-evidence: "Network通信 + ソースコード: proquip-common/dto/ProductDetailDto.java"
+
+    ImageDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        fileName:
+          type: string
+          description: "画像URL/パス（例: /images/products/product-1-dell-optiplex-7010.png）"
+        mimeType:
+          type: string
+          description: "画像タイプ（例: PHOTO, DIAGRAM）"
+        primary:
+          type: boolean
+          description: "プライマリ画像かどうか"
+        sortOrder:
+          type: integer
+          description: "表示順序"
+
+    DocumentDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        docType:
+          type: string
+          description: "ドキュメントタイプ"
+          enum:
+            - DATASHEET
+            - MSDS
+            - MANUAL
+            - DRAWING
+            - CERTIFICATE
+            - WARRANTY
+            - BROCHURE
+            - OTHER
+        fileName:
+          type: string
+          description: "オリジナルファイル名"
+        filePath:
+          type: string
+          description: "保存パス"
+        docVersion:
+          type: string
+          description: "バージョン（例: 1.0, 2024.1）"
+
+    ImageUploadResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "作成されたProductImageのID"
+        url:
+          type: string
+          description: "画像URL/パス"
+        isPrimary:
+          type: boolean
+          description: "プライマリ画像かどうか"
+      x-evidence: "ソースコード: ProductResource.java:1038-1114"
+
+    DocumentUploadResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "作成されたProductDocumentのID"
+        fileName:
+          type: string
+          description: "ファイル名"
+        filePath:
+          type: string
+          description: "保存パス"
+        docType:
+          type: string
+          description: "ドキュメントタイプ"
+      x-evidence: "ソースコード: ProductResource.java:1138-1211"
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: "HTTPステータスコード"
+        errorCode:
+          type: string
+          description: "エラーコード（例: INTERNAL_ERROR）"
+        message:
+          type: string
+          description: "エラーメッセージ"
+        details:
+          type: array
+          items:
+            type: string
+          description: "詳細エラー情報（例外メッセージ等）"
+        timestamp:
+          type: string
+          description: "エラー発生日時（ISO 8601形式）"
+      x-evidence: "Network通信で確認（バリデーションエラー・DB制約違反時のレスポンス）"
+
+# 技術的負債一覧（F-03-05関連）
+# 1. SKUバリデーションパターン不一致: FE create ^[A-Z0-9]{2,4}-\d{3,8}$, custom-validators ^[A-Za-z]{2,5}-[0-9]{4,8}$, BE [A-Za-z]{2,5}-[0-9]{4,8}$
+# 2. バリデーションエラーが500で返る（本来400）: GlobalExceptionMapperがValidationExceptionを適切にハンドリングしていない
+# 3. SKU重複エラーが500で返る（本来409）
+# 4. 負の価格（unitPrice < 0）のBEバリデーションなし
+# 5. @RolesAllowed未設定（全認証ユーザーが製品登録/編集/削除可能）
+# 6. create/editコンポーネント間でコード約90%重複
+# 7. ファイルアップロードのサイズ上限なし
+# 8. unsaved changesガード（canDeactivate）未実装
+# 9. ProductImageのカラム名が混乱（fileName→image_url列、filePath→thumbnail_url列）

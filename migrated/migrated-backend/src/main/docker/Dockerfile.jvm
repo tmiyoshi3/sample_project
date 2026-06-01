@@ -1,0 +1,22 @@
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
+
+WORKDIR /app
+COPY migrated-backend/pom.xml ./
+RUN mvn dependency:go-offline -B
+
+COPY migrated-backend/src ./src
+RUN mvn package -DskipTests -B
+
+FROM eclipse-temurin:21-jre-alpine
+
+ENV LANGUAGE='en_US:en'
+
+RUN mkdir /deployments
+COPY --from=builder /app/target/quarkus-app/lib/ /deployments/lib/
+COPY --from=builder /app/target/quarkus-app/*.jar /deployments/
+COPY --from=builder /app/target/quarkus-app/app/ /deployments/app/
+COPY --from=builder /app/target/quarkus-app/quarkus/ /deployments/quarkus/
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "/deployments/quarkus-run.jar"]

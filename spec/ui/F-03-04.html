@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>F-03-04: バンドル管理画面 UI仕様</title>
+  <style>
+    body { font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif; margin: 40px; color: #333; }
+    h1 { border-bottom: 2px solid #1a5276; padding-bottom: 8px; }
+    h2 { border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-top: 40px; }
+    h3 { margin-top: 24px; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: left; font-size: 13px; }
+    th { background-color: #f5f6fa; font-weight: 600; }
+    .feature { margin-bottom: 48px; }
+    .screenshot-item { margin-bottom: 16px; border: 1px solid #ddd; border-radius: 4px; padding: 12px; }
+    code { background: #f0f0f0; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+  </style>
+</head>
+<body>
+<h1>F-03-04: バンドル管理画面 UI仕様</h1>
+<p>最終更新: 2026-05-26</p>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-04-001">
+  <h2>F-03-04-001: バンドル一覧</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-04-001</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-04 バンドル管理画面</li>
+    <li>小分類: バンドル一覧</li>
+    <li>画面名: バンドル管理</li>
+    <li>URL: /products/bundles</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-015</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">バンドルが3件登録された状態の一覧表示。カード形式で表示される。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-04_bundle-management_initial.png</p>
+    <img src="../../screenshots/F-03/F-03-04_bundle-management_initial.png" alt="F-03-04-001 バンドル一覧 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>登録済みバンドル（セット商品）をカード形式で一覧表示する画面。各カードにバンドル名・ステータス・説明・構成製品・価格情報を表示する。</p>
+
+  <h3>WHY</h3>
+  <p>複数製品をまとめたセット商品の構成と価格を一覧で把握し、バンドルの管理（作成・編集・削除）を行うため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ページヘッダ「バンドル管理」</td><td>常時</td><td>固定文字列</td><td>app-page-headerコンポーネント使用</td></tr>
+    <tr><td>サブタイトル「製品バンドルの構成と価格管理」</td><td>常時</td><td>固定文字列</td><td>app-page-headerのdescription</td></tr>
+    <tr><td>バンドルカード</td><td>bundles.length > 0</td><td>GET /api/products/bundles</td><td>カード形式、バンドル名の昇順（JPQL ORDER BY bundleName）</td></tr>
+    <tr><td>バンドル名</td><td>常時</td><td>bundle.name</td><td>h4要素</td></tr>
+    <tr><td>ステータスバッジ</td><td>常時</td><td>bundle.status</td><td>有効(緑)、無効(灰)、下書き(黄)</td></tr>
+    <tr><td>説明</td><td>bundle.description が存在</td><td>bundle.description</td><td>省略なし</td></tr>
+    <tr><td>構成製品チップ</td><td>bundle.products > 0</td><td>bundle.products[].productName, quantity</td><td>「製品名 × 数量」形式、丸角チップ</td></tr>
+    <tr><td>定価合計</td><td>常時</td><td>bundle.totalPrice</td><td>打ち消し線スタイル、¥フォーマット</td></tr>
+    <tr><td>割引率</td><td>常時</td><td>bundle.discountPercentage</td><td>赤字、%表示</td></tr>
+    <tr><td>バンドル価格</td><td>常時</td><td>bundle.bundlePrice</td><td>緑色大文字、¥フォーマット</td></tr>
+    <tr><td>空状態メッセージ</td><td>bundles.length === 0</td><td>固定文字列</td><td>app-empty-state「バンドルが登録されていません」</td></tr>
+    <tr><td>成功バナー</td><td>操作成功後</td><td>successMessage</td><td>緑背景</td></tr>
+    <tr><td>エラーバナー</td><td>エラー発生時</td><td>errorMessage</td><td>赤背景</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>一覧読み込み</td><td>画面初期表示</td><td>GET /api/products/bundles</td><td>バンドルカード表示</td><td>エラーバナー「バンドルの取得に失敗しました。」</td><td>isLoading: true→false</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>ページ遷移時にバンドル一覧がカード形式で表示される。バンドル名の昇順でソートされる。各カードに構成製品のチップ（製品名×数量）と価格情報（定価合計・割引率・バンドル価格）が表示される。</p>
+
+  <h3>異常系</h3>
+  <p>API呼び出しエラー時、エラーバナー「バンドルの取得に失敗しました。」が表示される。</p>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。@RolesAllowed未設定（全認証済みユーザーがアクセス可能）。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>GET</td><td>/api/products/bundles</td><td>なし</td><td>ProductBundle[]（id, name, description, status, discountPercentage, bundlePrice, totalPrice, products[], createdAt）</td><td>500</td><td>ソースコード: ProductResource.java:661-686</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/features/products/bundle-management/bundle-management.component.ts</td><td>loadBundles()</td><td>バンドル一覧取得</td></tr>
+    <tr><td>proquip-frontend/src/app/features/products/bundle-management/bundle-management.component.html</td><td>bundle-list, bundle-card</td><td>カード形式レイアウト</td></tr>
+    <tr><td>proquip-web/src/main/java/com/proquip/web/resource/ProductResource.java</td><td>listBundles()</td><td>GET /api/products/bundles エンドポイント</td></tr>
+    <tr><td>proquip-ejb/src/main/java/com/proquip/ejb/entity/product/ProductBundle.java</td><td>ProductBundle</td><td>バンドルエンティティ定義</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPで /products/bundles にアクセスし、3件のバンドルカード表示を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-04_bundle-management_initial.png</li>
+    <li>ソースコード: bundle-management.component.html:133-177（一覧表示テンプレート）</li>
+    <li>ソースコード: ProductResource.java:661-686（GET /api/products/bundles）</li>
+    <li>DB定義: V002（product_bundle, product_bundle_item テーブル）</li>
+    <li>シードデータ: V021（3件: 新入社員セット、在宅勤務パッケージ、会議室セット）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>バンドル価格の不整合: 一覧表示の「バンドル価格」がDB登録値（bundlePrice）を表示しているが、定価合計はAPIレスポンス生成時にbundleItemsから再計算している。DB登録時と構成製品の単価が変わった場合に不整合が生じる可能性</li>
+    <li>ページングなし（全件取得）。大量データ時のパフォーマンス</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-04-002">
+  <h2>F-03-04-002: 新規バンドル作成ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-04-002</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-04 バンドル管理画面</li>
+    <li>小分類: 新規バンドル作成ボタン</li>
+    <li>画面名: バンドル管理</li>
+    <li>URL: /products/bundles</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-016</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">「+ 新規バンドル作成」ボタンをクリックした後の作成フォーム表示。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-04-002_create-form.png</p>
+    <img src="../../screenshots/F-03/F-03-04-002_create-form.png" alt="F-03-04-002 バンドル作成フォーム" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>新規バンドル作成フォームを表示するボタン。クリックするとインラインで作成フォームが展開され、バンドル一覧は非表示になる。</p>
+
+  <h3>WHY</h3>
+  <p>新しいセット商品（バンドル）を作成するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>「+ 新規バンドル作成」ボタン</td><td>editMode === null</td><td>固定文字列</td><td>btn-primary、青色(#3b82f6)</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>バンドル名</td><td>text</td><td>必須</td><td>最大200文字</td><td>空文字</td><td>Validators.required, Validators.maxLength(200)</td><td>DB上はname VARCHAR(300)だがFEで200文字制限</td></tr>
+    <tr><td>ステータス</td><td>select</td><td>必須</td><td>ACTIVE/INACTIVE/DRAFT</td><td>ACTIVE（有効）</td><td>Validators.required</td><td>有効・無効・下書きの3択</td></tr>
+    <tr><td>説明</td><td>textarea</td><td>任意</td><td>最大1000文字</td><td>空文字</td><td>Validators.maxLength(1000)</td><td>DB上はTEXT（制限なし）</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>新規作成モード開始</td><td>「+ 新規バンドル作成」ボタンクリック</td><td>フォーム初期化、editMode='create'</td><td>作成フォーム表示、一覧非表示</td><td>-</td><td>editMode: null→'create'</td></tr>
+    <tr><td>保存</td><td>「保存」ボタンクリック</td><td>POST /api/products/bundles</td><td>成功バナー「バンドルを作成しました。」、フォーム閉じる、一覧再読み込み</td><td>エラーバナー「バンドルの保存に失敗しました。」</td><td>editMode: 'create'→null</td></tr>
+    <tr><td>キャンセル</td><td>「キャンセル」ボタンクリック</td><td>editMode=null</td><td>フォーム閉じる、一覧表示復帰</td><td>-</td><td>editMode: 'create'→null</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>ボタンクリックで作成フォームが表示される。バンドル名（必須）・ステータス・説明を入力し、構成製品を追加後「保存」で新規バンドルが作成される。バンドルコードはBE側で自動生成（BDL-{timestamp}）。</p>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>バンドル名未入力で保存 → markAllAsTouched()でバリデーションエラー表示（ただし画面上のエラーメッセージ表示がない — フォームinvalid時はsubmitが無視されるのみ）</li>
+    <li>構成製品0件で保存 → エラーバナー「バンドルには少なくとも1つの製品を追加してください。」</li>
+    <li>API呼び出しエラー → エラーバナー「バンドルの保存に失敗しました。」</li>
+  </ul>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。BE側@RolesAllowed未設定。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>POST</td><td>/api/products/bundles</td><td>{ name, description, discountPercentage, status, items: [{productId, quantity}] }</td><td>201 Created + ProductBundle</td><td>500</td><td>ソースコード: ProductResource.java:689-713</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>bundle-management.component.ts</td><td>startCreate()</td><td>新規作成モード開始、フォーム初期化</td></tr>
+    <tr><td>bundle-management.component.ts</td><td>saveBundle()</td><td>バリデーション・API呼び出し</td></tr>
+    <tr><td>bundle-management.component.ts</td><td>initializeForm()</td><td>Reactive Forms定義・バリデーションルール</td></tr>
+    <tr><td>ProductResource.java</td><td>createBundle()</td><td>POST /api/products/bundles、bundleCode自動生成</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 新規作成ボタンクリック後の空フォーム ／
+        <strong>備考:</strong> バンドル名必須、ステータスデフォルト「有効」
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-04-002_create-form.png</p>
+      <img src="../../screenshots/F-03/F-03-04-002_create-form.png" alt="F-03-04-002 作成フォーム" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 「+ 新規バンドル作成」ボタンクリックでフォーム表示を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-04-002_create-form.png</li>
+    <li>ソースコード: bundle-management.component.ts:102-115（initializeForm、バリデーション定義）</li>
+    <li>ソースコード: bundle-management.component.ts:240-258（startCreate）</li>
+    <li>ソースコード: bundle-management.component.ts:310-349（saveBundle）</li>
+    <li>ソースコード: ProductResource.java:689-713（createBundle）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>バリデーションエラーの視覚的表示がない（フォームinvalid時はsubmitが無視されるだけで、項目ごとのエラーメッセージ表示なし）</li>
+    <li>BE側のバンドルコード一意制約違反時のエラーメッセージ（タイムスタンプベースのため実質発生しない）</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-04-003">
+  <h2>F-03-04-003: バンドル構成製品</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-04-003</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-04 バンドル管理画面</li>
+    <li>小分類: バンドル構成製品</li>
+    <li>画面名: バンドル管理</li>
+    <li>URL: /products/bundles</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-016</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">製品検索ドロップダウンと、追加済み製品テーブルの表示。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-04-003_product-search.png</p>
+    <img src="../../screenshots/F-03/F-03-04-003_product-search.png" alt="F-03-04-003 製品検索" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>バンドルに含める製品を検索・追加・削除・数量変更する機能。作成/編集フォーム内に表示される。一覧表示時はチップ形式で構成製品を表示。</p>
+
+  <h3>WHY</h3>
+  <p>バンドルにどの製品をいくつ含めるかを管理するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>製品検索テキストボックス</td><td>editMode時</td><td>-</td><td>プレースホルダ「製品名またはSKUで検索して追加...」</td></tr>
+    <tr><td>検索ドロップダウン</td><td>searchResults.length > 0</td><td>クライアントサイドフィルタ</td><td>最大10件、SKU・製品名・単価を表示</td></tr>
+    <tr><td>構成製品テーブル（フォーム内）</td><td>bundleItems.length > 0</td><td>FormArray</td><td>SKU・製品名・単価・数量（編集可）・小計・削除ボタン</td></tr>
+    <tr><td>空メッセージ（フォーム内）</td><td>bundleItems.length === 0</td><td>固定文字列</td><td>「上の検索欄から製品を追加してください」</td></tr>
+    <tr><td>構成製品チップ（一覧カード内）</td><td>bundle.products > 0</td><td>bundle.products</td><td>丸角チップ「製品名 × 数量」</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>製品検索キーワード</td><td>text</td><td>-</td><td>-</td><td>空文字</td><td>-</td><td>ngModel（standalone）、入力のたびにクライアントサイドフィルタ実行</td></tr>
+    <tr><td>数量</td><td>number</td><td>必須</td><td>min=1</td><td>1</td><td>Validators.required, Validators.min(1)</td><td>変更時に価格自動再計算</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>製品検索</td><td>検索キーワード入力（input イベント）</td><td>availableProducts をクライアントサイドで名前・SKU部分一致フィルタ</td><td>検索ドロップダウンに最大10件表示</td><td>-</td><td>searchResults更新</td></tr>
+    <tr><td>製品追加</td><td>検索結果の製品行クリック</td><td>FormArrayに製品を追加</td><td>テーブルに行追加、価格再計算、検索欄クリア</td><td>-</td><td>bundleItems追加、calculatedPrices更新</td></tr>
+    <tr><td>既存製品の数量加算</td><td>既にバンドル内にある製品を再度クリック</td><td>該当製品のquantity +1</td><td>数量更新、価格再計算</td><td>-</td><td>quantity +1</td></tr>
+    <tr><td>製品削除</td><td>×ボタンクリック</td><td>FormArrayから該当indexを削除</td><td>テーブルから行削除、価格再計算</td><td>-</td><td>bundleItems削除</td></tr>
+    <tr><td>数量変更</td><td>数量入力欄の値変更</td><td>価格再計算</td><td>小計・合計・バンドル価格が更新</td><td>-</td><td>calculatedPrices更新</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>検索欄にキーワードを入力すると、製品名・SKUの部分一致でドロップダウンに候補が表示される（最大10件、クライアントサイドフィルタ、先頭100件の製品が対象）。候補をクリックすると構成製品テーブルに追加され、数量は1で初期化される。同じ製品を再度クリックすると数量が+1される。</p>
+
+  <h3>異常系</h3>
+  <p>検索キーワードが空の場合、ドロップダウンは非表示。数量に0以下を入力した場合のバリデーションエラー表示は視覚的にはないが、バリデーション自体はValidators.min(1)で設定済み。</p>
+
+  <h3>権限制御</h3>
+  <p>バンドル作成/編集権限と同一（AuthGuardのみ）。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>bundle-management.component.ts</td><td>searchProducts()</td><td>クライアントサイドフィルタ、最大10件</td></tr>
+    <tr><td>bundle-management.component.ts</td><td>addProductToBundle()</td><td>製品追加、重複時は数量加算</td></tr>
+    <tr><td>bundle-management.component.ts</td><td>removeProductFromBundle()</td><td>製品削除</td></tr>
+    <tr><td>bundle-management.component.ts</td><td>loadProducts()</td><td>GET /api/products?page=0&size=100 で候補製品取得</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 「Think」で検索した際のドロップダウン表示 ／
+        <strong>備考:</strong> SKU・製品名・単価が表示される
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-04-003_product-search.png</p>
+      <img src="../../screenshots/F-03/F-03-04-003_product-search.png" alt="F-03-04-003 製品検索ドロップダウン" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 検索欄に「Think」入力→10件の候補が表示、製品クリックでテーブルに追加を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-04-003_product-search.png</li>
+    <li>ソースコード: bundle-management.component.ts:158-169（searchProducts、クライアントサイドフィルタ）</li>
+    <li>ソースコード: bundle-management.component.ts:174-205（addProductToBundle、重複チェック・数量加算）</li>
+    <li>ソースコード: bundle-management.component.ts:144-153（loadProducts、page=0&size=100）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>製品候補がpage=0&size=100の先頭100件に限定される。101件目以降の製品はバンドルに追加できない</li>
+    <li>DB上のproduct_bundle_itemにはsort_order列があるがFEでは順序管理していない</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-04-004">
+  <h2>F-03-04-004: バンドル価格情報</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-04-004</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-04 バンドル管理画面</li>
+    <li>小分類: バンドル価格情報</li>
+    <li>画面名: バンドル管理</li>
+    <li>URL: /products/bundles</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-015, UC-016</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">製品追加後の価格計算エリア。定価合計・割引率・バンドル価格が表示される。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-04-004_price-calculation.png</p>
+    <img src="../../screenshots/F-03/F-03-04-004_price-calculation.png" alt="F-03-04-004 価格計算" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>バンドルの価格情報を表示・計算する機能。一覧カードでは定価合計・割引率・バンドル価格を静的表示、作成/編集フォームでは割引率を入力するとリアルタイムで価格を再計算する。</p>
+
+  <h3>WHY</h3>
+  <p>セット商品としての割引価格を管理し、個別購入との価格差を把握するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>合計（定価）</td><td>bundleItems.length > 0（フォーム）</td><td>calculatedTotalPrice（FEで算出: Σ(unitPrice × quantity)）</td><td>¥フォーマット</td></tr>
+    <tr><td>割引率</td><td>bundleItems.length > 0（フォーム）</td><td>discountPercentage フォーム入力</td><td>数値入力（0-100）、%表示</td></tr>
+    <tr><td>割引額</td><td>bundleItems.length > 0（フォーム）</td><td>calculatedDiscountAmount（FEで算出: floor(totalPrice × discount / 100)）</td><td>赤字、マイナス表記「-¥X,XXX」</td></tr>
+    <tr><td>バンドル価格</td><td>bundleItems.length > 0（フォーム）</td><td>calculatedBundlePrice（FEで算出: totalPrice - discountAmount）</td><td>緑色(#059669)、大文字(20px)</td></tr>
+    <tr><td>定価合計（カード）</td><td>常時（一覧カード）</td><td>bundle.totalPrice</td><td>打ち消し線、灰色</td></tr>
+    <tr><td>割引（カード）</td><td>常時（一覧カード）</td><td>bundle.discountPercentage</td><td>赤色、%表示</td></tr>
+    <tr><td>バンドル価格（カード）</td><td>常時（一覧カード）</td><td>bundle.bundlePrice</td><td>緑色(#059669)、大文字(18px)</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr><td>割引率</td><td>number</td><td>必須</td><td>min=0, max=100, step=1</td><td>0</td><td>Validators.required, Validators.min(0), Validators.max(100)</td><td>変更時にリアルタイム再計算（valueChanges subscribe）</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>価格再計算</td><td>割引率変更 or 数量変更 or 製品追加/削除</td><td>recalculatePrices()実行</td><td>合計・割引額・バンドル価格が更新</td><td>-</td><td>calculatedTotalPrice, calculatedDiscountAmount, calculatedBundlePrice更新</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>構成製品を追加すると価格計算エリアが表示される。合計（定価）= Σ(単価×数量)、割引額 = floor(合計 × 割引率 / 100)、バンドル価格 = 合計 - 割引額。割引率の変更、数量の変更、製品の追加/削除のたびにリアルタイム再計算される。BE側も同じ計算ロジック（addBundleItemsメソッド）で保存時に算出。</p>
+
+  <h3>異常系</h3>
+  <p>割引率に100超の値を入力した場合、Validators.max(100)によりフォーム無効になるが視覚的エラー表示はなし。</p>
+
+  <h3>権限制御</h3>
+  <p>バンドル作成/編集権限と同一。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>bundle-management.component.ts</td><td>recalculatePrices()</td><td>FE側価格計算ロジック</td></tr>
+    <tr><td>ProductResource.java</td><td>addBundleItems()</td><td>BE側価格計算ロジック（同一ロジック）</td></tr>
+    <tr><td>bundle-management.component.html</td><td>price-calculation セクション</td><td>価格表示テンプレート</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 製品1件追加後、割引率0%の状態 ／
+        <strong>備考:</strong> 合計=¥138,000、割引額=¥0、バンドル価格=¥138,000
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-04-004_price-calculation.png</p>
+      <img src="../../screenshots/F-03/F-03-04-004_price-calculation.png" alt="F-03-04-004 価格計算" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 製品追加後に価格計算エリアの表示を確認、割引率変更で再計算を確認（編集フォームで会議室セット: 合計¥141,500、割引3%→割引額¥4,245、バンドル価格¥137,255）</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-04-004_price-calculation.png, screenshots/F-03/F-03-04-005_edit-form.png</li>
+    <li>ソースコード: bundle-management.component.ts:219-235（recalculatePrices、FE計算ロジック）</li>
+    <li>ソースコード: ProductResource.java:764-789（addBundleItems、BE計算ロジック）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>技術的負債: FEとBEで価格計算ロジックが重複（コンポーネント先頭コメントに記載あり）</li>
+    <li>一覧カードのバンドル価格(bundle.bundlePrice)がDB保存値であるのに対し、定価合計(bundle.totalPrice)はAPI応答時にbundleItemsから再計算。製品単価が変わると定価合計は更新されるがbundlePriceは保存時のまま</li>
+    <li>割引額の端数処理: FE=Math.floor、BE=RoundingMode.FLOOR（一致）</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-04-005">
+  <h2>F-03-04-005: バンドル編集ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-04-005</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-04 バンドル管理画面</li>
+    <li>小分類: バンドル編集ボタン</li>
+    <li>画面名: バンドル管理</li>
+    <li>URL: /products/bundles</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-016</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">「編集」ボタンクリック後のバンドル編集フォーム。既存値がプリセットされる。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-04-005_edit-form.png</p>
+    <img src="../../screenshots/F-03/F-03-04-005_edit-form.png" alt="F-03-04-005 編集フォーム" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>既存バンドルの編集フォームを表示する。各カードの「編集」ボタンをクリックすると、バンドル名・説明・ステータス・構成製品・割引率がプリセットされたフォームが表示される。</p>
+
+  <h3>WHY</h3>
+  <p>既存バンドルの構成や価格を変更するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>「編集」ボタン</td><td>editMode === null</td><td>-</td><td>各バンドルカードの右上に表示</td></tr>
+    <tr><td>パネルタイトル「バンドル編集」</td><td>editMode === 'edit'</td><td>固定文字列</td><td>-</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>編集モード開始</td><td>「編集」ボタンクリック</td><td>bundleForm.patchValue()で既存値セット、FormArray再構築</td><td>編集フォーム表示（既存値プリセット）、一覧非表示</td><td>-</td><td>editMode: null→'edit', editingBundleId設定</td></tr>
+    <tr><td>保存</td><td>「保存」ボタンクリック</td><td>PUT /api/products/bundles/{id}</td><td>成功バナー「バンドルを更新しました。」、フォーム閉じる、一覧再読み込み</td><td>エラーバナー「バンドルの保存に失敗しました。」</td><td>editMode: 'edit'→null</td></tr>
+    <tr><td>キャンセル</td><td>「キャンセル」ボタンクリック</td><td>editMode=null</td><td>フォーム閉じる、一覧表示復帰</td><td>-</td><td>editMode: 'edit'→null</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>編集ボタンクリックでフォームが表示され、バンドル名・説明・ステータス・構成製品（SKU・製品名・単価・数量）・割引率が既存値でプリセットされる。保存時はBE側でbundleItemsを全削除→再追加（orphanRemoval）。</p>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>バンドルが見つからない場合（BE: 404 Not Found）→ エラーバナー表示</li>
+    <li>バリデーションエラー → F-03-04-002と同様</li>
+  </ul>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。BE側@RolesAllowed未設定。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>PUT</td><td>/api/products/bundles/{id}</td><td>{ name, description, discountPercentage, status, items: [{productId, quantity}] }</td><td>200 OK + ProductBundle</td><td>404 バンドルが見つかりません / 500</td><td>ソースコード: ProductResource.java:717-743</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>bundle-management.component.ts</td><td>startEdit(bundle)</td><td>編集モード開始、フォームプリセット</td></tr>
+    <tr><td>bundle-management.component.ts</td><td>saveBundle()</td><td>create/edit分岐、API呼び出し</td></tr>
+    <tr><td>ProductResource.java</td><td>updateBundle()</td><td>PUT /api/products/bundles/{id}、bundleItems全削除→再追加</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 「会議室セット」の編集ボタンクリック後 ／
+        <strong>備考:</strong> 4製品がプリセットされ、割引率3%、バンドル価格¥137,255と表示
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-04-005_edit-form.png</p>
+      <img src="../../screenshots/F-03/F-03-04-005_edit-form.png" alt="F-03-04-005 編集フォーム" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 「会議室セット」の編集ボタンクリックで既存値プリセットを確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-04-005_edit-form.png</li>
+    <li>ソースコード: bundle-management.component.ts:263-297（startEdit）</li>
+    <li>ソースコード: ProductResource.java:717-743（updateBundle）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>編集フォームのバンドル価格がFE再計算値（¥137,255）とDB保存値（¥155,000）で異なる。これは定価合計がbundleItemsの現在の製品単価から再計算されるため</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-04-006">
+  <h2>F-03-04-006: バンドル削除ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-04-006</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-04 バンドル管理画面</li>
+    <li>小分類: バンドル削除ボタン</li>
+    <li>画面名: バンドル管理</li>
+    <li>URL: /products/bundles</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-017</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">削除ボタンクリック後の確認ダイアログ。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-04-006_delete-confirm.png</p>
+    <img src="../../screenshots/F-03/F-03-04-006_delete-confirm.png" alt="F-03-04-006 削除確認ダイアログ" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>バンドルを物理削除する。確認ダイアログで「削除する」を選択すると、バンドルとその構成明細（product_bundle_item）がCASCADE DELETEで物理削除される。</p>
+
+  <h3>WHY</h3>
+  <p>不要なバンドルをシステムから完全に除去するため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>「削除」ボタン</td><td>editMode === null</td><td>-</td><td>各バンドルカードの右上、赤色ボーダー</td></tr>
+    <tr><td>確認ダイアログタイトル「バンドルの削除」</td><td>showDeleteConfirm === true</td><td>固定文字列</td><td>app-confirm-dialogコンポーネント</td></tr>
+    <tr><td>確認メッセージ</td><td>showDeleteConfirm === true</td><td>deletingBundle.name</td><td>「「{バンドル名}」を削除してもよろしいですか？」</td></tr>
+    <tr><td>「削除する」ボタン</td><td>showDeleteConfirm === true</td><td>固定文字列</td><td>confirmLabel</td></tr>
+    <tr><td>「キャンセル」ボタン</td><td>showDeleteConfirm === true</td><td>固定文字列</td><td>cancelLabel</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>削除確認表示</td><td>「削除」ボタンクリック</td><td>showDeleteConfirm=true、deletingBundle設定</td><td>確認ダイアログ表示</td><td>-</td><td>showDeleteConfirm: false→true</td></tr>
+    <tr><td>削除実行</td><td>「削除する」ボタンクリック</td><td>DELETE /api/products/bundles/{id}</td><td>成功バナー「バンドルを削除しました。」、ダイアログ閉じる、一覧再読み込み</td><td>エラーバナー「バンドルの削除に失敗しました。」</td><td>showDeleteConfirm: true→false</td></tr>
+    <tr><td>キャンセル</td><td>「キャンセル」ボタンクリック</td><td>showDeleteConfirm=false</td><td>ダイアログ閉じる</td><td>-</td><td>showDeleteConfirm: true→false</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>削除ボタンクリック→確認ダイアログ表示→「削除する」クリック→DELETE API呼び出し→成功バナー表示→一覧再読み込み。物理削除（em.remove）。product_bundle_itemはON DELETE CASCADEで自動削除。</p>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>バンドルが見つからない場合（BE: 404 Not Found）→ エラーバナー表示</li>
+    <li>API呼び出しエラー → エラーバナー「バンドルの削除に失敗しました。」</li>
+  </ul>
+
+  <h3>権限制御</h3>
+  <p>AuthGuardのみ。BE側@RolesAllowed未設定。</p>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr><td>-</td><td>DELETE</td><td>/api/products/bundles/{id}</td><td>なし</td><td>204 No Content</td><td>404 バンドルが見つかりません / 500</td><td>ソースコード: ProductResource.java:747-761</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>bundle-management.component.ts</td><td>confirmDelete(bundle)</td><td>削除確認ダイアログ表示</td></tr>
+    <tr><td>bundle-management.component.ts</td><td>deleteBundle()</td><td>DELETE API呼び出し</td></tr>
+    <tr><td>bundle-management.component.ts</td><td>cancelDelete()</td><td>削除キャンセル</td></tr>
+    <tr><td>ProductResource.java</td><td>deleteBundle()</td><td>DELETE /api/products/bundles/{id}、物理削除</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <div class="screenshot-list">
+    <div class="screenshot-item">
+      <p style="margin:0 0 8px 0; font-size:14px; color:#555;">
+        <strong>撮影条件:</strong> 「会議室セット」の削除ボタンクリック後 ／
+        <strong>備考:</strong> 確認ダイアログにバンドル名が表示される
+      </p>
+      <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-03/F-03-04-006_delete-confirm.png</p>
+      <img src="../../screenshots/F-03/F-03-04-006_delete-confirm.png" alt="F-03-04-006 削除確認" style="max-width:100%; height:auto; border:1px solid #eee;">
+    </div>
+  </div>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 「会議室セット」の削除ボタンクリック→確認ダイアログ「「会議室セット」を削除してもよろしいですか？」を確認</li>
+    <li>スクリーンショット: screenshots/F-03/F-03-04-006_delete-confirm.png</li>
+    <li>ソースコード: bundle-management.component.ts:354-388（confirmDelete, deleteBundle, cancelDelete）</li>
+    <li>ソースコード: ProductResource.java:747-761（deleteBundle、物理削除）</li>
+    <li>DB定義: V002 product_bundle_item REFERENCES product_bundle(id) ON DELETE CASCADE</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>物理削除（論理削除ではない）。製品詳細のDISCONTINUED（論理削除）とは異なる方針</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="feature" id="F-03-04-007">
+  <h2>F-03-04-007: バンドルステータス</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-03-04-007</li>
+    <li>大分類: F-03 製品カタログ</li>
+    <li>中分類: F-03-04 バンドル管理画面</li>
+    <li>小分類: バンドルステータス</li>
+    <li>画面名: バンドル管理</li>
+    <li>URL: /products/bundles</li>
+    <li>対象ロール: 全ロール（AuthGuardのみ）</li>
+    <li>関連ユースケース: UC-015, UC-016</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>バンドルの有効/無効/下書きステータスを表示・変更する機能。一覧カードではステータスバッジとして表示、作成/編集フォームではセレクトボックスで選択する。</p>
+
+  <h3>WHY</h3>
+  <p>バンドルの利用可否を管理するため。下書き状態で準備→有効化→不要になったら無効化のライフサイクルを管理する。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>ステータスバッジ（一覧）</td><td>常時</td><td>bundle.status</td><td>ACTIVE→「有効」緑(#d1fae5/#065f46)、INACTIVE→「無効」灰(#f3f4f6/#6b7280)、DRAFT→「下書き」黄(#fef3c7/#92400e)</td></tr>
+    <tr><td>ステータスセレクト（フォーム）</td><td>editMode時</td><td>bundleForm.status</td><td>有効/無効/下書きの3択</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr><td>ステータス変更</td><td>フォームのセレクトボックス変更</td><td>bundleForm.statusの値更新</td><td>保存時にAPIリクエストに含まれる</td><td>-</td><td>フォーム内のstatus値のみ変更</td></tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>一覧カードにステータスバッジ（有効: 緑、無効: 灰、下書き: 黄）が表示される。作成/編集フォームではセレクトボックスで3択（有効/無効/下書き）から選択でき、保存時にAPIリクエストに含まれる。ステータス遷移に制約はない（任意の状態間で変更可能）。</p>
+
+  <h3>異常系</h3>
+  <p>DB制約: CHECK (status IN ('ACTIVE', 'INACTIVE', 'DRAFT'))。FEのセレクトボックスで3択に限定されるため、不正値は発生しない。</p>
+
+  <h3>権限制御</h3>
+  <p>バンドル作成/編集権限と同一。</p>
+
+  <h3>状態変化</h3>
+  <table>
+    <tr><th>ステータス</th><th>FE表示ラベル</th><th>バッジ色</th><th>遷移可能先</th></tr>
+    <tr><td>ACTIVE</td><td>有効</td><td>緑</td><td>INACTIVE, DRAFT（制約なし）</td></tr>
+    <tr><td>INACTIVE</td><td>無効</td><td>灰</td><td>ACTIVE, DRAFT（制約なし）</td></tr>
+    <tr><td>DRAFT</td><td>下書き</td><td>黄</td><td>ACTIVE, INACTIVE（制約なし）</td></tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>bundle-management.component.ts</td><td>getStatusLabel()</td><td>ステータスラベル変換（ACTIVE→有効、INACTIVE→無効、DRAFT→下書き）</td></tr>
+    <tr><td>bundle-management.component.scss</td><td>.status-active, .status-inactive, .status-draft</td><td>ステータスバッジ配色</td></tr>
+    <tr><td>V002__create_product_tables.sql</td><td>ck_bundle_status</td><td>CHECK制約: ACTIVE/INACTIVE/DRAFT</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 一覧カードで「有効」ステータスバッジ表示を確認（3件とも ACTIVE）</li>
+    <li>ソースコード: bundle-management.component.ts:400-408（getStatusLabel）</li>
+    <li>ソースコード: bundle-management.component.scss:394-407（ステータスバッジ色定義）</li>
+    <li>ソースコード: bundle-management.component.html:138-139（ngClass によるステータスCSSクラス付与）</li>
+    <li>DB定義: V002 ck_bundle_status CHECK (status IN ('ACTIVE', 'INACTIVE', 'DRAFT'))</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>ステータスによる業務上の影響（INACTIVE/DRAFTのバンドルが他機能で参照される場合の振る舞い）が未確認</li>
+    <li>DB上にvalid_from/valid_untilカラムがあるがFEでは使用していない。有効期間による自動ステータス変更機能は未実装</li>
+  </ul>
+</div>
+
+</body>
+</html>

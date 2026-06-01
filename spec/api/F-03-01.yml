@@ -1,0 +1,515 @@
+openapi: "3.0.3"
+info:
+  title: "Existing System API - F-03-01 製品一覧画面"
+  version: "1.0.0"
+  description: "既存システムのAPI仕様（マイグレーション用） - F-03-01 製品一覧画面"
+
+servers:
+  - url: http://localhost:4200
+    description: "既存システム（nginx経由）"
+
+paths:
+  /api/products:
+    get:
+      summary: "製品一覧取得（ページネーション付き）"
+      description: |
+        製品一覧をフィルタ・ページネーション付きで取得する。
+        keyword / categoryId / status / manufacturerId でフィルタ可能。
+
+        実装上の注意点:
+        - sortパラメータはフロントエンドから送信されるが、バックエンドでは処理されない（@QueryParamに定義なし）。
+          常に製品名昇順（ORDER BY p.name ASC）で返却される（技術的負債）。
+        - searchProducts()で全件取得後、インメモリでページネーションを行う（技術的負債#11）。
+        - manufacturerIdフィルタはDB検索ではなくインメモリフィルタ（技術的負債）。
+        - stockQuantityは製品ごとにN+1クエリで取得（技術的負債）。
+        - sizeがMAX_PAGE_SIZE(100)を超える場合は100に制限される。
+      operationId: listProducts
+      tags:
+        - "F-03-01-001"
+        - "F-03-01-002"
+        - "F-03-01-003"
+        - "F-03-01-004"
+        - "F-03-01-005"
+        - "F-03-01-006"
+        - "F-03-01-007"
+        - "F-03-01-010"
+      x-feature-ids:
+        - "F-03-01-001"
+        - "F-03-01-002"
+        - "F-03-01-003"
+        - "F-03-01-004"
+        - "F-03-01-005"
+        - "F-03-01-006"
+        - "F-03-01-007"
+        - "F-03-01-010"
+      x-evidence:
+        network: "Network通信で確認: GET /api/products?page=0&size=20&sort=name,asc [200]"
+        source: "ソースコード: proquip-web/.../resource/ProductResource.java:123-171"
+      x-confidence: "High"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: "ページ番号（0始まり）"
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          x-evidence: "Network通信 + ソースコード: ProductResource.java:125"
+        - name: size
+          in: query
+          description: "ページサイズ。MAX_PAGE_SIZE(100)を超える場合は100に制限される"
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+          x-evidence: "Network通信（size=20, size=1000） + ソースコード: ProductResource.java:126, AppConstants.java:39"
+        - name: keyword
+          in: query
+          description: "検索キーワード。製品名・説明・SKUの部分一致検索（LIKE %keyword%）"
+          required: false
+          schema:
+            type: string
+          x-evidence: "Network通信（keyword=Dell） + ソースコード: ProductServiceBean.java:288（name, description, sku の3フィールドLIKE検索）"
+        - name: categoryId
+          in: query
+          description: "カテゴリIDによるフィルタ。親カテゴリ選択時に子カテゴリの製品は含まれない（完全一致）"
+          required: false
+          schema:
+            type: integer
+            format: int64
+          x-evidence: "ソースコード: ProductServiceBean.java:290-291（p.category.id = :categoryId）"
+        - name: status
+          in: query
+          description: "ステータスによるフィルタ。ACTIVE / INACTIVE / DISCONTINUED / PENDING"
+          required: false
+          schema:
+            type: string
+            enum:
+              - ACTIVE
+              - INACTIVE
+              - DISCONTINUED
+              - PENDING
+          x-evidence: "ソースコード: ProductServiceBean.java:293-294 + ProductResource.java:129"
+        - name: manufacturerId
+          in: query
+          description: "メーカーIDによるフィルタ。バックエンドではインメモリフィルタ（DB検索ではない）"
+          required: false
+          schema:
+            type: integer
+            format: int64
+          x-evidence: "ソースコード: ProductResource.java:130,142-145（全件取得後にインメモリでremoveIf）"
+        - name: sort
+          in: query
+          description: |
+            ソートパラメータ。フロントエンドから「column,direction」形式で送信されるが、
+            バックエンドでは処理されず無視される。常にname ASCで返却される（技術的負債）。
+          required: false
+          schema:
+            type: string
+            example: "name,asc"
+          x-evidence: "Network通信（sort=name,asc送信確認） + ソースコード: ProductResource.java:124-130に@QueryParam(\"sort\")が存在しない"
+          x-unconfirmed:
+            - "sortパラメータはバックエンドで未処理。フロントエンドのUI上はソート切替が機能しているように見えるが、実際にはバックエンドの並び順は常にname ASC固定"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResultProductDTO"
+              example:
+                content:
+                  - id: 57
+                    sku: "DPC-001007"
+                    skuCode: "DPC-001007"
+                    name: "Apple Mac mini M2"
+                    description: "Apple M2チップ搭載 デスクトップPC。メモリ8GB、SSD 256GB。"
+                    categoryId: 7
+                    categoryName: "デスクトップPC"
+                    manufacturerId: 4
+                    manufacturerName: "Apple"
+                    unitPrice: 84800.00
+                    status: "ACTIVE"
+                    stockQuantity: 0
+                    unit: "台"
+                    minimumOrderQuantity: 1
+                    leadTimeDays: 3
+                    weight: 1.180
+                    tags: []
+                totalElements: 100
+                totalPages: 5
+                number: 0
+                size: 20
+                first: true
+                last: false
+                empty: false
+          headers:
+            content-type:
+              schema:
+                type: string
+              example: "application/json"
+            cache-control:
+              schema:
+                type: string
+              example: "no-store, no-cache, must-revalidate"
+              x-evidence: "Network通信"
+            access-control-allow-origin:
+              schema:
+                type: string
+              example: "*"
+              x-evidence: "Network通信"
+        "401":
+          description: "認証エラー（Bearerトークンなし・期限切れ）"
+          x-evidence: "ソースコード: proquip-web/.../filter/AuthenticationFilter.java"
+        "500":
+          description: "サーバーエラー"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          x-evidence: "ソースコード: proquip-web/.../filter/GlobalExceptionMapper.java"
+
+  /api/products/categories:
+    get:
+      summary: "カテゴリ一覧取得"
+      description: |
+        全カテゴリの一覧を取得する。名前順でソートされる。
+        各カテゴリの製品数（productCount）も集計して返却する。
+        技術的負債#5: 本来はCategoryResourceとして分離すべき。
+      operationId: listCategories
+      tags:
+        - "F-03-01-002"
+      x-feature-ids:
+        - "F-03-01-002"
+      x-evidence:
+        network: "Network通信で確認: GET /api/products/categories [200]"
+        source: "ソースコード: proquip-web/.../resource/ProductResource.java:428-458"
+      x-confidence: "High"
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoryDTO"
+              example:
+                - id: 8
+                  code: "CAT-LAPTOP"
+                  name: "ノートPC"
+                  description: "携帯型パーソナルコンピュータ"
+                  parentId: 1
+                  productCount: 15
+                - id: 7
+                  code: "CAT-DESKTOP"
+                  name: "デスクトップPC"
+                  description: "据置型パーソナルコンピュータ"
+                  parentId: 1
+                  productCount: 8
+                - id: 3
+                  code: "CAT-NET"
+                  name: "ネットワーク"
+                  description: "ルーター・スイッチ・アクセスポイント"
+                  parentId: null
+                  productCount: 0
+        "401":
+          description: "認証エラー"
+          x-evidence: "ソースコード: AuthenticationFilter.java"
+
+  /api/products/export:
+    get:
+      summary: "製品CSVエクスポート（バックエンド）"
+      description: |
+        有効ステータスの製品をCSV形式でエクスポートする。
+        Content-Disposition: attachment; filename="products.csv" ヘッダ付き。
+
+        注意: フロントエンド（F-03-01-010 CSV出力ボタン）はこのエンドポイントを使用せず、
+        GET /api/products?page=0&size=10000 でデータを取得し、クライアントサイドでCSV生成している（技術的負債: 二重実装）。
+      operationId: exportProducts
+      tags:
+        - "F-03-01-010"
+      x-feature-ids:
+        - "F-03-01-010"
+      x-evidence:
+        source: "ソースコード: proquip-web/.../resource/ProductResource.java:994-1006"
+      x-confidence: "Medium"
+      x-unconfirmed:
+        - "フロントエンドはこのエンドポイントを使用していない（クライアントサイドCSV生成）"
+        - "エクスポート対象はfindActiveProducts()のためACTIVEステータスのみ"
+        - "出力CSV項目の詳細（ProductServiceBean.exportProductsToCsv のフォーマット未確認）"
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        "200":
+          description: "CSV形式のレスポンス"
+          content:
+            text/csv:
+              schema:
+                type: string
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              example: "attachment; filename=\"products.csv\""
+              x-evidence: "ソースコード: ProductResource.java:1003-1004"
+        "401":
+          description: "認証エラー"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Keycloak OIDC (RS256) Bearer JWT。
+        aud: proquip-api, azp: proquip-web。
+        realm_roles: [WAREHOUSE_STAFF, VIEWER, BUYER, MANAGER, ADMIN]。
+        ProductResourceには@RolesAllowed未設定（全認証ユーザーがアクセス可能）。
+      x-evidence: "Network通信（Authorization: Bearer eyJ...） + ソースコード: AuthenticationFilter.java"
+
+  schemas:
+    PageResultProductDTO:
+      type: object
+      description: "製品一覧のページネーション結果"
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductDTO"
+          description: "製品DTOの配列"
+        totalElements:
+          type: integer
+          format: int64
+          description: "総件数"
+          example: 100
+        totalPages:
+          type: integer
+          description: "総ページ数"
+          example: 5
+        number:
+          type: integer
+          description: "現在ページ（0始まり）"
+          example: 0
+        size:
+          type: integer
+          description: "ページサイズ"
+          example: 20
+        first:
+          type: boolean
+          description: "最初のページかどうか"
+          example: true
+        last:
+          type: boolean
+          description: "最後のページかどうか"
+          example: false
+        empty:
+          type: boolean
+          description: "結果が空かどうか"
+          example: false
+      required:
+        - content
+        - totalElements
+        - totalPages
+        - number
+        - size
+        - first
+        - last
+        - empty
+      x-evidence: "Network通信 + ソースコード: proquip-common/.../dto/PageResultDto.java"
+
+    ProductDTO:
+      type: object
+      description: "製品DTO"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "製品ID"
+          example: 57
+        sku:
+          type: string
+          description: "SKUコード（getSku()はskuCodeを返す）"
+          example: "DPC-001007"
+        skuCode:
+          type: string
+          description: "SKUコード（skuフィールドと同値）"
+          example: "DPC-001007"
+        name:
+          type: string
+          description: "製品名"
+          example: "Apple Mac mini M2"
+        description:
+          type: string
+          nullable: true
+          description: "製品説明"
+          example: "Apple M2チップ搭載 デスクトップPC。メモリ8GB、SSD 256GB。"
+        categoryId:
+          type: integer
+          format: int64
+          nullable: true
+          description: "カテゴリID"
+          example: 7
+        categoryName:
+          type: string
+          nullable: true
+          description: "カテゴリ名"
+          example: "デスクトップPC"
+        manufacturerId:
+          type: integer
+          format: int64
+          nullable: true
+          description: "メーカーID（未設定の場合はフィールド自体が省略される）"
+          example: 4
+        manufacturerName:
+          type: string
+          nullable: true
+          description: "メーカー名（未設定の場合はフィールド自体が省略される）"
+          example: "Apple"
+        unitPrice:
+          type: number
+          format: decimal
+          nullable: true
+          description: "単価"
+          example: 84800.00
+        status:
+          type: string
+          description: "製品ステータス"
+          enum:
+            - ACTIVE
+            - INACTIVE
+            - DISCONTINUED
+            - PENDING
+            - DRAFT
+          example: "ACTIVE"
+        stockQuantity:
+          type: integer
+          nullable: true
+          description: "在庫数量（N+1クエリで取得: SUM(inventory_item.quantity)）"
+          example: 0
+        unit:
+          type: string
+          nullable: true
+          description: "単位名"
+          example: "台"
+        minimumOrderQuantity:
+          type: integer
+          nullable: true
+          description: "最低発注数"
+          example: 1
+        leadTimeDays:
+          type: integer
+          nullable: true
+          description: "リードタイム（日）"
+          example: 3
+        weight:
+          type: number
+          format: decimal
+          nullable: true
+          description: "重量（kg）。未設定の場合はフィールド省略"
+          example: 1.180
+        reorderPoint:
+          type: integer
+          nullable: true
+          description: "再発注点"
+        dimensions:
+          type: string
+          nullable: true
+          description: "寸法（文字列）"
+        specifications:
+          type: string
+          nullable: true
+          description: "仕様（JSON文字列）"
+        notes:
+          type: string
+          nullable: true
+          description: "備考"
+        tags:
+          type: array
+          items:
+            type: string
+          description: "タグ一覧"
+          example: []
+      required:
+        - id
+        - name
+        - status
+      x-evidence: "Network通信 + ソースコード: proquip-common/.../dto/ProductDTO.java"
+
+    CategoryDTO:
+      type: object
+      description: "カテゴリDTO"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "カテゴリID"
+          example: 8
+        code:
+          type: string
+          description: "カテゴリコード"
+          example: "CAT-LAPTOP"
+        name:
+          type: string
+          description: "カテゴリ名"
+          example: "ノートPC"
+        description:
+          type: string
+          description: "カテゴリ説明"
+          example: "携帯型パーソナルコンピュータ"
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+          description: "親カテゴリID（ルートカテゴリの場合はnull）"
+          example: 1
+        productCount:
+          type: integer
+          format: int64
+          description: "カテゴリに属する製品数"
+          example: 15
+      required:
+        - id
+        - code
+        - name
+        - productCount
+      x-evidence: "Network通信 + ソースコード: ProductResource.java:444-455"
+
+    ErrorResponse:
+      type: object
+      description: |
+        エラーレスポンス。
+        GlobalExceptionMapper経由: code, errorCode, message, details。
+        ProductResource直接: error のみ。
+      properties:
+        code:
+          type: integer
+          description: "HTTPステータスコード"
+          example: 404
+        errorCode:
+          type: string
+          description: "エラーコード"
+          example: "ENTITY_NOT_FOUND"
+        message:
+          type: string
+          description: "エラーメッセージ"
+          example: "商品が見つかりません。"
+        details:
+          type: array
+          items:
+            type: string
+          description: "エラー詳細"
+        error:
+          type: string
+          description: "エラーメッセージ（ProductResource直接返却時）"
+          example: "商品が見つかりません。ID=999"
+      x-evidence: "ソースコード: GlobalExceptionMapper.java + ProductResource.java"

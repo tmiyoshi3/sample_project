@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F-12-03: フッター - UI仕様</title>
+  <style>
+    body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; margin: 24px; line-height: 1.6; color: #333; }
+    h1 { border-bottom: 3px solid #2196F3; padding-bottom: 8px; }
+    h2 { border-bottom: 2px solid #64B5F6; padding-bottom: 4px; margin-top: 48px; }
+    h3 { border-left: 4px solid #90CAF9; padding-left: 8px; margin-top: 24px; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; font-size: 14px; }
+    th { background: #E3F2FD; }
+    .feature { margin-bottom: 64px; }
+    .screenshot-item { margin-bottom: 16px; border: 1px solid #ddd; border-radius: 4px; padding: 12px; }
+    .screenshot-list { margin-top: 12px; }
+    ul { margin: 4px 0; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<h1>F-12-03: フッター - UI仕様</h1>
+<p>最終更新: 2026-05-22</p>
+
+<!-- ================================================================== -->
+<!-- F-12-03-001: コピーライト表示 -->
+<!-- ================================================================== -->
+<div class="feature" id="F-12-03-001">
+  <h2>F-12-03-001: コピーライト表示</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-12-03-001</li>
+    <li>大分類: F-12 共通機能</li>
+    <li>中分類: F-12-03 フッター</li>
+    <li>小分類: コピーライト表示</li>
+    <li>画面名: フッター（全画面共通）</li>
+    <li>URL: 全画面共通</li>
+    <li>対象ロール: 全認証ユーザー（ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER）</li>
+    <li>関連ユースケース: UC-005（システムバージョン・識別情報を確認する）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <p style="font-size:14px; color:#555;">画面最下部のフッター領域。コピーライトとバージョン情報を中央揃えで表示。</p>
+  <div class="screenshot-item">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-12/F-12-03-001_footer_initial.png</p>
+    <img src="../../screenshots/F-12/F-12-03-001_footer_initial.png" alt="F-12-03-001 フッター 通常表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>画面最下部に表示されるフッター。「© {現在年} ProQuip - 調達・在庫管理システム v1.0.0」のテキストを中央揃えで表示する。</p>
+
+  <h3>WHY</h3>
+  <p>著作権表示とシステムバージョンの明示。問い合わせ・障害報告時のバージョン特定にも利用。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>コピーライトシンボル（©）</td><td>常時</td><td>HTMLエンティティ <code>&amp;copy;</code></td><td></td></tr>
+    <tr><td>年</td><td>常時</td><td><code>new Date().getFullYear()</code>（コンポーネントプロパティ <code>currentYear</code>）</td><td>動的に現在年を取得。2026年時点では「2026」</td></tr>
+    <tr><td>システム名「ProQuip - 調達・在庫管理システム」</td><td>常時</td><td>固定文字列（テンプレート直書き）</td><td></td></tr>
+    <tr><td>バージョン「v1.0.0」</td><td>常時</td><td>固定文字列（テンプレート直書き）</td><td>サイドバーのバージョン表示（F-12-02-011）と同一値</td></tr>
+  </table>
+
+  <h3>入力項目</h3>
+  <p>なし（表示専用）</p>
+
+  <h3>操作</h3>
+  <p>なし（クリックイベント等は未設定）</p>
+
+  <h3>正常系</h3>
+  <p>全画面で画面下部に「© 2026 ProQuip - 調達・在庫管理システム v1.0.0」が常時表示される。年は <code>new Date().getFullYear()</code> で動的に取得されるため、年が変わると自動的に更新される。</p>
+
+  <h3>異常系</h3>
+  <p>なし（固定文字列 + JavaScript Date のみ）</p>
+
+  <h3>権限制御</h3>
+  <p>なし。全認証ユーザーに表示。</p>
+
+  <h3>状態変化</h3>
+  <table>
+    <tr><th>状態</th><th>表示</th><th>条件</th></tr>
+    <tr><td>サイドバー展開時</td><td>サイドバー幅分の左マージン（<code>margin-left: var(--sidebar-width)</code>）</td><td>デフォルト</td></tr>
+    <tr><td>サイドバー折りたたみ時</td><td>折りたたみ幅分の左マージン（<code>margin-left: var(--sidebar-collapsed-width)</code>）</td><td>親要素に <code>.sidebar-collapsed</code> クラスが付与された場合</td></tr>
+  </table>
+
+  <h3>関連API</h3>
+  <p>なし</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/footer.component.ts</td><td>FooterComponent.currentYear</td><td><code>new Date().getFullYear()</code> でコピーライト年を動的取得（:14）</td></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/footer.component.html</td><td>footer.app-footer &gt; span</td><td>コピーライト + バージョン表示テンプレート（:1-3）</td></tr>
+    <tr><td>proquip-frontend/src/app/core/layout/footer.component.scss</td><td>.app-footer</td><td>中央揃え、border-top、サイドバー幅追従のmargin-left（:2-18）</td></tr>
+  </table>
+
+  <h3>状態別スクリーンショット</h3>
+  <p>なし（表示内容に状態変化なし。レイアウトのみサイドバー状態に追従）</p>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ダッシュボード画面下部でフッターテキスト「© 2026 ProQuip - 調達・在庫管理システム v1.0.0」を確認</li>
+    <li>スクリーンショット: screenshots/F-12/F-12-03-001_footer_initial.png</li>
+    <li>ソースコード: proquip-frontend/src/app/core/layout/footer.component.ts:14（currentYear = new Date().getFullYear()）</li>
+    <li>ソースコード: proquip-frontend/src/app/core/layout/footer.component.html:1-3（テンプレート）</li>
+    <li>ソースコード: proquip-frontend/src/app/core/layout/footer.component.scss:2-18（レイアウトスタイル）</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>バージョン番号「v1.0.0」がテンプレートにハードコードされており、F-12-02-011（サイドバーバージョン表示）と二重管理</li>
+  </ul>
+</div>
+
+</body>
+</html>

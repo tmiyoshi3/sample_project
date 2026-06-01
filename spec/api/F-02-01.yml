@@ -1,0 +1,986 @@
+openapi: "3.0.3"
+info:
+  title: "Existing System API - F-02-01 ダッシュボード画面"
+  version: "1.0.0"
+  description: "既存システムのAPI仕様（マイグレーション用） - F-02-01 ダッシュボード画面"
+
+servers:
+  - url: http://localhost:4200
+    description: "既存システム（nginx経由）"
+
+paths:
+  /api/dashboard/summary:
+    get:
+      summary: "ダッシュボードサマリー取得"
+      description: |
+        ダッシュボード画面のサマリー情報（製品総数、有効仕入先数、承認待ち発注数、在庫不足品目数、承認待ち合計）を取得する。
+        各集計値を個別のJPQLクエリで取得している（技術的負債#3: N+1パターン）。
+        EntityManagerを直接使用（技術的負債#5）。
+      operationId: getDashboardSummary
+      tags:
+        - "F-02-01-001"
+        - "F-02-01-002"
+        - "F-02-01-003"
+      x-feature-ids:
+        - "F-02-01-001"
+        - "F-02-01-002"
+        - "F-02-01-003"
+      x-evidence:
+        network: "Network通信で確認: GET /api/dashboard/summary [200]"
+        source: "ソースコード: proquip-web/.../resource/DashboardResource.java:81-129"
+      x-confidence: "High"
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummaryDTO"
+              example:
+                totalProducts: 96
+                activeSuppliers: 10
+                pendingOrders: 1
+                lowStockItems: 0
+                pendingApprovals: 4
+                recentOrders: []
+                budgetUtilization: {}
+          headers:
+            cache-control:
+              schema:
+                type: string
+              example: "no-store, no-cache, must-revalidate"
+              x-evidence: "Network通信"
+        "401":
+          description: "認証エラー（Bearerトークンなし・期限切れ）"
+          x-evidence: "ソースコード: proquip-web/.../filter/AuthenticationFilter.java"
+        "500":
+          description: "サーバーエラー"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          x-evidence: "ソースコード: DashboardResource.java:123-126（例外を握りつぶして空DTOを返す技術的負債#7）"
+          x-unconfirmed:
+            - "例外時は空DTOが返り、HTTPステータスは200のまま（技術的負債#7）"
+
+  /api/dashboard/spending-trend:
+    get:
+      summary: "月別支出推移取得"
+      description: |
+        指定した月数分の月別発注金額推移データを取得する。
+        PostgreSQLネイティブSQLで月別GROUP BY集計を行う。
+        CANCELLED, DRAFTステータスの発注は除外される。
+      operationId: getSpendingTrend
+      tags:
+        - "F-02-01-005"
+      x-feature-ids:
+        - "F-02-01-005"
+      x-evidence:
+        network: "Network通信で確認: GET /api/dashboard/spending-trend?months=12 [200] → []"
+        source: "ソースコード: proquip-web/.../resource/DashboardResource.java:274-304"
+      x-confidence: "High"
+      x-unconfirmed:
+        - "データがある場合のレスポンス形式はソースコードから推定（テスト環境に該当期間のデータなし）"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: months
+          in: query
+          description: "取得する月数（過去N か月分）"
+          required: false
+          schema:
+            type: integer
+            default: 12
+          x-evidence: "Network通信 + ソースコード: DashboardResource.java:278"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SpendingTrendItem"
+              examples:
+                empty:
+                  summary: "データなし（テスト環境で確認）"
+                  value: []
+                withData:
+                  summary: "データあり（ソースコードから推定）"
+                  value:
+                    - month: "2024-10"
+                      amount: 1850000.00
+                    - month: "2024-11"
+                      amount: 3401500.00
+        "401":
+          description: "認証エラー"
+        "500":
+          description: "サーバーエラー（例外時は空配列が返る）"
+          x-evidence: "ソースコード: DashboardResource.java:300-301"
+
+  /api/dashboard/category-spending:
+    get:
+      summary: "カテゴリ別支出取得"
+      description: |
+        カテゴリ別の発注回数と合計金額を取得する。
+        PurchaseOrder → items → product → category のJOINでJPQL集計。
+        金額降順でソートされる。
+        CANCELLED, DRAFTステータスの発注は除外される。
+      operationId: getCategorySpending
+      tags:
+        - "F-02-01-006"
+      x-feature-ids:
+        - "F-02-01-006"
+      x-evidence:
+        network: "Network通信で確認: GET /api/dashboard/category-spending [200] → 11件の配列"
+        source: "ソースコード: proquip-web/.../resource/DashboardResource.java:306-337"
+      x-confidence: "High"
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategorySpendingItem"
+              example:
+                - categoryName: "ノートPC"
+                  orderCount: 9
+                  totalAmount: 20433650.00
+                - categoryName: "モニター"
+                  orderCount: 6
+                  totalAmount: 18129110.00
+                - categoryName: "サプライ品"
+                  orderCount: 7
+                  totalAmount: 11291510.00
+                - categoryName: "オフィスソフト"
+                  orderCount: 1
+                  totalAmount: 10925600.00
+                - categoryName: "マウス"
+                  orderCount: 5
+                  totalAmount: 10288810.00
+                - categoryName: "キーボード"
+                  orderCount: 5
+                  totalAmount: 10288810.00
+                - categoryName: "スイッチ"
+                  orderCount: 2
+                  totalAmount: 6023000.00
+                - categoryName: "アクセスポイント"
+                  orderCount: 2
+                  totalAmount: 3011500.00
+                - categoryName: "デスクトップPC"
+                  orderCount: 1
+                  totalAmount: 2330000.00
+                - categoryName: "ルーター"
+                  orderCount: 1
+                  totalAmount: 1999500.00
+                - categoryName: "プリンター"
+                  orderCount: 2
+                  totalAmount: 1291950.00
+        "401":
+          description: "認証エラー"
+        "500":
+          description: "サーバーエラー（例外時は空配列が返る）"
+          x-evidence: "ソースコード: DashboardResource.java:333-334"
+
+  /api/purchase-orders:
+    get:
+      summary: "発注書一覧取得"
+      description: |
+        発注書の一覧をページング付きで取得する。
+        ダッシュボードではpage=0&size=100で全件取得し、
+        フロントエンド側で発注日降順ソート・上位10件スライスを行う。
+        ダッシュボード以外（F-05-03）でも使用されるAPIだが、ここではダッシュボードでの使用仕様を記録する。
+      operationId: listPurchaseOrders
+      tags:
+        - "F-02-01-001"
+        - "F-02-01-007"
+      x-feature-ids:
+        - "F-02-01-001"
+        - "F-02-01-007"
+      x-evidence:
+        network: "Network通信で確認: GET /api/purchase-orders?page=0&size=100 [200] → 20件"
+        source: "ソースコード: proquip-web/.../resource/PurchaseOrderResource.java:80-110"
+      x-confidence: "High"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: "ページ番号（0始まり）"
+          required: false
+          schema:
+            type: integer
+            default: 0
+          x-evidence: "Network通信 + ソースコード: PurchaseOrderResource.java"
+        - name: size
+          in: query
+          description: "1ページあたりの件数"
+          required: false
+          schema:
+            type: integer
+            default: 20
+          x-evidence: "Network通信 + ソースコード: PurchaseOrderResource.java"
+        - name: status
+          in: query
+          description: "ステータスフィルタ"
+          required: false
+          schema:
+            type: string
+            enum:
+              - DRAFT
+              - SUBMITTED
+              - APPROVED
+              - REJECTED
+              - ORDERED
+              - PARTIALLY_RECEIVED
+              - RECEIVED
+              - INVOICED
+              - CLOSED
+              - CANCELLED
+          x-evidence: "ソースコード: PurchaseOrderResource.java + Network通信レスポンスのstatus値"
+        - name: keyword
+          in: query
+          description: "キーワード検索"
+          required: false
+          schema:
+            type: string
+          x-evidence: "ソースコード: PurchaseOrderResource.java"
+        - name: supplierId
+          in: query
+          description: "サプライヤーIDフィルタ"
+          required: false
+          schema:
+            type: integer
+            format: int64
+          x-evidence: "ソースコード: PurchaseOrderResource.java"
+        - name: fromDate
+          in: query
+          description: "発注日開始（yyyy-MM-dd形式）"
+          required: false
+          schema:
+            type: string
+            format: date
+          x-evidence: "ソースコード: PurchaseOrderResource.java"
+        - name: toDate
+          in: query
+          description: "発注日終了（yyyy-MM-dd形式）"
+          required: false
+          schema:
+            type: string
+            format: date
+          x-evidence: "ソースコード: PurchaseOrderResource.java"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrderPageResult"
+        "401":
+          description: "認証エラー"
+        "500":
+          description: "サーバーエラー"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/inventory/alerts/low-stock:
+    get:
+      summary: "在庫不足アラート取得"
+      description: |
+        在庫不足（発注点以下）の品目一覧を取得する。
+        全倉庫を対象とする（warehouseId=null）。
+        ダッシュボードでは在庫アラートカード（F-02-01-002）と
+        在庫アラートテーブル（F-02-01-009）のデータソースとして使用する。
+      operationId: getLowStockAlerts
+      tags:
+        - "F-02-01-002"
+        - "F-02-01-009"
+      x-feature-ids:
+        - "F-02-01-002"
+        - "F-02-01-009"
+      x-evidence:
+        network: "Network通信で確認: GET /api/inventory/alerts/low-stock [200] → []（テスト環境に在庫不足データなし）"
+        source: "ソースコード: proquip-web/.../resource/InventoryResource.java:460-485"
+      x-confidence: "Medium"
+      x-unconfirmed:
+        - "在庫不足データがある場合のレスポンスフィールドの完全性（テスト環境で空配列のため未確認）"
+        - "InventoryItemDtoの全フィールド構成（ソースコードからの推定）"
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InventoryItemDto"
+              examples:
+                empty:
+                  summary: "在庫不足なし（テスト環境で確認）"
+                  value: []
+                withData:
+                  summary: "在庫不足あり（ソースコードから推定）"
+                  value:
+                    - id: 1
+                      productId: 10
+                      productName: "Apple MacBook Air 15 M3"
+                      productSku: "NPC-002005"
+                      warehouseId: 1
+                      warehouseName: "本社倉庫"
+                      quantity: 2
+                      reservedQuantity: 0
+                      availableQuantity: 2
+                      minimumStock: 5
+                      reorderPoint: 10
+                      status: "LOW_STOCK"
+        "401":
+          description: "認証エラー"
+        "500":
+          description: "サーバーエラー"
+
+  /api/budgets:
+    get:
+      summary: "予算一覧取得"
+      description: |
+        会計年度および部門IDで予算データを取得する。
+        ダッシュボードでは fiscalYear=2026（ハードコード）で呼び出す。
+        予算消化率カード（F-02-01-004）のデータソース。
+      operationId: listBudgets
+      tags:
+        - "F-02-01-004"
+      x-feature-ids:
+        - "F-02-01-004"
+      x-evidence:
+        network: "Network通信で確認: GET /api/budgets?fiscalYear=2026 [200] → []（テスト環境に予算データなし）"
+        source: "ソースコード: proquip-web/.../resource/BudgetResource.java:76-103"
+      x-confidence: "Medium"
+      x-unconfirmed:
+        - "予算データがある場合のレスポンスフィールドの完全性（テスト環境で空配列のため未確認）"
+        - "BudgetDtoの全フィールド構成（ソースコードからの推定）"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: fiscalYear
+          in: query
+          description: "会計年度"
+          required: false
+          schema:
+            type: integer
+          example: 2026
+          x-evidence: "Network通信 + ソースコード: BudgetResource.java:76-103"
+        - name: departmentId
+          in: query
+          description: "部門ID"
+          required: false
+          schema:
+            type: integer
+            format: int64
+          x-evidence: "ソースコード: BudgetResource.java:76-103"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BudgetDto"
+              examples:
+                empty:
+                  summary: "予算データなし（テスト環境で確認）"
+                  value: []
+                withData:
+                  summary: "予算データあり（ソースコードから推定）"
+                  value:
+                    - id: 1
+                      departmentId: 1
+                      departmentName: "情報システム部"
+                      fiscalYear: 2026
+                      totalAmount: 50000000.00
+                      usedAmount: 25000000.00
+                      status: "ACTIVE"
+        "401":
+          description: "認証エラー"
+        "500":
+          description: "サーバーエラー"
+
+  /api/requisitions:
+    get:
+      summary: "購買依頼一覧取得"
+      description: |
+        購買依頼の一覧をページング付きで取得する。
+        ダッシュボードではstatus=PENDING_APPROVALでフィルタし、
+        承認待ちカード（F-02-01-003）のカウントに使用する。
+        ダッシュボード以外（F-05-01）でも使用されるAPIだが、ここではダッシュボードでの使用仕様を記録する。
+      operationId: listRequisitions
+      tags:
+        - "F-02-01-003"
+      x-feature-ids:
+        - "F-02-01-003"
+      x-evidence:
+        network: "Network通信で確認: GET /api/requisitions?page=0&size=100&status=PENDING_APPROVAL [200] → totalElements:0"
+        source: "ソースコード: proquip-web/.../resource/RequisitionResource.java:84-145"
+      x-confidence: "High"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: "ページ番号（0始まり）"
+          required: false
+          schema:
+            type: integer
+            default: 0
+          x-evidence: "Network通信 + ソースコード: RequisitionResource.java"
+        - name: size
+          in: query
+          description: "1ページあたりの件数"
+          required: false
+          schema:
+            type: integer
+            default: 20
+          x-evidence: "Network通信 + ソースコード: RequisitionResource.java"
+        - name: status
+          in: query
+          description: "ステータスフィルタ"
+          required: false
+          schema:
+            type: string
+            enum:
+              - DRAFT
+              - SUBMITTED
+              - PENDING_APPROVAL
+              - APPROVED
+              - REJECTED
+              - CANCELLED
+          x-evidence: "Network通信（PENDING_APPROVAL使用確認） + ソースコード: RequisitionResource.java"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequisitionPageResult"
+              example:
+                content: []
+                empty: true
+                first: true
+                last: true
+                number: 0
+                size: 100
+                totalElements: 0
+                totalPages: 0
+        "401":
+          description: "認証エラー"
+        "500":
+          description: "サーバーエラー"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Keycloak OIDC Bearer JWT。
+        AuthInterceptor（フロントエンド）が自動付与。
+        AuthenticationFilter（バックエンド）で検証（ただしJWT署名検証なし — 技術的負債）。
+        realm: proquip, clientId: proquip-web, audience: proquip-api
+      x-evidence: "Network通信（Authorization: Bearer ...） + ソースコード: auth.interceptor.ts, AuthenticationFilter.java"
+
+  schemas:
+    DashboardSummaryDTO:
+      type: object
+      description: "ダッシュボードサマリーDTO"
+      properties:
+        totalProducts:
+          type: integer
+          format: int64
+          description: "有効（ACTIVE）な製品の総数"
+          example: 96
+          x-evidence: "Network通信 + ソースコード: DashboardResource.java:94-97"
+        activeSuppliers:
+          type: integer
+          format: int64
+          description: "有効（ACTIVE）なサプライヤーの総数"
+          example: 10
+          x-evidence: "Network通信 + ソースコード: DashboardResource.java:100-103"
+        pendingOrders:
+          type: integer
+          format: int64
+          description: "承認待ち（SUBMITTED）発注書の件数"
+          example: 1
+          x-evidence: "Network通信 + ソースコード: DashboardResource.java:106-109"
+        lowStockItems:
+          type: integer
+          format: int64
+          description: "在庫不足品目数（inventoryService.getLowStockItems(null)の結果件数）"
+          example: 0
+          x-evidence: "Network通信 + ソースコード: DashboardResource.java:112-113"
+        pendingApprovals:
+          type: integer
+          format: int64
+          description: "承認待ち合計件数（発注書SUBMITTED + 購買依頼SUBMITTED）"
+          example: 4
+          x-evidence: "Network通信 + ソースコード: DashboardResource.java:116-121"
+        recentOrders:
+          type: array
+          description: "直近の発注一覧（このAPIでは常に空配列。/dashboard/recent-ordersで個別取得可能）"
+          items:
+            $ref: "#/components/schemas/RecentOrderDto"
+          x-evidence: "Network通信（常に[]） + ソースコード: DashboardSummaryDTO.java:42"
+        budgetUtilization:
+          type: object
+          description: "予算利用率マップ（キー: 部門名、値: 利用率%）。このAPIでは常に空オブジェクト"
+          additionalProperties:
+            type: number
+            format: decimal
+          example: {}
+          x-evidence: "Network通信（常に{}） + ソースコード: DashboardSummaryDTO.java:48"
+      x-evidence: "Network通信 + ソースコード: proquip-common/.../dto/DashboardSummaryDTO.java"
+
+    RecentOrderDto:
+      type: object
+      description: "直近の発注情報DTO（DashboardSummaryDTO内部クラス）"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "発注ID"
+        orderNumber:
+          type: string
+          description: "発注番号（例: PO-2025-000006）"
+        supplierName:
+          type: string
+          description: "仕入先名"
+        totalAmount:
+          type: number
+          format: decimal
+          description: "合計金額"
+        status:
+          type: string
+          description: "ステータス"
+        orderDate:
+          type: string
+          format: date-time
+          description: "発注日"
+      x-evidence: "ソースコード: proquip-common/.../dto/DashboardSummaryDTO.java:122-194"
+
+    SpendingTrendItem:
+      type: object
+      description: "月別支出推移の1レコード"
+      properties:
+        month:
+          type: string
+          description: "年月（YYYY-MM形式）"
+          example: "2024-10"
+          x-evidence: "ソースコード: DashboardResource.java:284,294 — TO_CHAR(o.order_date, 'YYYY-MM')"
+        amount:
+          type: number
+          format: decimal
+          description: "月間合計発注金額"
+          example: 1850000.00
+          x-evidence: "ソースコード: DashboardResource.java:285,295 — SUM(o.total_amount)"
+      x-evidence: "ソースコード: DashboardResource.java:274-304"
+
+    CategorySpendingItem:
+      type: object
+      description: "カテゴリ別支出の1レコード"
+      properties:
+        categoryName:
+          type: string
+          description: "カテゴリ名"
+          example: "ノートPC"
+          x-evidence: "Network通信 + ソースコード: DashboardResource.java:315,326"
+        orderCount:
+          type: integer
+          format: int64
+          description: "発注回数（DISTINCT order ID）"
+          example: 9
+          x-evidence: "Network通信 + ソースコード: DashboardResource.java:315,327"
+        totalAmount:
+          type: number
+          format: decimal
+          description: "合計金額"
+          example: 20433650.00
+          x-evidence: "Network通信 + ソースコード: DashboardResource.java:315,328"
+      x-evidence: "Network通信（11件確認） + ソースコード: DashboardResource.java:306-337"
+
+    PurchaseOrderPageResult:
+      type: object
+      description: "発注書一覧のページング結果"
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseOrderResponse"
+        totalElements:
+          type: integer
+          format: int64
+          description: "全件数"
+          example: 20
+        totalPages:
+          type: integer
+          description: "全ページ数"
+        number:
+          type: integer
+          description: "現在のページ番号（0始まり）"
+        size:
+          type: integer
+          description: "1ページあたりの件数"
+        first:
+          type: boolean
+        last:
+          type: boolean
+        empty:
+          type: boolean
+      x-evidence: "Network通信 + ソースコード: PurchaseOrderResource.java:80-110"
+
+    PurchaseOrderResponse:
+      type: object
+      description: "発注書レスポンスDTO"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "発注書ID"
+          example: 17
+          x-evidence: "Network通信"
+        orderNumber:
+          type: string
+          description: "発注番号"
+          example: "PO-2025-000006"
+          x-evidence: "Network通信"
+        status:
+          type: string
+          description: "ステータス"
+          enum:
+            - DRAFT
+            - SUBMITTED
+            - APPROVED
+            - REJECTED
+            - ORDERED
+            - PARTIALLY_RECEIVED
+            - RECEIVED
+            - INVOICED
+            - CLOSED
+            - CANCELLED
+          example: "DRAFT"
+          x-evidence: "Network通信（全ステータス確認済み）"
+        orderDate:
+          type: string
+          format: date-time
+          description: "発注日"
+          example: "2026-05-21T11:10:16"
+          x-evidence: "Network通信"
+        expectedDeliveryDate:
+          type: string
+          description: "納品予定日（date or date-time形式が混在）"
+          example: "2025-04-30"
+          x-evidence: "Network通信"
+          x-unconfirmed:
+            - "date形式とdate-time形式が混在している（PO-2025-000006は'2025-04-30'、PO-2024-000013は'2026-05-21T11:10:16'）"
+        supplierId:
+          type: integer
+          format: int64
+          description: "サプライヤーID"
+          example: 4
+          x-evidence: "Network通信"
+        supplierName:
+          type: string
+          description: "サプライヤー名"
+          example: "ダイワボウ情報システム"
+          x-evidence: "Network通信"
+        totalAmount:
+          type: number
+          format: decimal
+          description: "合計金額"
+          example: 374000.00
+          x-evidence: "Network通信"
+        currency:
+          type: string
+          description: "通貨コード"
+          example: "JPY"
+          x-evidence: "Network通信"
+        items:
+          type: array
+          description: "発注明細"
+          items:
+            $ref: "#/components/schemas/PurchaseOrderItemResponse"
+          x-evidence: "Network通信"
+      x-evidence: "Network通信（20件確認）"
+
+    PurchaseOrderItemResponse:
+      type: object
+      description: "発注明細レスポンスDTO"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "明細ID"
+          x-evidence: "Network通信"
+        productId:
+          type: integer
+          format: int64
+          description: "製品ID"
+          x-evidence: "Network通信"
+        productName:
+          type: string
+          description: "製品名"
+          x-evidence: "Network通信"
+        skuCode:
+          type: string
+          description: "SKUコード"
+          example: "SWT-009003"
+          x-evidence: "Network通信"
+        quantity:
+          type: integer
+          description: "発注数量"
+          x-evidence: "Network通信"
+        receivedQuantity:
+          type: integer
+          description: "受領済み数量"
+          x-evidence: "Network通信"
+        unitPrice:
+          type: number
+          format: decimal
+          description: "単価"
+          x-evidence: "Network通信"
+        subtotal:
+          type: number
+          format: decimal
+          description: "小計"
+          x-evidence: "Network通信"
+      x-evidence: "Network通信"
+
+    InventoryItemDto:
+      type: object
+      description: "在庫品目DTO（在庫不足アラートのレスポンス要素）"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "在庫品目ID"
+        productId:
+          type: integer
+          format: int64
+          description: "製品ID"
+        productName:
+          type: string
+          description: "製品名"
+        productSku:
+          type: string
+          description: "製品SKU"
+        warehouseId:
+          type: integer
+          format: int64
+          description: "倉庫ID"
+        warehouseName:
+          type: string
+          description: "倉庫名"
+        quantity:
+          type: integer
+          description: "現在在庫数（quantityOnHand）"
+        reservedQuantity:
+          type: integer
+          description: "引当済み数量"
+        availableQuantity:
+          type: integer
+          description: "利用可能数量"
+        minimumStock:
+          type: integer
+          description: "最低在庫数（発注点）"
+        reorderPoint:
+          type: integer
+          description: "再発注点"
+        status:
+          type: string
+          description: "在庫ステータス"
+          enum:
+            - NORMAL
+            - LOW_STOCK
+            - OUT_OF_STOCK
+            - OVER_STOCK
+      x-evidence: "ソースコード: InventoryResource.java:471-485 + InventoryItem.java エンティティ定義"
+      x-unconfirmed:
+        - "テスト環境で在庫不足データがないため、レスポンスフィールドの実際の出力はソースコードからの推定"
+
+    BudgetDto:
+      type: object
+      description: "予算DTO"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "予算ID"
+        departmentId:
+          type: integer
+          format: int64
+          description: "部門ID"
+        departmentName:
+          type: string
+          description: "部門名（BudgetResource内でEntityManagerから解決）"
+        fiscalYear:
+          type: integer
+          description: "会計年度"
+          example: 2026
+        totalAmount:
+          type: number
+          format: decimal
+          description: "予算総額"
+        usedAmount:
+          type: number
+          format: decimal
+          description: "使用済み金額"
+        status:
+          type: string
+          description: "予算ステータス"
+      x-evidence: "ソースコード: BudgetResource.java:76-103 + Budget.java エンティティ定義"
+      x-unconfirmed:
+        - "テスト環境で予算データがないため、レスポンスフィールドの実際の出力はソースコードからの推定"
+        - "BudgetDtoの全フィールド構成（usedAmount, status等のフィールド名）"
+
+    RequisitionPageResult:
+      type: object
+      description: "購買依頼一覧のページング結果"
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseRequisitionDto"
+        totalElements:
+          type: integer
+          format: int64
+          description: "全件数"
+          example: 0
+          x-evidence: "Network通信"
+        totalPages:
+          type: integer
+          description: "全ページ数"
+          x-evidence: "Network通信"
+        number:
+          type: integer
+          description: "現在のページ番号（0始まり）"
+          x-evidence: "Network通信"
+        size:
+          type: integer
+          description: "1ページあたりの件数"
+          x-evidence: "Network通信"
+        first:
+          type: boolean
+          x-evidence: "Network通信"
+        last:
+          type: boolean
+          x-evidence: "Network通信"
+        empty:
+          type: boolean
+          x-evidence: "Network通信"
+      x-evidence: "Network通信（ページング構造確認済み）"
+
+    PurchaseRequisitionDto:
+      type: object
+      description: "購買依頼DTO"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "購買依頼ID"
+        reqNumber:
+          type: string
+          description: "依頼番号"
+        requesterName:
+          type: string
+          description: "依頼者名"
+        departmentName:
+          type: string
+          description: "部門名"
+        totalAmount:
+          type: number
+          format: decimal
+          description: "合計金額"
+        status:
+          type: string
+          description: "ステータス"
+        requiredDate:
+          type: string
+          format: date
+          description: "希望納期"
+        createdAt:
+          type: string
+          format: date-time
+          description: "作成日時"
+      x-evidence: "ソースコード: RequisitionResource.java:84-145"
+      x-unconfirmed:
+        - "ダッシュボードでのPENDING_APPROVAL状態の依頼が0件のため、レスポンスフィールドの実際の出力は未確認"
+
+    ErrorResponse:
+      type: object
+      description: "エラーレスポンス（GlobalExceptionMapper）"
+      properties:
+        code:
+          type: integer
+          description: "HTTPステータスコード"
+          example: 500
+        errorCode:
+          type: string
+          description: "エラーコード"
+          example: "INTERNAL_ERROR"
+        message:
+          type: string
+          description: "エラーメッセージ"
+          example: "Description of error"
+        details:
+          type: array
+          items:
+            type: string
+          description: "追加詳細情報"
+      x-evidence: "ソースコード: proquip-web/.../filter/GlobalExceptionMapper.java"
+
+x-dashboard-api-call-sequence:
+  description: |
+    ダッシュボード画面のAPI呼び出し順序（直列、技術的負債）:
+    1. GET /api/dashboard/spending-trend?months=12（独立）
+    2. GET /api/dashboard/category-spending（独立）
+    3. GET /api/dashboard/summary
+    4. GET /api/purchase-orders?page=0&size=100（summaryの後）
+    5. GET /api/inventory/alerts/low-stock（purchase-ordersの後）
+    6. GET /api/budgets?fiscalYear=2026（low-stockの後）
+    7. GET /api/requisitions?page=0&size=100&status=PENDING_APPROVAL（budgetsの後）
+  x-evidence: "Network通信（リクエスト順序確認） + ソースコード: dashboard-main.component.ts:90-187"
+
+x-authentication:
+  method: "Bearer JWT (Keycloak OIDC)"
+  header: "Authorization: Bearer <access_token>"
+  tokenEndpoint: "POST /auth/realms/proquip/protocol/openid-connect/token"
+  realm: "proquip"
+  clientId: "proquip-web"
+  audience: "proquip-api"
+  x-evidence: "Network通信（全リクエストのAuthorizationヘッダー確認） + ソースコード: auth.interceptor.ts"
+
+x-cors:
+  allowOrigin: "*"
+  allowMethods: "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH"
+  allowHeaders: "origin, content-type, accept, authorization, X-Requested-With"
+  allowCredentials: true
+  maxAge: 86400
+  x-evidence: "Network通信（全レスポンスのCORSヘッダー確認） + ソースコード: CorsFilter.java"
+
+x-authorization:
+  description: |
+    全ダッシュボードAPIに@RolesAllowed未設定。
+    全認証ユーザー（ADMIN, MANAGER, BUYER, WAREHOUSE_STAFF, VIEWER）がアクセス可能。
+    ユーザーごとのデータフィルタリングも未実装（全データが全ユーザーに公開される）。
+  x-evidence: "ソースコード: DashboardResource.java, PurchaseOrderResource.java, InventoryResource.java, BudgetResource.java, RequisitionResource.java — いずれも@RolesAllowedなし"

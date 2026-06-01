@@ -1,0 +1,110 @@
+# ProQuip 移行後環境
+# 起動: cd migrated && podman compose up -d --build
+# 停止: cd migrated && podman compose down
+
+services:
+  postgres:
+    image: postgres:15.7-alpine
+    container_name: proquip-migrated-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: proquip_migrated
+      POSTGRES_USER: proquip
+      POSTGRES_PASSWORD: proquip
+    volumes:
+      - migrated-postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init-keycloak-db.sh:/docker-entrypoint-initdb.d/init-keycloak-db.sh:ro
+    networks:
+      - proquip-migrated-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U proquip -d proquip_migrated"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    build:
+      context: ./docker/keycloak
+      dockerfile: Dockerfile
+    container_name: proquip-migrated-keycloak
+    ports:
+      - "8181:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_migrated
+      KC_DB_USERNAME: proquip
+      KC_DB_PASSWORD: proquip
+      KC_HOSTNAME_STRICT: "false"
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_ENABLED: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - proquip-migrated-net
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
+
+  quarkus:
+    build:
+      context: .
+      dockerfile: migrated-backend/src/main/docker/Dockerfile.jvm
+    container_name: proquip-migrated-quarkus
+    ports:
+      - "8082:8080"
+    environment:
+      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/proquip
+      QUARKUS_OIDC_CLIENT_ID: proquip-api
+      QUARKUS_OIDC_CREDENTIALS_SECRET: proquip-api-secret-dev
+      QUARKUS_OIDC_TOKEN_ISSUER: any
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/proquip_migrated
+      QUARKUS_DATASOURCE_USERNAME: proquip
+      QUARKUS_DATASOURCE_PASSWORD: proquip
+      UPLOAD_BASE_PATH: /opt/proquip/static-files
+    volumes:
+      - ./docker/static-files:/opt/proquip/static-files:rw
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - proquip-migrated-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/q/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    container_name: proquip-migrated-nginx
+    ports:
+      - "4201:80"
+    volumes:
+      - ./docker/static-files:/usr/share/nginx/html/static-files:ro
+    depends_on:
+      quarkus:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - proquip-migrated-net
+
+volumes:
+  migrated-postgres-data:
+    driver: local
+
+networks:
+  proquip-migrated-net:
+    driver: bridge
