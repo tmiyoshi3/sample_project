@@ -1,0 +1,152 @@
+# ProQuip - エンタープライズ調達・在庫管理システム
+# Podman Compose 構成ファイル
+#
+# 起動: podman compose -f podman-compose.yml up -d --build
+# 停止: podman compose -f podman-compose.yml down
+
+services:
+  # -------------------------------------------------
+  # PostgreSQL データベース
+  # -------------------------------------------------
+  postgres:
+    image: postgres:15.7-alpine
+    container_name: proquip-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: proquip
+      POSTGRES_USER: proquip
+      POSTGRES_PASSWORD: proquip
+    volumes:
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - proquip-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U proquip -d proquip"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------------------
+  # Keycloak 認証サーバー
+  # -------------------------------------------------
+  keycloak:
+    build:
+      context: ./docker/keycloak
+      dockerfile: Dockerfile
+    container_name: proquip-keycloak
+    ports:
+      - "8180:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: proquip
+      KC_DB_PASSWORD: proquip
+      KC_HOSTNAME_STRICT: "false"
+      KC_PROXY: edge
+      KC_HTTP_ENABLED: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - proquip-net
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  # -------------------------------------------------
+  # Flyway DBマイグレーション
+  # postgres 起動後にスキーマ作成・シードデータ投入
+  # -------------------------------------------------
+  migration:
+    image: flyway/flyway:10.15.0
+    container_name: proquip-migration
+    command: migrate
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/proquip
+      FLYWAY_USER: proquip
+      FLYWAY_PASSWORD: proquip
+    volumes:
+      - ./proquip-db/src/main/resources/db/migration:/flyway/sql:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - proquip-net
+
+  # -------------------------------------------------
+  # WildFly アプリケーションサーバー
+  # マルチステージビルドで Maven ビルド → EAR デプロイ
+  # -------------------------------------------------
+  wildfly:
+    build:
+      context: .
+      dockerfile: docker/wildfly/Dockerfile
+    container_name: proquip-wildfly
+    ports:
+      - "8080:8080"
+      - "9990:9990"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: proquip
+      DB_USER: proquip
+      DB_PASSWORD: proquip
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: proquip
+      KEYCLOAK_CLIENT_ID: proquip-api
+      UPLOAD_BASE_PATH: /opt/jboss/wildfly/static-files
+      JAVA_OPTS: >-
+        -Xms512m -Xmx1024m
+        -Djboss.bind.address=0.0.0.0
+        -Djboss.bind.address.management=0.0.0.0
+    volumes:
+      - ./docker/static-files:/opt/jboss/wildfly/static-files:rw
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+    networks:
+      - proquip-net
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  # -------------------------------------------------
+  # Nginx リバースプロキシ & フロントエンド配信
+  # マルチステージビルドで Angular ビルド → 静的ファイル配信
+  # -------------------------------------------------
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    container_name: proquip-nginx
+    ports:
+      - "4200:80"
+    volumes:
+      - ./docker/static-files:/usr/share/nginx/html/static-files:ro
+    depends_on:
+      wildfly:
+        condition: service_healthy
+    networks:
+      - proquip-net
+
+volumes:
+  postgres-data:
+    driver: local
+
+networks:
+  proquip-net:
+    driver: bridge
