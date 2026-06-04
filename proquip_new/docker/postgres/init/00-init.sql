@@ -1,0 +1,12 @@
+\connect proquip;
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+CREATE SCHEMA IF NOT EXISTS procurement;
+CREATE SCHEMA IF NOT EXISTS inventory;
+CREATE SCHEMA IF NOT EXISTS master;
+
+GRANT ALL ON SCHEMA procurement TO proquip;
+GRANT ALL ON SCHEMA inventory TO proquip;
+GRANT ALL ON SCHEMA master TO proquip;
