@@ -1,0 +1,427 @@
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  font-size: 16px;
+  color: #6b7280;
+}
+
+.pageHeader {
+  margin-bottom: 24px;
+}
+
+.pageTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.pageDescription {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 4px 0 0;
+}
+
+.errorBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #991b1b;
+}
+
+.btnRetry {
+  margin-left: auto;
+  padding: 4px 16px;
+  background-color: #dc2626;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btnRetry:hover {
+  background-color: #b91c1c;
+}
+
+/* サマリーカード */
+.summaryCards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.summaryCard {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+.summaryCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.cardHeader {
+  margin-bottom: 12px;
+}
+
+.cardTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0;
+}
+
+.cardMainValue {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.cardDescription {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.cardOrders { border-top: 3px solid #3b82f6; }
+.cardStock { border-top: 3px solid #f59e0b; }
+.cardApprovals { border-top: 3px solid #8b5cf6; }
+.cardBudget { border-top: 3px solid #10b981; }
+
+.alertValue { color: #d97706; }
+.pendingValue { color: #7c3aed; }
+
+/* 予算バー */
+.budgetBar {
+  height: 8px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.budgetBarFill {
+  height: 100%;
+  background-color: #10b981;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.budgetWarning { background-color: #f59e0b; }
+.budgetDanger { background-color: #ef4444; }
+
+.budgetDetail {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 6px;
+  text-align: right;
+}
+
+/* チャートセクション */
+.chartsSection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.chartContainer {
+  background: #fff;
+  border-radius: 10px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px;
+}
+
+/* 棒グラフ */
+.chartBars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 220px;
+  padding: 0 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.chartBarWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  gap: 6px;
+}
+
+.chartBar {
+  width: 24px;
+  background: linear-gradient(180deg, #3b82f6, #60a5fa);
+  border-radius: 3px 3px 0 0;
+  transition: height 0.4s ease;
+  cursor: pointer;
+}
+
+.chartBar:hover {
+  background: linear-gradient(180deg, #2563eb, #3b82f6);
+}
+
+.chartBarLabel {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* カテゴリリスト */
+.categoryList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.categoryItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.categoryName {
+  font-size: 13px;
+  color: #374151;
+  min-width: 80px;
+}
+
+.categoryBar {
+  flex: 1;
+  height: 16px;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.categoryBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border-radius: 8px;
+  transition: width 0.4s ease;
+}
+
+.categoryPct {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  min-width: 36px;
+  text-align: right;
+}
+
+.categoryAmount {
+  font-size: 12px;
+  color: #9ca3af;
+  min-width: 100px;
+  text-align: right;
+}
+
+/* 詳細セクション */
+.detailSection {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 20px;
+}
+
+.detailPanel {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.panelBody {
+  padding: 0;
+}
+
+/* テーブル */
+.simpleTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.simpleTable th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.simpleTable td {
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.clickableRow {
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.clickableRow:hover {
+  background-color: #f9fafb;
+}
+
+.orderNumber {
+  font-family: 'SFMono-Regular', 'Consolas', monospace;
+  font-weight: 500;
+  color: #3b82f6;
+}
+
+.amount {
+  text-align: right;
+  font-weight: 500;
+  font-family: 'SFMono-Regular', 'Consolas', monospace;
+}
+
+/* ステータスタグ */
+.statusTag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.statusDraft { background-color: #f3f4f6; color: #6b7280; }
+.statusPending { background-color: #fef3c7; color: #92400e; }
+.statusApproved { background-color: #d1fae5; color: #065f46; }
+.statusRejected { background-color: #fee2e2; color: #991b1b; }
+.statusOrdered { background-color: #dbeafe; color: #1e40af; }
+.statusCompleted { background-color: #d1fae5; color: #065f46; }
+.statusCancelled { background-color: #f3f4f6; color: #6b7280; }
+.statusDefault { background-color: #f3f4f6; color: #6b7280; }
+
+/* 在庫アラート */
+.alertList {
+  padding: 0;
+}
+
+.alertItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.alertItem:hover {
+  background-color: #fffbeb;
+}
+
+.alertItem:last-child {
+  border-bottom: none;
+}
+
+.alertItemInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.alertProductName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.alertProductSku {
+  font-size: 12px;
+  color: #9ca3af;
+  font-family: 'SFMono-Regular', 'Consolas', monospace;
+}
+
+.alertItemStock {
+  text-align: right;
+  min-width: 140px;
+}
+
+.stockValues {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.currentStock {
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+.critical {
+  color: #ef4444;
+}
+
+.minimumStock {
+  color: #9ca3af;
+}
+
+.stockBar {
+  height: 4px;
+  background-color: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.stockBarFill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.stockWarning { background-color: #f59e0b; }
+.stockCritical { background-color: #ef4444; }
+
+.emptyState {
+  padding: 40px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* レスポンシブ */
+@media (max-width: 1200px) {
+  .summaryCards { grid-template-columns: repeat(2, 1fr); }
+  .chartsSection { grid-template-columns: 1fr; }
+  .detailSection { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .summaryCards { grid-template-columns: 1fr; }
+}

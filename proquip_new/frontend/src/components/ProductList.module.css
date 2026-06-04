@@ -1,0 +1,133 @@
+.pageHeader { margin-bottom: 24px; }
+.pageTitle { font-size: 24px; font-weight: 700; color: #111827; margin: 0; }
+.pageDescription { font-size: 14px; color: #6b7280; margin: 4px 0 0; }
+
+.actionBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.actionLeft { flex: 1; max-width: 400px; }
+
+.searchInput {
+  width: 100%;
+  padding: 8px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+}
+.searchInput:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.15); }
+
+.filterArea {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filterGroup { display: flex; align-items: center; gap: 6px; }
+.filterLabel { font-size: 13px; color: #6b7280; white-space: nowrap; }
+.filterSelect {
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  background: #fff;
+  outline: none;
+  min-width: 120px;
+}
+
+.btnReset {
+  padding: 6px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  color: #6b7280;
+  cursor: pointer;
+}
+.btnReset:hover { background: #f3f4f6; }
+
+.loading { text-align: center; padding: 60px; color: #6b7280; font-size: 16px; }
+
+.tableWrapper {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.dataTable { width: 100%; border-collapse: collapse; }
+.dataTable th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+.dataTable td {
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.clickableRow { cursor: pointer; transition: background-color 0.15s; }
+.clickableRow:hover { background-color: #f9fafb; }
+
+.mono { font-family: 'SFMono-Regular','Consolas',monospace; font-weight: 500; color: #3b82f6; }
+.amount { text-align: right; font-weight: 500; font-family: 'SFMono-Regular','Consolas',monospace; }
+.number { text-align: right; }
+
+.statusTag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.statusActive { background: #d1fae5; color: #065f46; }
+.statusInactive { background: #f3f4f6; color: #6b7280; }
+.statusDiscontinued { background: #fee2e2; color: #991b1b; }
+.statusPending { background: #fef3c7; color: #92400e; }
+.statusDraft { background: #f3f4f6; color: #6b7280; }
+.statusDefault { background: #f3f4f6; color: #6b7280; }
+
+.emptyState { padding: 60px 20px; text-align: center; font-size: 14px; color: #9ca3af; }
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding: 0 4px;
+}
+.resultCount { font-size: 13px; color: #6b7280; }
+.pageButtons { display: flex; align-items: center; gap: 8px; }
+.pageButtons button {
+  padding: 6px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+.pageButtons button:disabled { opacity: 0.4; cursor: default; }
+.pageButtons button:not(:disabled):hover { background: #f3f4f6; }
+.pageInfo { font-size: 13px; color: #374151; }
+
+@media (max-width: 768px) {
+  .filterArea { flex-direction: column; align-items: stretch; }
+}

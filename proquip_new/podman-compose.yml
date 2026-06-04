@@ -1,0 +1,86 @@
+# ProQuip New - Next.js + Quarkus + PostgreSQL
+#
+# 起動: podman compose -f podman-compose.yml up -d --build
+# 停止: podman compose -f podman-compose.yml down
+#
+# ポート割り当て (既存コンテナとの競合回避):
+#   PostgreSQL: 5433
+#   Quarkus API: 8280
+#   Next.js Frontend: 3100
+
+services:
+  # -------------------------------------------------
+  # PostgreSQL データベース
+  # -------------------------------------------------
+  postgres:
+    image: postgres:15.7-alpine
+    container_name: proquip-new-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: proquip_new
+      POSTGRES_USER: proquip
+      POSTGRES_PASSWORD: proquip
+    volumes:
+      - proquip-new-postgres-data:/var/lib/postgresql/data
+    networks:
+      - proquip-new-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U proquip -d proquip_new"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------------------
+  # Quarkus REST API バックエンド
+  # -------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: proquip-new-backend
+    ports:
+      - "8280:8280"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: proquip_new
+      DB_USER: proquip
+      DB_PASSWORD: proquip
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - proquip-new-net
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -qO- http://localhost:8280/q/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  # -------------------------------------------------
+  # Next.js フロントエンド
+  # -------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8280
+    container_name: proquip-new-frontend
+    ports:
+      - "3100:3100"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - proquip-new-net
+
+volumes:
+  proquip-new-postgres-data:
+    driver: local
+
+networks:
+  proquip-new-net:
+    driver: bridge
