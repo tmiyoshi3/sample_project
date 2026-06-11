@@ -3,19 +3,27 @@ package com.proquip.service;
 import com.proquip.dto.PageResult;
 import com.proquip.dto.SupplierPerformanceReport;
 import com.proquip.dto.SupplierResponse;
+import com.proquip.entity.product.Product;
 import com.proquip.entity.supplier.Supplier;
+import com.proquip.entity.supplier.SupplierCertification;
 import com.proquip.entity.supplier.SupplierContact;
+import com.proquip.entity.supplier.SupplierContract;
+import com.proquip.entity.supplier.SupplierProduct;
 import com.proquip.entity.supplier.SupplierRating;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @ApplicationScoped
 public class SupplierService {
@@ -44,8 +52,7 @@ public class SupplierService {
 
 		List<SupplierResponse> dtoList = new ArrayList<>();
 		if (fromIndex < totalCount) {
-			List<Supplier> pageSuppliers = suppliers.subList(fromIndex, toIndex);
-			for (Supplier s : pageSuppliers) {
+			for (Supplier s : suppliers.subList(fromIndex, toIndex)) {
 				dtoList.add(toResponse(s));
 			}
 		}
@@ -61,17 +68,361 @@ public class SupplierService {
 		return toResponse(supplier);
 	}
 
+	@Transactional
+	public Map<String, Object> createSupplier(Map<String, Object> body) {
+		Supplier supplier = new Supplier();
+		supplier.setName((String) body.get("name"));
+		supplier.setCode((String) body.get("code"));
+		supplier.setStatus(body.get("status") != null ? (String) body.get("status") : "ACTIVE");
+
+		em.persist(supplier);
+		em.flush();
+
+		Map<String, Object> result = new HashMap<>();
+		result.put("id", supplier.getId());
+		result.put("code", supplier.getCode());
+		result.put("name", supplier.getName());
+		result.put("status", supplier.getStatus());
+		result.put("rating", 0);
+		result.put("email", "");
+		result.put("phone", "");
+		return result;
+	}
+
+	@Transactional
+	public void deleteSupplier(Long id) {
+		Supplier supplier = em.find(Supplier.class, id);
+		if (supplier == null) {
+			throw new NotFoundException("Supplierが見つかりません。ID: " + id);
+		}
+		supplier.setStatus("INACTIVE");
+		em.merge(supplier);
+	}
+
 	public List<SupplierPerformanceReport> compareSuppliers(List<Long> supplierIds) {
 		List<SupplierPerformanceReport> results = new ArrayList<>();
 		for (Long id : supplierIds) {
 			try {
 				results.add(getPerformanceReport(id));
 			} catch (Exception e) {
-				// skip suppliers that can't be found
+				// skip
 			}
 		}
 		return results;
 	}
+
+	// --- Contacts ---
+
+	public List<Map<String, Object>> getContacts(Long supplierId) {
+		List<SupplierContact> contacts = em
+				.createQuery("SELECT sc FROM SupplierContact sc WHERE sc.supplier.id = :supplierId",
+						SupplierContact.class)
+				.setParameter("supplierId", supplierId).getResultList();
+
+		List<Map<String, Object>> result = new ArrayList<>();
+		for (SupplierContact c : contacts) {
+			Map<String, Object> map = new HashMap<>();
+			map.put("id", c.getId());
+			map.put("supplierId", supplierId);
+			map.put("name", c.getLastName() + " " + c.getFirstName());
+			map.put("department", c.getDepartment() != null ? c.getDepartment() : "");
+			map.put("position", "");
+			map.put("phone", c.getPhone() != null ? c.getPhone() : "");
+			map.put("email", c.getEmail() != null ? c.getEmail() : "");
+			map.put("isPrimary", c.isPrimary());
+			result.add(map);
+		}
+		return result;
+	}
+
+	// --- Products ---
+
+	public List<Map<String, Object>> getProducts(Long supplierId) {
+		List<SupplierProduct> products = em
+				.createQuery("SELECT sp FROM SupplierProduct sp LEFT JOIN FETCH sp.product "
+						+ "WHERE sp.supplier.id = :supplierId ORDER BY sp.product.name", SupplierProduct.class)
+				.setParameter("supplierId", supplierId).getResultList();
+
+		List<Map<String, Object>> result = new ArrayList<>();
+		for (SupplierProduct sp : products) {
+			Map<String, Object> map = new HashMap<>();
+			map.put("id", sp.getId());
+			map.put("supplierSku", sp.getSupplierSku());
+			map.put("unitCost", sp.getUnitCost());
+			map.put("leadTimeDays", sp.getLeadTimeDays());
+			map.put("minOrderQty", sp.getMinOrderQty());
+			map.put("isPreferred", sp.isPreferred());
+			map.put("productId", sp.getProduct().getId());
+			map.put("productName", sp.getProduct().getName());
+			map.put("productSku", sp.getProduct().getSku());
+			result.add(map);
+		}
+		return result;
+	}
+
+	@Transactional
+	public Map<String, Object> addProduct(Long supplierId, Map<String, Object> body) {
+		Supplier supplier = em.find(Supplier.class, supplierId);
+		if (supplier == null) {
+			throw new NotFoundException("Supplierが見つかりません。ID: " + supplierId);
+		}
+
+		Number productIdNum = (Number) body.get("productId");
+		if (productIdNum == null) {
+			throw new jakarta.ws.rs.BadRequestException("productIdは必須です。");
+		}
+		Product product = em.find(Product.class, productIdNum.longValue());
+		if (product == null) {
+			throw new jakarta.ws.rs.BadRequestException("製品が見つかりません。ID: " + productIdNum);
+		}
+
+		SupplierProduct sp = new SupplierProduct();
+		sp.setSupplier(supplier);
+		sp.setProduct(product);
+		sp.setSupplierSku(body.get("supplierSku") != null ? body.get("supplierSku").toString() : null);
+		sp.setUnitCost(
+				body.get("unitCost") != null ? new BigDecimal(body.get("unitCost").toString()) : BigDecimal.ZERO);
+		sp.setLeadTimeDays(body.get("leadTimeDays") != null ? ((Number) body.get("leadTimeDays")).intValue() : 0);
+		sp.setMinOrderQty(body.get("minOrderQty") != null ? ((Number) body.get("minOrderQty")).intValue() : 1);
+		sp.setPreferred(body.get("isPreferred") != null && Boolean.parseBoolean(body.get("isPreferred").toString()));
+
+		em.persist(sp);
+		em.flush();
+
+		Map<String, Object> result = new HashMap<>();
+		result.put("id", sp.getId());
+		result.put("supplierSku", sp.getSupplierSku());
+		result.put("unitCost", sp.getUnitCost());
+		result.put("leadTimeDays", sp.getLeadTimeDays());
+		result.put("minOrderQty", sp.getMinOrderQty());
+		result.put("isPreferred", sp.isPreferred());
+		result.put("productId", product.getId());
+		result.put("productName", product.getName());
+		result.put("productSku", product.getSku());
+		return result;
+	}
+
+	@Transactional
+	public void removeProduct(Long supplierId, Long spId) {
+		SupplierProduct sp = em.find(SupplierProduct.class, spId);
+		if (sp == null || !sp.getSupplier().getId().equals(supplierId)) {
+			throw new NotFoundException("SupplierProductが見つかりません。");
+		}
+		em.remove(sp);
+	}
+
+	// --- Contracts ---
+
+	public List<SupplierContract> getContracts(Long supplierId) {
+		return em
+				.createQuery("SELECT sc FROM SupplierContract sc WHERE sc.supplier.id = :supplierId "
+						+ "ORDER BY sc.startDate DESC", SupplierContract.class)
+				.setParameter("supplierId", supplierId).getResultList();
+	}
+
+	@Transactional
+	public SupplierContract createContract(Long supplierId, Map<String, Object> body) {
+		Supplier supplier = em.find(Supplier.class, supplierId);
+		if (supplier == null) {
+			throw new NotFoundException("Supplierが見つかりません。ID: " + supplierId);
+		}
+
+		SupplierContract contract = new SupplierContract();
+		contract.setSupplier(supplier);
+		contract.setContractNumber((String) body.get("contractNumber"));
+		contract.setTitle(body.get("title") != null ? (String) body.get("title") : (String) body.get("contractNumber"));
+		contract.setStartDate(parseDate((String) body.get("startDate")));
+		contract.setEndDate(parseDate((String) body.get("endDate")));
+		contract.setStatus(body.get("status") != null ? (String) body.get("status") : "DRAFT");
+		contract.setTerms(body.get("terms") != null ? (String) body.get("terms") : null);
+
+		em.persist(contract);
+		em.flush();
+		return contract;
+	}
+
+	@Transactional
+	public SupplierContract updateContract(Long supplierId, Long contractId, Map<String, Object> body) {
+		SupplierContract contract = em.find(SupplierContract.class, contractId);
+		if (contract == null || !contract.getSupplier().getId().equals(supplierId)) {
+			throw new NotFoundException("契約が見つかりません。");
+		}
+
+		if (body.containsKey("contractNumber")) {
+			contract.setContractNumber((String) body.get("contractNumber"));
+		}
+		if (body.containsKey("title")) {
+			contract.setTitle((String) body.get("title"));
+		}
+		if (body.containsKey("startDate")) {
+			contract.setStartDate(parseDate((String) body.get("startDate")));
+		}
+		if (body.containsKey("endDate")) {
+			contract.setEndDate(parseDate((String) body.get("endDate")));
+		}
+		if (body.containsKey("status")) {
+			contract.setStatus((String) body.get("status"));
+		}
+		if (body.containsKey("terms")) {
+			contract.setTerms((String) body.get("terms"));
+		}
+
+		return em.merge(contract);
+	}
+
+	@Transactional
+	public void deleteContract(Long supplierId, Long contractId) {
+		SupplierContract contract = em.find(SupplierContract.class, contractId);
+		if (contract == null || !contract.getSupplier().getId().equals(supplierId)) {
+			throw new NotFoundException("契約が見つかりません。");
+		}
+		em.remove(contract);
+	}
+
+	// --- Ratings ---
+
+	public List<SupplierRating> getRatings(Long supplierId) {
+		return em
+				.createQuery("SELECT sr FROM SupplierRating sr WHERE sr.supplier.id = :supplierId "
+						+ "ORDER BY sr.ratingDate DESC", SupplierRating.class)
+				.setParameter("supplierId", supplierId).getResultList();
+	}
+
+	@Transactional
+	public SupplierRating rateSupplier(Long supplierId, Map<String, Object> body) {
+		Supplier supplier = em.find(Supplier.class, supplierId);
+		if (supplier == null) {
+			throw new NotFoundException("Supplierが見つかりません。ID: " + supplierId);
+		}
+
+		BigDecimal quality = toBigDecimal(body.get("qualityScore"));
+		BigDecimal delivery = toBigDecimal(body.get("deliveryScore"));
+		BigDecimal price = toBigDecimal(body.get("priceScore"));
+		BigDecimal service = body.get("serviceScore") != null
+				? toBigDecimal(body.get("serviceScore"))
+				: new BigDecimal("3.0");
+
+		BigDecimal overall = quality.add(delivery).add(price).add(service).divide(BigDecimal.valueOf(4), 1,
+				RoundingMode.HALF_UP);
+
+		LocalDate now = LocalDate.now();
+		int quarter = (now.getMonthValue() - 1) / 3 + 1;
+		String ratingPeriod = now.getYear() + "Q" + quarter;
+
+		SupplierRating rating = new SupplierRating();
+		rating.setSupplier(supplier);
+		rating.setRatingDate(now);
+		rating.setQualityScore(quality);
+		rating.setDeliveryScore(delivery);
+		rating.setPriceScore(price);
+		rating.setServiceScore(service);
+		rating.setOverallScore(overall);
+		rating.setComments(body.get("comments") != null ? (String) body.get("comments") : null);
+		rating.setRatingPeriod(ratingPeriod);
+		rating.setRatedBy(1L);
+
+		em.persist(rating);
+		em.flush();
+		return rating;
+	}
+
+	// --- Certifications ---
+
+	public List<Map<String, Object>> getCertifications(Long supplierId) {
+		List<SupplierCertification> certs = em
+				.createQuery(
+						"SELECT sc FROM SupplierCertification sc "
+								+ "WHERE sc.supplier.id = :supplierId ORDER BY sc.expiryDate",
+						SupplierCertification.class)
+				.setParameter("supplierId", supplierId).getResultList();
+
+		List<Map<String, Object>> result = new ArrayList<>();
+		for (SupplierCertification c : certs) {
+			Map<String, Object> map = new HashMap<>();
+			map.put("id", c.getId());
+			map.put("certType", c.getCertType());
+			map.put("certNumber", c.getCertNumber());
+			map.put("issuedDate", c.getIssuedDate() != null ? c.getIssuedDate().toString() : null);
+			map.put("expiryDate", c.getExpiryDate() != null ? c.getExpiryDate().toString() : null);
+			map.put("status", c.getStatus());
+			result.add(map);
+		}
+		return result;
+	}
+
+	@Transactional
+	public Map<String, Object> createCertification(Long supplierId, Map<String, Object> body) {
+		Supplier supplier = em.find(Supplier.class, supplierId);
+		if (supplier == null) {
+			throw new NotFoundException("Supplierが見つかりません。ID: " + supplierId);
+		}
+
+		SupplierCertification cert = new SupplierCertification();
+		cert.setSupplier(supplier);
+		cert.setCertType((String) body.get("certType"));
+		cert.setCertNumber(body.get("certNumber") != null ? (String) body.get("certNumber") : null);
+		cert.setIssuedDate(parseDate((String) body.get("issuedDate")));
+		cert.setExpiryDate(parseDate((String) body.get("expiryDate")));
+		cert.setStatus(body.get("status") != null ? (String) body.get("status") : "ACTIVE");
+
+		em.persist(cert);
+		em.flush();
+
+		Map<String, Object> map = new HashMap<>();
+		map.put("id", cert.getId());
+		map.put("certType", cert.getCertType());
+		map.put("certNumber", cert.getCertNumber());
+		map.put("issuedDate", cert.getIssuedDate() != null ? cert.getIssuedDate().toString() : null);
+		map.put("expiryDate", cert.getExpiryDate() != null ? cert.getExpiryDate().toString() : null);
+		map.put("status", cert.getStatus());
+		return map;
+	}
+
+	@Transactional
+	public Map<String, Object> updateCertification(Long supplierId, Long certId, Map<String, Object> body) {
+		SupplierCertification cert = em.find(SupplierCertification.class, certId);
+		if (cert == null || !cert.getSupplier().getId().equals(supplierId)) {
+			throw new NotFoundException("認証が見つかりません。");
+		}
+
+		if (body.containsKey("certType")) {
+			cert.setCertType((String) body.get("certType"));
+		}
+		if (body.containsKey("certNumber")) {
+			cert.setCertNumber((String) body.get("certNumber"));
+		}
+		if (body.containsKey("issuedDate")) {
+			cert.setIssuedDate(parseDate((String) body.get("issuedDate")));
+		}
+		if (body.containsKey("expiryDate")) {
+			cert.setExpiryDate(parseDate((String) body.get("expiryDate")));
+		}
+		if (body.containsKey("status")) {
+			cert.setStatus((String) body.get("status"));
+		}
+
+		em.merge(cert);
+
+		Map<String, Object> map = new HashMap<>();
+		map.put("id", cert.getId());
+		map.put("certType", cert.getCertType());
+		map.put("certNumber", cert.getCertNumber());
+		map.put("issuedDate", cert.getIssuedDate() != null ? cert.getIssuedDate().toString() : null);
+		map.put("expiryDate", cert.getExpiryDate() != null ? cert.getExpiryDate().toString() : null);
+		map.put("status", cert.getStatus());
+		return map;
+	}
+
+	@Transactional
+	public void deleteCertification(Long supplierId, Long certId) {
+		SupplierCertification cert = em.find(SupplierCertification.class, certId);
+		if (cert == null || !cert.getSupplier().getId().equals(supplierId)) {
+			throw new NotFoundException("認証が見つかりません。");
+		}
+		em.remove(cert);
+	}
+
+	// --- Private helpers ---
 
 	private SupplierPerformanceReport getPerformanceReport(Long supplierId) {
 		Supplier supplier = em.find(Supplier.class, supplierId);
@@ -97,9 +448,10 @@ public class SupplierService {
 		BigDecimal totalAmount = totalAmountObj != null ? (BigDecimal) totalAmountObj : BigDecimal.ZERO;
 		report.setTotalAmount(totalAmount);
 
-		List<SupplierRating> recentRatings = em.createQuery(
-				"SELECT sr FROM SupplierRating sr WHERE sr.supplier.id = :supplierId ORDER BY sr.ratingDate DESC",
-				SupplierRating.class).setParameter("supplierId", supplierId).setMaxResults(5).getResultList();
+		List<SupplierRating> recentRatings = em
+				.createQuery("SELECT sr FROM SupplierRating sr WHERE sr.supplier.id = :supplierId "
+						+ "ORDER BY sr.ratingDate DESC", SupplierRating.class)
+				.setParameter("supplierId", supplierId).setMaxResults(5).getResultList();
 
 		List<SupplierPerformanceReport.RatingEntry> ratingEntries = new ArrayList<>();
 		for (SupplierRating sr : recentRatings) {
@@ -185,5 +537,19 @@ public class SupplierService {
 		}
 
 		return response;
+	}
+
+	private LocalDate parseDate(String dateStr) {
+		if (dateStr == null || dateStr.isEmpty()) {
+			return null;
+		}
+		return LocalDate.parse(dateStr);
+	}
+
+	private BigDecimal toBigDecimal(Object value) {
+		if (value == null) {
+			return BigDecimal.ZERO;
+		}
+		return new BigDecimal(value.toString());
 	}
 }

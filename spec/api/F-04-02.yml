@@ -1,0 +1,1200 @@
+openapi: "3.0.3"
+info:
+  title: "Existing System API - F-04-02 サプライヤー詳細画面"
+  version: "1.0.0"
+  description: "既存システムのAPI仕様（マイグレーション用） - F-04-02 サプライヤー詳細画面"
+
+servers:
+  - url: http://localhost:4200
+    description: "既存システム（nginx経由）"
+
+paths:
+  /api/suppliers/{id}:
+    get:
+      summary: "サプライヤー詳細取得"
+      description: |
+        指定IDのサプライヤー基本情報を取得する。
+
+        実装上の注意点:
+        - enrichDto()でprimary contactからemail/phoneを取得するが、
+          現在LazyInitializationExceptionにより空文字が返る。
+        - ratingフィールドは常に0を返す（SupplierMapper.toDtoがratingをignoreし、
+          enrichDto()で再計算するが結果がDTOに反映されない）。
+        - nameKana, address, website, paymentTerms, notesはDTOに含まれず、
+          FE側では常に「-」表示になる。
+        - 存在しないIDの場合、EntityNotFoundExceptionが500で返される（本来は404が適切）。
+      operationId: getSupplier
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-001"
+        - "F-04-02-005"
+      x-evidence:
+        network: "Network通信で確認: GET /api/suppliers/1 [200], GET /api/suppliers/12 [200]"
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:135-142"
+      x-confidence: "High"
+      x-tech-debt:
+        - "ratingが常に0（SupplierMapper.toDtoがratingをignoreし、enrichDto()再計算結果がDTOに反映されない）"
+        - "email/phoneが空文字（LazyInitializationExceptionでcontactsコレクション未ロード）"
+        - "nameKana, address, website, paymentTerms, notesがDTOに含まれない"
+        - "存在しないIDでEntityNotFoundExceptionが500で返される（404が適切）"
+        - "@RolesAllowed未設定（全ユーザーアクセス可能）"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+          x-evidence: "Network通信 + ソースコード: SupplierResource.java:136"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierDTO"
+              example:
+                id: 1
+                code: "SUP-001"
+                name: "大塚商会"
+                status: "ACTIVE"
+                rating: 0
+                email: ""
+                phone: ""
+          x-evidence: "Network通信: GET /api/suppliers/1 レスポンス確認"
+        "500":
+          description: "サーバーエラー（存在しないIDの場合も500）"
+          x-evidence: "Network通信: DELETE /api/suppliers/9999 → HTTP 500"
+          x-unconfirmed:
+            - "エラーレスポンスのボディ構造（HTMLエラーページが返される可能性）"
+
+    delete:
+      summary: "サプライヤー削除（論理削除）"
+      description: |
+        サプライヤーを論理削除する（ステータスをINACTIVEに変更）。
+        物理削除ではなくdeactivateSupplier()による論理削除。
+        SecurityContextからユーザー情報を取得して監査ログに記録する。
+      operationId: deleteSupplier
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-004"
+      x-evidence:
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:192-199, SupplierServiceBean.java:186-196"
+      x-confidence: "High"
+      x-tech-debt:
+        - "@RolesAllowed未設定（全ユーザーが削除可能）"
+        - "存在しないIDの場合500エラー（404が適切）"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+          x-evidence: "ソースコード: SupplierResource.java:193"
+      responses:
+        "204":
+          description: "削除成功（No Content）"
+          x-evidence: "ソースコード: SupplierResource.java:198"
+        "500":
+          description: "サーバーエラー（存在しないID等）"
+          x-evidence: "Network通信: DELETE /api/suppliers/9999 → HTTP 500"
+
+  /api/suppliers/{id}/contacts:
+    get:
+      summary: "サプライヤー連絡先一覧取得"
+      description: |
+        指定サプライヤーの連絡先情報を一覧取得する。
+        NamedQuery「SupplierContact.findBySupplier」で取得。
+        名前はlastName + firstNameで結合して返す。
+      operationId: getSupplierContacts
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-006"
+      x-evidence:
+        network: "Network通信で確認: GET /api/suppliers/1/contacts [200] → 2件"
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:321-346"
+      x-confidence: "High"
+      x-tech-debt:
+        - "DTOを使わずMap<String, Object>で返している（型安全性なし）"
+        - "@RolesAllowed未設定"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupplierContact"
+              example:
+                - id: 1
+                  supplierId: 1
+                  name: "松本 健太"
+                  department: "法人営業部"
+                  position: ""
+                  phone: "03-3522-1001"
+                  email: "matsumoto.kenta@otsuka-shokai.example.com"
+                  isPrimary: true
+                - id: 2
+                  supplierId: 1
+                  name: "岡田 由美"
+                  department: "管理部"
+                  position: ""
+                  phone: "03-3522-1002"
+                  email: "okada.yumi@otsuka-shokai.example.com"
+                  isPrimary: false
+          x-evidence: "Network通信: GET /api/suppliers/1/contacts レスポンス確認"
+
+  /api/suppliers/{id}/products:
+    get:
+      summary: "サプライヤー取扱製品一覧取得"
+      description: |
+        指定サプライヤーに紐づく取扱製品一覧を取得する。
+        SupplierProduct エンティティをLEFT JOIN FETCHでProduct詳細と結合して返す。
+      operationId: getSupplierProducts
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-007"
+      x-evidence:
+        network: "Network通信で確認: GET /api/suppliers/1/products [200] → 14件"
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:211-243"
+      x-confidence: "High"
+      x-tech-debt:
+        - "DTOを使わずMap<String, Object>で返している"
+        - "@RolesAllowed未設定"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupplierProduct"
+              example:
+                - id: 8
+                  supplierSku: "OTS-MFCL3780"
+                  unitCost: 54000.0
+                  leadTimeDays: 5
+                  minOrderQty: 1
+                  isPreferred: false
+                  productId: 29
+                  productName: "Brother MFC-L3780CDW"
+                  productSku: "PRT-007001"
+          x-evidence: "Network通信: GET /api/suppliers/1/products レスポンス確認"
+
+    post:
+      summary: "サプライヤー取扱製品追加"
+      description: |
+        サプライヤーに取扱製品を紐付ける。
+        productIdで製品を検索し、SupplierProductエンティティを作成する。
+      operationId: addSupplierProduct
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-007"
+      x-evidence:
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:458-494"
+      x-confidence: "High"
+      x-tech-debt:
+        - "リクエストがMap<String, Object>（型安全なDTOなし）"
+        - "@RolesAllowed未設定"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - productId
+              properties:
+                productId:
+                  type: integer
+                  format: int64
+                  description: "紐付ける製品のID"
+                supplierSku:
+                  type: string
+                  description: "サプライヤー側のSKUコード"
+                unitCost:
+                  type: number
+                  format: double
+                  default: 0.0
+                  description: "仕入単価"
+                leadTimeDays:
+                  type: integer
+                  default: 0
+                  description: "リードタイム（日数）"
+                minOrderQty:
+                  type: integer
+                  default: 1
+                  description: "最小注文数量"
+                isPreferred:
+                  type: boolean
+                  description: "優先サプライヤーフラグ"
+            x-evidence: "ソースコード: SupplierResource.java:465-480"
+      responses:
+        "201":
+          description: "作成成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierProduct"
+          x-evidence: "ソースコード: SupplierResource.java:489-493"
+        "400":
+          description: "製品が見つからない場合"
+          x-evidence: "ソースコード: SupplierResource.java:472-474"
+
+  /api/suppliers/{id}/products/{spId}:
+    delete:
+      summary: "サプライヤー取扱製品紐付け削除"
+      description: |
+        サプライヤーと製品の紐付け（SupplierProduct）を削除する。
+        所有権チェック（supplier.idの一致確認）を行う。
+      operationId: removeSupplierProduct
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-007"
+      x-evidence:
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:496-508"
+      x-confidence: "High"
+      x-tech-debt:
+        - "@RolesAllowed未設定"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: spId
+          in: path
+          description: "SupplierProduct ID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: "削除成功（No Content）"
+          x-evidence: "ソースコード: SupplierResource.java:506"
+        "404":
+          description: "SupplierProductが存在しない、またはサプライヤー不一致"
+          x-evidence: "ソースコード: SupplierResource.java:501-503"
+
+  /api/suppliers/{id}/contracts:
+    get:
+      summary: "サプライヤー契約一覧取得"
+      description: |
+        指定サプライヤーの契約一覧をstartDate降順で取得する。
+        エンティティを直接返す（DTO未使用）。
+        createdAt, updatedAt, versionなどの内部フィールドも含まれる。
+      operationId: getSupplierContracts
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-008"
+      x-evidence:
+        network: "Network通信で確認: GET /api/suppliers/1/contracts [200] → 1件"
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:251-263"
+      x-confidence: "High"
+      x-tech-debt:
+        - "エンティティを直接返している（DTO未使用、内部フィールド漏洩）"
+        - "termsフィールドがレスポンスに含まれない（FEで常に「-」表示）"
+        - "@RolesAllowed未設定"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupplierContract"
+              example:
+                - id: 1
+                  contractNumber: "CNT-2024-001"
+                  title: "大塚商会 年間基本取引契約 2024"
+                  startDate: "2024-04-01"
+                  endDate: "2025-03-31"
+                  status: "ACTIVE"
+                  createdAt: "2026-05-21T11:10:16"
+                  updatedAt: "2026-05-21T11:10:16"
+                  version: 0
+          x-evidence: "Network通信: GET /api/suppliers/1/contracts レスポンス確認"
+
+    post:
+      summary: "サプライヤー契約作成"
+      description: |
+        新規契約を作成する。
+        日付はyyyy-MM-dd形式でパース。titleを省略するとcontractNumberが使用される。
+        statusを省略するとDRAFTがデフォルト。
+      operationId: createContract
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-008"
+      x-evidence:
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:265-283"
+      x-confidence: "High"
+      x-tech-debt:
+        - "リクエストがMap<String, Object>（型安全なDTOなし）"
+        - "バリデーションなし（contractNumber重複チェック等なし）"
+        - "@RolesAllowed未設定"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contractNumber
+                - startDate
+                - endDate
+              properties:
+                contractNumber:
+                  type: string
+                  description: "契約番号（例: CNT-2024-001）"
+                title:
+                  type: string
+                  description: "契約名（省略時はcontractNumberを使用）"
+                startDate:
+                  type: string
+                  format: date
+                  description: "開始日（yyyy-MM-dd）"
+                endDate:
+                  type: string
+                  format: date
+                  description: "終了日（yyyy-MM-dd）"
+                status:
+                  type: string
+                  enum: [DRAFT, ACTIVE, EXPIRED, TERMINATED]
+                  default: "DRAFT"
+                  description: "契約ステータス"
+                terms:
+                  type: string
+                  description: "契約条件"
+            x-evidence: "ソースコード: SupplierResource.java:269-278"
+      responses:
+        "201":
+          description: "作成成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierContract"
+          x-evidence: "ソースコード: SupplierResource.java:282"
+
+  /api/suppliers/{id}/contracts/{contractId}:
+    put:
+      summary: "サプライヤー契約更新"
+      description: |
+        既存契約を更新する。リクエストに含まれるフィールドのみ更新する。
+        所有権チェック（supplier.idの一致確認）を行う。
+      operationId: updateContract
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-008"
+      x-evidence:
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:285-305"
+      x-confidence: "High"
+      x-tech-debt:
+        - "リクエストがMap<String, Object>（型安全なDTOなし）"
+        - "@RolesAllowed未設定"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: contractId
+          in: path
+          description: "契約ID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contractNumber:
+                  type: string
+                title:
+                  type: string
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                status:
+                  type: string
+                  enum: [DRAFT, ACTIVE, EXPIRED, TERMINATED]
+                terms:
+                  type: string
+            x-evidence: "ソースコード: SupplierResource.java:293-303"
+      responses:
+        "200":
+          description: "更新成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierContract"
+          x-evidence: "ソースコード: SupplierResource.java:304"
+        "404":
+          description: "契約が存在しない、またはサプライヤー不一致"
+          x-evidence: "ソースコード: SupplierResource.java:291-292"
+
+    delete:
+      summary: "サプライヤー契約削除"
+      description: |
+        契約を物理削除する。
+        所有権チェック（supplier.idの一致確認）を行う。
+      operationId: deleteContract
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-008"
+      x-evidence:
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:307-319"
+      x-confidence: "High"
+      x-tech-debt:
+        - "@RolesAllowed未設定"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: contractId
+          in: path
+          description: "契約ID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: "削除成功（No Content）"
+          x-evidence: "ソースコード: SupplierResource.java:318"
+        "404":
+          description: "契約が存在しない、またはサプライヤー不一致"
+          x-evidence: "ソースコード: SupplierResource.java:313-315"
+
+  /api/suppliers/{id}/ratings:
+    get:
+      summary: "サプライヤー評価履歴取得"
+      description: |
+        指定サプライヤーの評価履歴を取得する。
+        NamedQuery「SupplierRating.findBySupplier」で取得。
+        エンティティを直接返す（DTO未使用）。
+        createdAt, updatedAt, versionなどの内部フィールドも含まれる。
+      operationId: getSupplierRatings
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-009"
+      x-evidence:
+        network: "Network通信で確認: GET /api/suppliers/1/ratings [200] → 4件"
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:354-361, SupplierServiceBean.java:330-338"
+      x-confidence: "High"
+      x-tech-debt:
+        - "エンティティを直接返している（DTO未使用、内部フィールド漏洩）"
+        - "ratedByがユーザーID番号のみ（ユーザー名に解決されない）"
+        - "@RolesAllowed未設定"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupplierRating"
+              example:
+                - id: 4
+                  ratingDate: "2025-01-10"
+                  qualityScore: 4.5
+                  deliveryScore: 4.5
+                  priceScore: 4.0
+                  serviceScore: 4.8
+                  overallScore: 4.5
+                  ratedBy: 3
+                  comments: "年末の大量発注にも柔軟に対応。"
+                  ratingPeriod: "2024Q4"
+                  createdAt: "2026-05-21T11:10:16"
+                  updatedAt: "2026-05-21T11:10:16"
+                  version: 0
+          x-evidence: "Network通信: GET /api/suppliers/1/ratings レスポンス確認"
+
+  /api/suppliers/{id}/rate:
+    post:
+      summary: "サプライヤー評価追加"
+      description: |
+        サプライヤーに新規評価を追加する。
+        overallScoreは4カテゴリ（quality/delivery/price/service）の平均で自動計算。
+        ratingPeriodは現在の四半期（例: 2026Q2）が自動設定される。
+        SecurityContextからユーザーを特定してratedByに設定。
+        評価追加後、サプライヤーの全体ratingが再計算される。
+
+        スコア値の範囲: 0.00〜5.00（BigDecimal, precision 3, scale 1）
+      operationId: rateSupplier
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-009"
+      x-evidence:
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:518-541, SupplierServiceBean.java:340-380"
+      x-confidence: "High"
+      x-tech-debt:
+        - "リクエストがMap<String, Object>（型安全なDTOなし）"
+        - "resolveUserId()がSecurityContext解決失敗時にデフォルトID=1を返す（セキュリティリスク）"
+        - "@RolesAllowed未設定"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - qualityScore
+                - deliveryScore
+                - priceScore
+              properties:
+                qualityScore:
+                  type: number
+                  format: double
+                  minimum: 0.0
+                  maximum: 5.0
+                  description: "品質スコア"
+                deliveryScore:
+                  type: number
+                  format: double
+                  minimum: 0.0
+                  maximum: 5.0
+                  description: "納期スコア"
+                priceScore:
+                  type: number
+                  format: double
+                  minimum: 0.0
+                  maximum: 5.0
+                  description: "価格スコア"
+                serviceScore:
+                  type: number
+                  format: double
+                  minimum: 0.0
+                  maximum: 5.0
+                  default: 3.0
+                  description: "対応スコア（省略時3.0）"
+                comments:
+                  type: string
+                  maxLength: 2000
+                  description: "コメント"
+            x-evidence: "ソースコード: SupplierResource.java:525-532, SupplierServiceBean.java:345-365"
+      responses:
+        "201":
+          description: "評価追加成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierRating"
+          x-evidence: "ソースコード: SupplierResource.java:540"
+
+  /api/suppliers/{id}/certifications:
+    get:
+      summary: "サプライヤー認証一覧取得"
+      description: |
+        指定サプライヤーの認証情報一覧を取得する。
+        NamedQuery「SupplierCertification.findBySupplier」で取得。
+        Map<String, Object>形式で返す。
+      operationId: getSupplierCertifications
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-010"
+      x-evidence:
+        network: "Network通信で確認: GET /api/suppliers/1/certifications [200] → 3件, GET /api/suppliers/12/certifications [200] → 0件"
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:363-388"
+      x-confidence: "High"
+      x-tech-debt:
+        - "DTOを使わずMap<String, Object>で返している"
+        - "@RolesAllowed未設定"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupplierCertification"
+              example:
+                - id: 1
+                  certType: "ISO 9001:2015"
+                  certNumber: "JQA-QMA-15001"
+                  issuedDate: "2022-06-01"
+                  expiryDate: "2025-05-31"
+                  status: "VALID"
+                - id: 3
+                  certType: "プライバシーマーク"
+                  certNumber: "PM-10012345"
+                  issuedDate: "2023-08-01"
+                  expiryDate: "2025-07-31"
+                  status: "VALID"
+                - id: 2
+                  certType: "ISO 27001:2022"
+                  certNumber: "JQA-IM-15001"
+                  issuedDate: "2023-04-01"
+                  expiryDate: "2026-03-31"
+                  status: "VALID"
+          x-evidence: "Network通信: GET /api/suppliers/1/certifications, /api/suppliers/12/certifications レスポンス確認"
+
+    post:
+      summary: "サプライヤー認証作成"
+      description: |
+        新規認証を作成する。
+        日付はyyyy-MM-dd形式でパース。
+        statusを省略するとACTIVEがデフォルト。
+      operationId: createCertification
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-010"
+      x-evidence:
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:390-414"
+      x-confidence: "High"
+      x-tech-debt:
+        - "リクエストがMap<String, Object>（型安全なDTOなし）"
+        - "バリデーションなし"
+        - "@RolesAllowed未設定"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - certType
+                - issuedDate
+                - expiryDate
+              properties:
+                certType:
+                  type: string
+                  description: "認証種別（ISO_9001, ISO_14001, ISO_27001, OHSAS_18001, OTHER）"
+                certNumber:
+                  type: string
+                  description: "認証番号"
+                issuedDate:
+                  type: string
+                  format: date
+                  description: "発行日（yyyy-MM-dd）"
+                expiryDate:
+                  type: string
+                  format: date
+                  description: "有効期限（yyyy-MM-dd）"
+                status:
+                  type: string
+                  enum: [ACTIVE, VALID, EXPIRED, REVOKED]
+                  default: "ACTIVE"
+                  description: "認証ステータス"
+            x-evidence: "ソースコード: SupplierResource.java:396-408"
+      responses:
+        "201":
+          description: "作成成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierCertification"
+          x-evidence: "ソースコード: SupplierResource.java:413"
+
+  /api/suppliers/{id}/certifications/{certId}:
+    put:
+      summary: "サプライヤー認証更新"
+      description: |
+        既存認証を更新する。リクエストに含まれるフィールドのみ更新する。
+        所有権チェック（supplier.idの一致確認）を行う。
+      operationId: updateCertification
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-010"
+      x-evidence:
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:416-442"
+      x-confidence: "High"
+      x-tech-debt:
+        - "リクエストがMap<String, Object>（型安全なDTOなし）"
+        - "@RolesAllowed未設定"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: certId
+          in: path
+          description: "認証ID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                certType:
+                  type: string
+                certNumber:
+                  type: string
+                issuedDate:
+                  type: string
+                  format: date
+                expiryDate:
+                  type: string
+                  format: date
+                status:
+                  type: string
+                  enum: [ACTIVE, VALID, EXPIRED, REVOKED]
+            x-evidence: "ソースコード: SupplierResource.java:427-440"
+      responses:
+        "200":
+          description: "更新成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierCertification"
+          x-evidence: "ソースコード: SupplierResource.java:441"
+        "404":
+          description: "認証が存在しない、またはサプライヤー不一致"
+          x-evidence: "ソースコード: SupplierResource.java:424-426"
+
+    delete:
+      summary: "サプライヤー認証削除"
+      description: |
+        認証を物理削除する。
+        所有権チェック（supplier.idの一致確認）を行う。
+      operationId: deleteCertification
+      tags:
+        - "F-04-02"
+      x-feature-ids:
+        - "F-04-02-010"
+      x-evidence:
+        source: "ソースコード: proquip-web/.../resource/SupplierResource.java:444-456"
+      x-confidence: "High"
+      x-tech-debt:
+        - "@RolesAllowed未設定"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: "サプライヤーID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: certId
+          in: path
+          description: "認証ID"
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: "削除成功（No Content）"
+          x-evidence: "ソースコード: SupplierResource.java:455"
+        "404":
+          description: "認証が存在しない、またはサプライヤー不一致"
+          x-evidence: "ソースコード: SupplierResource.java:450-452"
+
+# クライアントサイド機能（APIなし）
+x-client-side-features:
+  - feature-id: "F-04-02-002"
+    name: "一覧に戻るボタン"
+    description: "router.navigate(['/suppliers']) で一覧画面に遷移。API呼び出しなし。"
+    evidence: "ソースコード: supplier-detail.component.ts goBack()"
+  - feature-id: "F-04-02-003"
+    name: "編集ボタン"
+    description: "router.navigate(['/suppliers', id, 'edit']) で編集画面に遷移。API呼び出しなし。"
+    evidence: "ソースコード: supplier-detail.component.ts editSupplier()"
+
+# 技術的負債サマリー
+x-tech-debt-summary:
+  - id: 1
+    description: "全エンドポイントに@RolesAllowed未設定（認可チェックなし）"
+    severity: "High"
+    evidence: "ソースコード: SupplierResource.java 全体"
+  - id: 2
+    description: "GET /api/suppliers/{id}のratingが常に0（SupplierMapper.toDtoのignore設定）"
+    severity: "Medium"
+    evidence: "Network通信: GET /api/suppliers/1 → rating:0, ソースコード: SupplierMapper"
+  - id: 3
+    description: "GET /api/suppliers/{id}のemail/phoneが常に空（LazyInitializationException）"
+    severity: "Medium"
+    evidence: "Network通信: GET /api/suppliers/1 → email:\"\", phone:\"\""
+  - id: 4
+    description: "nameKana, address, website, paymentTerms, notesがDTOに含まれない"
+    severity: "Medium"
+    evidence: "ソースコード: SupplierDTO.java, Network通信: レスポンスにフィールドなし"
+  - id: 5
+    description: "contracts/ratingsエンドポイントがエンティティを直接返す（DTO未使用、内部フィールド漏洩）"
+    severity: "Low"
+    evidence: "Network通信: createdAt, updatedAt, versionがレスポンスに含まれる"
+  - id: 6
+    description: "resolveUserId()がSecurityContext解決失敗時にデフォルトID=1を返す（セキュリティリスク）"
+    severity: "High"
+    evidence: "ソースコード: SupplierResource.java:621-645"
+  - id: 7
+    description: "存在しないIDへのアクセスで500エラー（404が適切）"
+    severity: "Low"
+    evidence: "Network通信: DELETE /api/suppliers/9999 → HTTP 500"
+  - id: 8
+    description: "全write系エンドポイントでリクエストがMap<String, Object>（型安全なDTO未使用）"
+    severity: "Medium"
+    evidence: "ソースコード: SupplierResource.java 全POST/PUTメソッド"
+  - id: 9
+    description: "ratedByがユーザーID番号のみ（ユーザー名に解決されない）"
+    severity: "Low"
+    evidence: "Network通信: GET /api/suppliers/1/ratings → ratedBy:3"
+  - id: 10
+    description: "全タブのデータがngOnInit()で同時ロード（アクティブタブに関係なく全API呼び出し）"
+    severity: "Low"
+    evidence: "ソースコード: supplier-detail.component.ts ngOnInit()"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Keycloak OIDC Bearer Token（現在は認証チェックのみ、認可チェックなし）"
+
+  schemas:
+    SupplierDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        code:
+          type: string
+          description: "サプライヤーコード（例: SUP-001）"
+        name:
+          type: string
+          description: "会社名"
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, SUSPENDED, PENDING_APPROVAL]
+          description: "サプライヤーステータス"
+        rating:
+          type: number
+          format: double
+          description: "評価スコア（0.0-5.0）。現在は常に0を返す（技術的負債）"
+        email:
+          type: string
+          description: "メールアドレス（primary contactから取得。現在は常に空文字）"
+        phone:
+          type: string
+          description: "電話番号（primary contactから取得。現在は常に空文字）"
+
+    SupplierContact:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        supplierId:
+          type: integer
+          format: int64
+        name:
+          type: string
+          description: "担当者名（lastName + firstName）"
+        department:
+          type: string
+          description: "部署名"
+        position:
+          type: string
+          description: "役職（空文字の場合あり）"
+        phone:
+          type: string
+          description: "電話番号"
+        email:
+          type: string
+          description: "メールアドレス"
+        isPrimary:
+          type: boolean
+          description: "主担当フラグ"
+
+    SupplierProduct:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "SupplierProduct ID"
+        supplierSku:
+          type: string
+          description: "サプライヤー側のSKUコード"
+        unitCost:
+          type: number
+          format: double
+          description: "仕入単価"
+        leadTimeDays:
+          type: integer
+          description: "リードタイム（日数）"
+        minOrderQty:
+          type: integer
+          description: "最小注文数量"
+        isPreferred:
+          type: boolean
+          description: "優先サプライヤーフラグ"
+        productId:
+          type: integer
+          format: int64
+          description: "製品ID"
+        productName:
+          type: string
+          description: "製品名"
+        productSku:
+          type: string
+          description: "製品SKUコード"
+
+    SupplierContract:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        contractNumber:
+          type: string
+          description: "契約番号（unique）"
+        title:
+          type: string
+          description: "契約名"
+        startDate:
+          type: string
+          format: date
+          description: "開始日"
+        endDate:
+          type: string
+          format: date
+          description: "終了日"
+        status:
+          type: string
+          enum: [DRAFT, ACTIVE, EXPIRED, TERMINATED]
+          description: "契約ステータス"
+        terms:
+          type: string
+          description: "契約条件（TEXT型。レスポンスに含まれない場合あり）"
+        createdAt:
+          type: string
+          format: date-time
+          description: "作成日時（エンティティ直接返却のため含まれる）"
+        updatedAt:
+          type: string
+          format: date-time
+          description: "更新日時"
+        version:
+          type: integer
+          description: "楽観的ロックバージョン"
+
+    SupplierRating:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        ratingDate:
+          type: string
+          format: date
+          description: "評価日"
+        qualityScore:
+          type: number
+          format: double
+          description: "品質スコア（0.0-5.0）"
+        deliveryScore:
+          type: number
+          format: double
+          description: "納期スコア（0.0-5.0）"
+        priceScore:
+          type: number
+          format: double
+          description: "価格スコア（0.0-5.0）"
+        serviceScore:
+          type: number
+          format: double
+          description: "対応スコア（0.0-5.0）"
+        overallScore:
+          type: number
+          format: double
+          description: "総合スコア（4カテゴリの平均、自動計算）"
+        ratedBy:
+          type: integer
+          format: int64
+          description: "評価者ユーザーID"
+        comments:
+          type: string
+          maxLength: 2000
+          description: "コメント"
+        ratingPeriod:
+          type: string
+          description: "評価期間（例: 2024Q4）"
+        createdAt:
+          type: string
+          format: date-time
+          description: "作成日時"
+        updatedAt:
+          type: string
+          format: date-time
+          description: "更新日時"
+        version:
+          type: integer
+          description: "楽観的ロックバージョン"
+
+    SupplierCertification:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        certType:
+          type: string
+          description: "認証種別（例: ISO 9001:2015, プライバシーマーク）"
+        certNumber:
+          type: string
+          description: "認証番号"
+        issuedDate:
+          type: string
+          format: date
+          description: "発行日"
+        expiryDate:
+          type: string
+          format: date
+          description: "有効期限"
+        status:
+          type: string
+          enum: [VALID, EXPIRED, EXPIRING_SOON, REVOKED]
+          description: "認証ステータス"

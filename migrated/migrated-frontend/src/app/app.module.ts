@@ -14,6 +14,7 @@ import { CategoryManagementComponent } from './features/products/category-manage
 import { BundleManagementComponent } from './features/products/bundle-management/bundle-management.component';
 import { SupplierListComponent } from './features/suppliers/supplier-list/supplier-list.component';
 import { SupplierCompareComponent } from './features/suppliers/supplier-compare/supplier-compare.component';
+import { SupplierDetailComponent } from './features/suppliers/supplier-detail/supplier-detail.component';
 import { HeaderComponent } from './core/layout/header.component';
 import { SidebarComponent } from './core/layout/sidebar.component';
 import { FooterComponent } from './core/layout/footer.component';
@@ -22,6 +23,7 @@ import { FormFieldComponent } from './shared/components/form-field/form-field.co
 import { LoadingSpinnerComponent } from './shared/components/loading-spinner/loading-spinner.component';
 import { StatusBadgeComponent } from './shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from './shared/components/empty-state/empty-state.component';
+import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confirm-dialog.component';
 
 function initializeKeycloak(keycloak: KeycloakService) {
   return () =>
@@ -52,6 +54,7 @@ function initializeKeycloak(keycloak: KeycloakService) {
     BundleManagementComponent,
     SupplierListComponent,
     SupplierCompareComponent,
+    SupplierDetailComponent,
     HeaderComponent,
     SidebarComponent,
     FooterComponent,
@@ -69,6 +72,7 @@ function initializeKeycloak(keycloak: KeycloakService) {
     LoadingSpinnerComponent,
     StatusBadgeComponent,
     EmptyStateComponent,
+    ConfirmDialogComponent,
   ],
   providers: [
     {

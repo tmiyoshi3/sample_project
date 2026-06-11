@@ -815,6 +815,136 @@ export interface SupplierListPageAdapter {
   getCurrentUrl(): string;
 }
 
+// ============================================================
+// F-04: サプライヤー — サプライヤー詳細画面
+// ============================================================
+
+export interface SupplierDetailPageAdapter {
+  readonly page: Page;
+
+  navigateToSupplierDetail(supplierId: number): Promise<void>;
+  waitForSupplierDetailLoad(): Promise<void>;
+
+  // ヘッダ情報
+  getPageTitle(): Promise<string>;
+  getSupplierName(): Promise<string>;
+  getStatusBadgeText(): Promise<string>;
+  getSupplierCode(): Promise<string>;
+  getRatingText(): Promise<string>;
+
+  // ナビゲーションボタン
+  isBackToListButtonVisible(): Promise<boolean>;
+  clickBackToListButton(): Promise<void>;
+  isEditButtonVisible(): Promise<boolean>;
+  clickEditButton(): Promise<void>;
+  isDeleteButtonVisible(): Promise<boolean>;
+  clickDeleteButton(): Promise<void>;
+
+  // タブ
+  clickTab(tabName: string): Promise<void>;
+  isTabActive(tabName: string): Promise<boolean>;
+  isTabContentVisible(tabName: string): Promise<boolean>;
+
+  // 基本情報タブ — 会社情報
+  isCompanyInfoSectionVisible(): Promise<boolean>;
+  getCompanyInfoValue(fieldName: string): Promise<string>;
+
+  // 基本情報タブ — 連絡先
+  isContactSectionVisible(): Promise<boolean>;
+  getContactCardCount(): Promise<number>;
+  isContactPrimaryBadgeVisible(contactName: string): Promise<boolean>;
+  getContactDepartment(contactName: string): Promise<string>;
+  isContactPhoneVisible(contactName: string): Promise<boolean>;
+  isContactEmailVisible(contactName: string): Promise<boolean>;
+  isContactEmptyMessageVisible(): Promise<boolean>;
+
+  // 製品タブ
+  isProductTableVisible(): Promise<boolean>;
+  getProductRowCount(): Promise<number>;
+  isProductColumnVisible(columnName: string): Promise<boolean>;
+  clickProductDetailButton(rowIndex: number): Promise<void>;
+  clickProductDeleteButton(rowIndex: number): Promise<void>;
+  isProductEmptyMessageVisible(): Promise<boolean>;
+
+  // 契約タブ
+  isContractTableVisible(): Promise<boolean>;
+  getContractRowCount(): Promise<number>;
+  isContractRowVisible(contractNumber: string): Promise<boolean>;
+  getContractStatusText(contractNumber: string): Promise<string>;
+  clickNewContractButton(): Promise<void>;
+  isContractModalVisible(): Promise<boolean>;
+  fillContractNumber(value: string): Promise<void>;
+  fillContractTitle(value: string): Promise<void>;
+  fillContractStartDate(value: string): Promise<void>;
+  fillContractEndDate(value: string): Promise<void>;
+  selectContractStatus(label: string): Promise<void>;
+  clickContractSaveButton(): Promise<void>;
+  clickContractEditButton(contractNumber: string): Promise<void>;
+  isContractFormPrefilled(): Promise<boolean>;
+  updateContractTitle(newTitle: string): Promise<void>;
+  clickContractDeleteButton(contractNumber: string): Promise<void>;
+  isContractEmptyMessageVisible(): Promise<boolean>;
+
+  // 評価履歴タブ
+  isRatingSummaryVisible(): Promise<boolean>;
+  getRatingCountText(): Promise<string>;
+  getRatingEntryCount(): Promise<number>;
+  isQualityBarVisible(): Promise<boolean>;
+  isDeliveryBarVisible(): Promise<boolean>;
+  isPriceBarVisible(): Promise<boolean>;
+  isServiceBarVisible(): Promise<boolean>;
+  isRatingCommentVisible(): Promise<boolean>;
+  isRatingEvaluatorVisible(): Promise<boolean>;
+  clickNewRatingButton(): Promise<void>;
+  isNewRatingButtonVisible(): Promise<boolean>;
+  isRatingModalVisible(): Promise<boolean>;
+  isQualitySliderVisible(): Promise<boolean>;
+  isDeliverySliderVisible(): Promise<boolean>;
+  isPriceSliderVisible(): Promise<boolean>;
+  isServiceSliderVisible(): Promise<boolean>;
+  setQualityScore(value: string): Promise<void>;
+  setDeliveryScore(value: string): Promise<void>;
+  setPriceScore(value: string): Promise<void>;
+  setServiceScore(value: string): Promise<void>;
+  fillRatingComment(text: string): Promise<void>;
+  clickRatingSaveButton(): Promise<void>;
+  getRatingSummaryText(): Promise<string>;
+  isRatingEmptyMessageVisible(): Promise<boolean>;
+
+  // 認証タブ
+  getCertCardCount(): Promise<number>;
+  isCertCardVisible(certName: string): Promise<boolean>;
+  getCertStatusBadgeText(certName: string): Promise<string>;
+  isCertNumberVisible(certName: string): Promise<boolean>;
+  isCertIssueDateVisible(certName: string): Promise<boolean>;
+  isCertExpiryDateVisible(certName: string): Promise<boolean>;
+  clickNewCertButton(): Promise<void>;
+  isCertModalVisible(): Promise<boolean>;
+  selectCertType(type: string): Promise<void>;
+  fillCertNumber(value: string): Promise<void>;
+  fillCertIssuedDate(value: string): Promise<void>;
+  fillCertExpiryDate(value: string): Promise<void>;
+  selectCertStatus(label: string): Promise<void>;
+  clickCertSaveButton(): Promise<void>;
+  clickCertEditButton(certName: string): Promise<void>;
+  isCertFormPrefilled(): Promise<boolean>;
+  updateCertExpiryDate(value: string): Promise<void>;
+  clickCertDeleteButton(certName: string): Promise<void>;
+  isCertEmptyMessageVisible(): Promise<boolean>;
+
+  // 確認ダイアログ（サプライヤー削除 + アイテム削除共通）
+  isConfirmDialogVisible(): Promise<boolean>;
+  getConfirmDialogTitle(): Promise<string>;
+  getConfirmDialogMessage(): Promise<string>;
+  isDialogCancelButtonVisible(): Promise<boolean>;
+  isDialogConfirmButtonVisible(): Promise<boolean>;
+  clickDialogConfirmButton(): Promise<void>;
+  clickDialogCancelButton(): Promise<void>;
+
+  // URL
+  getCurrentUrl(): string;
+}
+
 export interface OrderRow {
   orderNumber: string;
   supplier: string;

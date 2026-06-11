@@ -187,21 +187,21 @@
 
 | 機能ID | 小分類 | 種別 | 概要 | URL | ステータス |
 |---|---|---|---|---|---|
-| F-04-02-001 | サプライヤーヘッダ情報 | 表示項目 | 会社名・ステータス・コード・評価 | /suppliers/:id | discovered |
-| F-04-02-002 | 一覧に戻るボタン | ボタン | サプライヤー一覧への遷移 | /suppliers/:id | discovered |
-| F-04-02-003 | 編集ボタン | ボタン | サプライヤー編集 | /suppliers/:id | discovered |
-| F-04-02-004 | 削除ボタン | ボタン | サプライヤー削除 | /suppliers/:id | discovered |
-| F-04-02-005 | 基本情報タブ | タブ | 会社情報（名前・カナ・コード・住所・電話・メール・Web・支払条件・備考） | /suppliers/:id | discovered |
-| F-04-02-006 | 連絡先セクション | 表示項目 | 担当者情報（名前・部署・電話・メール）複数件 | /suppliers/:id | discovered |
-| F-04-02-007 | 製品タブ | タブ | 取扱製品一覧 | /suppliers/:id | discovered |
-| F-04-02-008 | 契約タブ | タブ | 契約情報 | /suppliers/:id | discovered |
-| F-04-02-009 | 評価履歴タブ | タブ | 評価履歴 | /suppliers/:id | discovered |
-| F-04-02-010 | 認証タブ | タブ | 認証情報 | /suppliers/:id | discovered |
+| F-04-02-001 | サプライヤーヘッダ情報 | 表示項目 | 会社名(h2)・ステータスバッジ・コード・評価(星+数値、ただしAPI rating=0固定) | /suppliers/:id | specified |
+| F-04-02-002 | 一覧に戻るボタン | ボタン | サプライヤー一覧(/suppliers)への遷移 | /suppliers/:id | specified |
+| F-04-02-003 | 編集ボタン | ボタン | サプライヤー編集画面(/suppliers/:id/edit)への遷移 | /suppliers/:id | specified |
+| F-04-02-004 | 削除ボタン | ボタン | 確認ダイアログ表示→DELETE /api/suppliers/{id}→一覧遷移 | /suppliers/:id | specified |
+| F-04-02-005 | 基本情報タブ | タブ | 会社情報テーブル（名前・カナ・コード・住所・電話・メール・Web・支払条件・備考、全てAPI未返却で"-"表示） | /suppliers/:id | specified |
+| F-04-02-006 | 連絡先セクション | 表示項目 | 担当者カード（名前・主担当タグ・部署・役職・電話・メール）、空状態対応 | /suppliers/:id | specified |
+| F-04-02-007 | 製品タブ | タブ | 取扱製品テーブル(SKU・製品名・仕入先SKU・単価・リードタイム)、追加/詳細遷移/削除、空状態対応 | /suppliers/:id | specified |
+| F-04-02-008 | 契約タブ | タブ | 契約テーブル(番号・期間・ステータス・条件)、CRUD(モーダル)、空状態対応 | /suppliers/:id | specified |
+| F-04-02-009 | 評価履歴タブ | タブ | 平均評価サマリー、評価エントリリスト(日付・星・4カテゴリバー・コメント)、新規評価モーダル(4スライダー+コメント)、空状態対応 | /suppliers/:id | specified |
+| F-04-02-010 | 認証タブ | タブ | 認証カード(種別・ステータス・番号・発行日・有効期限)、CRUD(モーダル)、空状態対応 | /suppliers/:id | specified |
 
 未確認事項:
-- サプライヤー比較画面の詳細
-- 製品・契約・評価履歴・認証タブの詳細内容
-- サプライヤー新規登録/編集フォームの項目
+- サプライヤー新規登録/編集フォームの項目（/suppliers/new, /suppliers/:id/edit）
+- ヘッダのrating=0.0問題の移行後対応方針
+- 基本情報の各フィールド(nameKana, address, website等)がAPIで返却されない問題
 
 ---
 
@@ -211,17 +211,24 @@
 
 | 機能ID | 小分類 | 種別 | 概要 | URL | ステータス |
 |---|---|---|---|---|---|
-| F-05-01-001 | 新規依頼作成ボタン | ボタン | 購買依頼の新規作成 | /procurement/requisitions | discovered |
-| F-05-01-002 | ステータスフィルタ | 入力項目 | ステータスでの絞り込み（下書き/申請中/承認済み/却下/キャンセル） | /procurement/requisitions | discovered |
-| F-05-01-003 | 部門フィルタ | 入力項目 | 部門での絞り込み（7部門） | /procurement/requisitions | discovered |
-| F-05-01-004 | 作成日開始フィルタ | 入力項目 | 作成日範囲（開始） | /procurement/requisitions | discovered |
-| F-05-01-005 | 作成日終了フィルタ | 入力項目 | 作成日範囲（終了） | /procurement/requisitions | discovered |
-| F-05-01-006 | フィルタクリアボタン | ボタン | フィルタ条件の初期化 | /procurement/requisitions | discovered |
-| F-05-01-007 | 購買依頼一覧テーブル | テーブル | 依頼番号・依頼者・部門・金額・ステータス・作成日・操作 | /procurement/requisitions | discovered |
-| F-05-01-008 | テーブルソート | 操作 | 作成日でのソート | /procurement/requisitions | discovered |
-| F-05-01-009 | 申請ボタン | ボタン | 下書きステータスの依頼を申請提出 | /procurement/requisitions | discovered |
-| F-05-01-010 | 取消ボタン | ボタン | 依頼のキャンセル | /procurement/requisitions | discovered |
-| F-05-01-011 | 依頼行クリック | 操作 | 購買依頼詳細画面への遷移 | /procurement/requisitions | discovered |
+| F-05-01-001 | 新規依頼作成ボタン | ボタン | 購買依頼の新規作成（/procurement/requisitions/newへ遷移） | /procurement/requisitions | specified |
+| F-05-01-002 | ステータスフィルタ | 入力項目 | ステータスでの絞り込み（すべて/下書き/申請中/承認済み/却下/キャンセル）、サーバーサイドフィルタ | /procurement/requisitions | specified |
+| F-05-01-003 | 部門フィルタ | 入力項目 | 部門での絞り込み（ハードコード7部門）、クライアントサイドフィルタ | /procurement/requisitions | specified |
+| F-05-01-004 | 作成日開始フィルタ | 入力項目 | 作成日範囲（開始）、HTML5 date input、クライアントサイドフィルタ | /procurement/requisitions | specified |
+| F-05-01-005 | 作成日終了フィルタ | 入力項目 | 作成日範囲（終了）、HTML5 date input、クライアントサイドフィルタ | /procurement/requisitions | specified |
+| F-05-01-006 | フィルタクリアボタン | ボタン | 全フィルタ条件の初期化（4フィルタ+ページ番号リセット） | /procurement/requisitions | specified |
+| F-05-01-007 | 購買依頼一覧テーブル | テーブル | 依頼番号・依頼者・部門・金額・ステータス・作成日・操作（7列）、app-data-table使用、全17件 | /procurement/requisitions | specified |
+| F-05-01-008 | テーブルソート | 操作 | 全6列ソート可能（初期: 作成日降順）、クライアントサイドソート | /procurement/requisitions | specified |
+| F-05-01-009 | 申請ボタン | ボタン | DRAFTのみ表示、POST /api/requisitions/{id}/submit（DRAFT→SUBMITTED）、確認ダイアログなし | /procurement/requisitions | specified |
+| F-05-01-010 | 取消ボタン | ボタン | DRAFT/SUBMITTEDのみ表示、DELETE /api/requisitions/{id}（→CANCELLED）、確認ダイアログなし | /procurement/requisitions | specified |
+| F-05-01-011 | 依頼行クリック | 操作 | 購買依頼詳細画面（/procurement/requisitions/:id）への遷移 | /procurement/requisitions | specified |
+
+未確認事項:
+- 部門フィルタ選択肢とDB部門マスタの不一致（情報システム部、経営企画部、人事部、調達部が選択肢にない）
+- ステータスフィルタにPARTIALLY_ORDERED/ORDERED/CONVERTEDが欠落
+- 部門・日付・ソートのクライアントサイド処理（ページサイズ超過時の不具合リスク）
+- 申請・取消の確認ダイアログ追加要否
+- RequisitionResourceの@RolesAllowed未設定（権限制御なし）
 
 ### F-05-02: 購買依頼詳細画面
 

@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>F-05-01: 購買依頼一覧画面 UI仕様</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; line-height: 1.6; color: #333; }
+    h1 { border-bottom: 3px solid #1a5276; padding-bottom: 10px; }
+    h2 { border-bottom: 2px solid #2980b9; padding-bottom: 6px; margin-top: 40px; }
+    h3 { color: #2c3e50; margin-top: 24px; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; vertical-align: top; }
+    th { background-color: #1a5276; color: white; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    .feature { margin-bottom: 60px; page-break-inside: avoid; }
+    ul { margin: 8px 0; }
+    code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    .tech-debt { background: #fff3cd; border-left: 4px solid #ffc107; padding: 8px 12px; margin: 8px 0; }
+  </style>
+</head>
+<body>
+
+<h1>F-05-01: 購買依頼一覧画面 UI仕様</h1>
+<p>中分類: F-05-01（調達管理 &gt; 購買依頼一覧画面）</p>
+<p>URL: <code>/procurement/requisitions</code></p>
+<p>対象ロール: 全認証ユーザー（@RolesAllowed未設定）</p>
+<p>作成日: 2026-06-03</p>
+
+<!-- ============================================================ -->
+<div class="feature" id="F-05-01-001">
+  <h2>F-05-01-001: 新規依頼作成ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-05-01-001</li>
+    <li>大分類: F-05 調達管理</li>
+    <li>中分類: F-05-01 購買依頼一覧画面</li>
+    <li>小分類: 新規依頼作成ボタン</li>
+    <li>画面名: 購買依頼一覧</li>
+    <li>URL: /procurement/requisitions</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: （06-usecase-extractionで記載）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>画面イメージ</h3>
+  <div class="screenshot-item" style="margin-bottom:16px; border:1px solid #ddd; border-radius:4px; padding:12px;">
+    <p style="margin:0 0 8px 0; font-size:12px; color:#888;">screenshots/F-05/F-05-01-001_requisition-list_initial.png</p>
+    <img src="../../screenshots/F-05/F-05-01-001_requisition-list_initial.png" alt="F-05-01-001 購買依頼一覧 初期表示" style="max-width:100%; height:auto; border:1px solid #eee;">
+  </div>
+
+  <h3>WHAT</h3>
+  <p>ページヘッダ右上に配置された「新規依頼作成」ボタン。クリックすると購買依頼の新規作成画面（/procurement/requisitions/new）へ遷移する。</p>
+
+  <h3>WHY</h3>
+  <p>新しい購買依頼を作成するためのエントリーポイント。一覧画面から直接新規作成フローを開始できるようにする。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>新規依頼作成ボタン</td><td>常時表示</td><td>固定テキスト</td><td>btn btn-primary、icon-plusアイコン付き</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>新規依頼作成</td>
+      <td>ボタンクリック</td>
+      <td>Router.navigate(['/procurement/requisitions/new'])</td>
+      <td>/procurement/requisitions/new へ遷移</td>
+      <td>-</td>
+      <td>ページ遷移</td>
+    </tr>
+  </table>
+
+  <h3>権限制御</h3>
+  <p>権限制御なし。全認証ユーザーに表示される。</p>
+  <div class="tech-debt">技術的負債: RequisitionResource に @RolesAllowed 未設定。本来は BUYER, MANAGER, ADMIN のみ作成可能にすべき。</div>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.html</td><td>行5-8</td><td>ボタン配置・テキスト</td></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>navigateToCreate():186</td><td>遷移先パス</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: Chrome DevTools MCPで /procurement/requisitions にアクセスし確認</li>
+    <li>ソースコード: requisition-list.component.html:5-8, requisition-list.component.ts:186-188</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>新規作成画面（F-05-05）の詳細はF-05-05のスコープ</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<div class="feature" id="F-05-01-002">
+  <h2>F-05-01-002: ステータスフィルタ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-05-01-002</li>
+    <li>大分類: F-05 調達管理</li>
+    <li>中分類: F-05-01 購買依頼一覧画面</li>
+    <li>小分類: ステータスフィルタ</li>
+    <li>画面名: 購買依頼一覧</li>
+    <li>URL: /procurement/requisitions</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: （06-usecase-extractionで記載）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>購買依頼をステータスで絞り込むドロップダウンセレクト。選択変更時にAPIを再呼出しし、サーバーサイドでフィルタリングする。</p>
+
+  <h3>WHY</h3>
+  <p>特定のステータスの購買依頼のみを表示し、承認待ちや下書き状態の依頼を効率的に管理するため。</p>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr>
+      <td>ステータスフィルタ</td>
+      <td>select</td>
+      <td>任意</td>
+      <td>選択肢: すべて(空文字), 下書き(DRAFT), 申請中(SUBMITTED), 承認済み(APPROVED), 却下(REJECTED), キャンセル(CANCELLED)</td>
+      <td>すべて</td>
+      <td>-</td>
+      <td>サーバーサイドフィルタ（APIクエリパラメータ status）</td>
+    </tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>ステータスフィルタ変更</td>
+      <td>select変更（ngModelChange）</td>
+      <td>currentPage=1にリセット → GET /api/requisitions?page=0&amp;size=20&amp;status={値} を呼出</td>
+      <td>テーブルが選択ステータスの依頼のみに絞り込まれる</td>
+      <td>コンソールエラー出力、テーブル更新なし</td>
+      <td>currentPage=1、テーブルデータ更新</td>
+    </tr>
+  </table>
+
+  <h3>状態変化</h3>
+  <p>フィルタ選択変更 → ページ番号リセット（1ページ目）→ API再呼出 → テーブルデータ更新。「すべて」選択時はstatusパラメータなしでAPIを呼出。</p>
+
+  <div class="tech-debt">
+    技術的負債: フィルタ選択肢に PARTIALLY_ORDERED（一部発注済み）、ORDERED（発注済み）、CONVERTED（発注変換済み）が含まれない。データ上これらのステータスが存在するが、フィルタで絞り込めない。
+  </div>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr>
+      <td>-</td>
+      <td>GET</td>
+      <td>/api/requisitions</td>
+      <td>page=0, size=20, status=SUBMITTED（例）</td>
+      <td>PageResult&lt;Requisition&gt;</td>
+      <td>500 Internal Server Error</td>
+      <td>Network通信観測</td>
+    </tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>statusOptions:57-61</td><td>選択肢定義（5ステータス）</td></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>onFilterChange():170</td><td>フィルタ変更時の処理</td></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>loadRequisitions():103</td><td>API呼出（filterStatus送信）</td></tr>
+    <tr><td>proquip-frontend/.../requisition.service.ts</td><td>getRequisitions()</td><td>APIリクエスト構築</td></tr>
+    <tr><td>proquip-web/.../RequisitionResource.java</td><td>GET /requisitions:84</td><td>statusパラメータのJPQLフィルタ</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 「申請中」選択で3件に絞り込まれることを確認</li>
+    <li>Network通信: GET /api/requisitions?page=0&amp;size=20&amp;status=SUBMITTED → 200</li>
+    <li>ソースコード: requisition-list.component.ts:57-61, RequisitionResource.java:84</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>PARTIALLY_ORDERED / ORDERED / CONVERTED をフィルタ選択肢に追加すべきか</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<div class="feature" id="F-05-01-003">
+  <h2>F-05-01-003: 部門フィルタ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-05-01-003</li>
+    <li>大分類: F-05 調達管理</li>
+    <li>中分類: F-05-01 購買依頼一覧画面</li>
+    <li>小分類: 部門フィルタ</li>
+    <li>画面名: 購買依頼一覧</li>
+    <li>URL: /procurement/requisitions</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: （06-usecase-extractionで記載）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>購買依頼を部門で絞り込むドロップダウンセレクト。クライアントサイドでフィルタリングする。</p>
+
+  <h3>WHY</h3>
+  <p>特定部門の購買依頼のみを表示し、部門別の管理を容易にするため。</p>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr>
+      <td>部門フィルタ</td>
+      <td>select</td>
+      <td>任意</td>
+      <td>選択肢: すべて(空文字), 総務部, 営業部, 技術部, 製造部, 品質管理部, 物流部, 経理部</td>
+      <td>すべて</td>
+      <td>-</td>
+      <td>クライアントサイドフィルタ（ハードコード7部門）</td>
+    </tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>部門フィルタ変更</td>
+      <td>select変更（ngModelChange）</td>
+      <td>currentPage=1にリセット → API再呼出 → クライアントサイドでdepartmentフィールドの完全一致フィルタ</td>
+      <td>テーブルが選択部門の依頼のみに絞り込まれる</td>
+      <td>-</td>
+      <td>currentPage=1、テーブルデータ更新</td>
+    </tr>
+  </table>
+
+  <div class="tech-debt">
+    技術的負債 #1: 部門フィルタはクライアントサイドで実行。ページサイズ（20件）を超えるデータがある場合、2ページ目以降の部門データがフィルタされない。<br>
+    技術的負債 #2: フィルタ選択肢（7部門）がDBの部門マスタと不一致。実データには「情報システム部」「経営企画部」「人事部」「調達部」が存在するが選択肢にない。
+  </div>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>departmentOptions:64-73</td><td>ハードコードされた7部門</td></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>applyLocalFilters():129-148</td><td>クライアントサイドフィルタ実装</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: ドロップダウンで7部門+「すべて」を確認</li>
+    <li>ソースコード: requisition-list.component.ts:64-73（ハードコード）、129-148（クライアントサイドフィルタ）</li>
+    <li>Network通信: 部門フィルタ変更時にAPIクエリパラメータにdepartmentが送信されないことを確認</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>DBの部門マスタの全件リスト（部門テーブルの全レコード）</li>
+    <li>フィルタ選択肢をAPIから動的取得すべきか</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<div class="feature" id="F-05-01-004">
+  <h2>F-05-01-004: 作成日開始フィルタ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-05-01-004</li>
+    <li>大分類: F-05 調達管理</li>
+    <li>中分類: F-05-01 購買依頼一覧画面</li>
+    <li>小分類: 作成日開始フィルタ</li>
+    <li>画面名: 購買依頼一覧</li>
+    <li>URL: /procurement/requisitions</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: （06-usecase-extractionで記載）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>購買依頼の作成日を期間指定で絞り込むための開始日入力。HTML5 date inputを使用。</p>
+
+  <h3>WHY</h3>
+  <p>特定期間に作成された購買依頼を検索するため。終了日フィルタ（F-05-01-005）と組み合わせて期間を指定する。</p>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr>
+      <td>作成日（開始）</td>
+      <td>date</td>
+      <td>任意</td>
+      <td>YYYY-MM-DD形式</td>
+      <td>空（未指定）</td>
+      <td>-</td>
+      <td>クライアントサイドフィルタ。createdAtフィールドと比較（>=）</td>
+    </tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>開始日フィルタ変更</td>
+      <td>日付入力変更（ngModelChange）</td>
+      <td>currentPage=1にリセット → API再呼出 → クライアントサイドでcreatedAt >= filterDateFromフィルタ</td>
+      <td>テーブルが指定日以降の依頼のみに絞り込まれる</td>
+      <td>-</td>
+      <td>currentPage=1、テーブルデータ更新</td>
+    </tr>
+  </table>
+
+  <div class="tech-debt">技術的負債: 日付フィルタはクライアントサイドで実行。ページサイズを超えるデータがある場合、2ページ目以降がフィルタされない。</div>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.html</td><td>行40-48</td><td>date input要素</td></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>applyLocalFilters():136-139</td><td>Date比較ロジック（>=）</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: date inputの表示を確認</li>
+    <li>ソースコード: requisition-list.component.ts:136-139</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="feature" id="F-05-01-005">
+  <h2>F-05-01-005: 作成日終了フィルタ</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-05-01-005</li>
+    <li>大分類: F-05 調達管理</li>
+    <li>中分類: F-05-01 購買依頼一覧画面</li>
+    <li>小分類: 作成日終了フィルタ</li>
+    <li>画面名: 購買依頼一覧</li>
+    <li>URL: /procurement/requisitions</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: （06-usecase-extractionで記載）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>購買依頼の作成日を期間指定で絞り込むための終了日入力。HTML5 date inputを使用。</p>
+
+  <h3>WHY</h3>
+  <p>特定期間に作成された購買依頼を検索するため。開始日フィルタ（F-05-01-004）と組み合わせて期間を指定する。</p>
+
+  <h3>入力項目</h3>
+  <table>
+    <tr><th>項目名</th><th>型</th><th>必須/任意</th><th>入力制約</th><th>初期値</th><th>バリデーション</th><th>備考</th></tr>
+    <tr>
+      <td>作成日（終了）</td>
+      <td>date</td>
+      <td>任意</td>
+      <td>YYYY-MM-DD形式</td>
+      <td>空（未指定）</td>
+      <td>-</td>
+      <td>クライアントサイドフィルタ。createdAtフィールドと比較（<=、当日の23:59:59.999まで含む）</td>
+    </tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>終了日フィルタ変更</td>
+      <td>日付入力変更（ngModelChange）</td>
+      <td>currentPage=1にリセット → API再呼出 → クライアントサイドでcreatedAt <= filterDateTo(23:59:59.999)フィルタ</td>
+      <td>テーブルが指定日以前の依頼のみに絞り込まれる</td>
+      <td>-</td>
+      <td>currentPage=1、テーブルデータ更新</td>
+    </tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.html</td><td>行49-58</td><td>date input要素</td></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>applyLocalFilters():141-145</td><td>Date比較ロジック（<=, setHours(23,59,59,999)）</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: date inputの表示を確認</li>
+    <li>ソースコード: requisition-list.component.ts:141-145</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="feature" id="F-05-01-006">
+  <h2>F-05-01-006: フィルタクリアボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-05-01-006</li>
+    <li>大分類: F-05 調達管理</li>
+    <li>中分類: F-05-01 購買依頼一覧画面</li>
+    <li>小分類: フィルタクリアボタン</li>
+    <li>画面名: 購買依頼一覧</li>
+    <li>URL: /procurement/requisitions</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: （06-usecase-extractionで記載）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>全てのフィルタ条件を初期状態にリセットするボタン。</p>
+
+  <h3>WHY</h3>
+  <p>フィルタを一括解除して全件表示に戻すための操作。個々のフィルタを個別にリセットする手間を省く。</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>フィルタクリア</td>
+      <td>ボタンクリック</td>
+      <td>filterStatus='', filterDepartment='', filterDateFrom='', filterDateTo='', currentPage=1 → API再呼出（パラメータなし）</td>
+      <td>全フィルタが「すべて」/空に戻り、テーブルが全件表示になる</td>
+      <td>-</td>
+      <td>全フィルタ値リセット、currentPage=1</td>
+    </tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.html</td><td>行61-63</td><td>ボタン配置（btn btn-outline）</td></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>clearFilters():176-183</td><td>4フィルタ値クリア + ページリセット + リロード</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: フィルタ適用後にクリアボタンで全件表示に戻ることを確認</li>
+    <li>ソースコード: requisition-list.component.ts:176-183</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="feature" id="F-05-01-007">
+  <h2>F-05-01-007: 購買依頼一覧テーブル</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-05-01-007</li>
+    <li>大分類: F-05 調達管理</li>
+    <li>中分類: F-05-01 購買依頼一覧画面</li>
+    <li>小分類: 購買依頼一覧テーブル</li>
+    <li>画面名: 購買依頼一覧</li>
+    <li>URL: /procurement/requisitions</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: （06-usecase-extractionで記載）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>購買依頼を一覧表示するデータテーブル。7列（依頼番号・依頼者・部門・金額・ステータス・作成日・操作）で構成。共通コンポーネント <code>app-data-table</code> を使用。</p>
+
+  <h3>WHY</h3>
+  <p>全ての購買依頼の概要を一覧形式で確認し、必要な依頼を素早く見つけるため。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>依頼番号</td><td>常時</td><td>API: requisitionNumber</td><td>形式: PR-YYYY-NNNNNN または REQ-YYYYMMDD-NNNN、幅140px</td></tr>
+    <tr><td>依頼者</td><td>常時</td><td>API: requestedBy</td><td>ユーザー名（姓 名）、幅120px</td></tr>
+    <tr><td>部門</td><td>常時</td><td>API: department / departmentName</td><td>部門名文字列、幅120px</td></tr>
+    <tr><td>金額</td><td>常時</td><td>API: totalAmount</td><td>通貨フォーマット（¥N,NNN,NNN）、幅130px</td></tr>
+    <tr><td>ステータス</td><td>常時</td><td>API: status</td><td>ステータスバッジ表示（色付き）、幅110px。表示ラベル: 下書き/申請中/承認済み/却下/キャンセル/一部発注済み/発注済み</td></tr>
+    <tr><td>作成日</td><td>常時</td><td>API: createdAt</td><td>日付フォーマット（YYYY年MM月DD日）、幅120px</td></tr>
+    <tr><td>操作</td><td>ステータスにより表示切替</td><td>-</td><td>申請ボタン（DRAFT時のみ）、取消ボタン（DRAFT/SUBMITTED時のみ）</td></tr>
+  </table>
+
+  <h3>ステータス表示マッピング</h3>
+  <table>
+    <tr><th>APIステータス</th><th>表示ラベル</th><th>色</th><th>CSSクラス</th></tr>
+    <tr><td>DRAFT</td><td>下書き</td><td>#9e9e9e（グレー）</td><td>status-draft</td></tr>
+    <tr><td>SUBMITTED</td><td>申請中</td><td>#1976d2（青）</td><td>status-pending</td></tr>
+    <tr><td>APPROVED</td><td>承認済み</td><td>#43a047（緑）</td><td>status-approved</td></tr>
+    <tr><td>REJECTED</td><td>却下</td><td>#e53935（赤）</td><td>status-rejected</td></tr>
+    <tr><td>CANCELLED</td><td>キャンセル</td><td>#757575（濃グレー）</td><td>status-cancelled</td></tr>
+    <tr><td>PARTIALLY_ORDERED</td><td>一部発注済み</td><td>#7b1fa2（紫）</td><td>-</td></tr>
+    <tr><td>ORDERED</td><td>発注済み</td><td>#7b1fa2（紫）</td><td>status-ordered</td></tr>
+  </table>
+
+  <h3>データ取得</h3>
+  <table>
+    <tr><th>API</th><th>パラメータ</th><th>レスポンス形式</th></tr>
+    <tr>
+      <td>GET /api/requisitions</td>
+      <td>page（0始まり）, size（デフォルト20）, status（任意）</td>
+      <td>PageResult: { content: Requisition[], totalElements: number, totalPages: number, number: number, size: number, first: boolean, last: boolean, empty: boolean }</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <ul>
+    <li>初期表示: API呼出 → ローディングスピナー表示 → データ取得完了 → テーブル表示</li>
+    <li>データあり: テーブルに依頼一覧を表示（初期: 作成日降順ソート）</li>
+    <li>全17件がsize=20の1ページに収まる（現時点）</li>
+  </ul>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>API呼出失敗: コンソールに「購買依頼一覧の取得に失敗しました」エラー出力。ユーザーへのエラー通知なし</li>
+    <li>データなし: <code>app-empty-state</code> コンポーネント表示「購買依頼がありません」+ 「新規依頼を作成」アクションリンク</li>
+  </ul>
+
+  <div class="tech-debt">
+    技術的負債: API失敗時にユーザーへのエラー通知（トースト等）がない。コンソールログのみ。
+  </div>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>columns:76-83</td><td>テーブルカラム定義（6データ列+操作列）</td></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.html</td><td>行72-103</td><td>app-data-table使用、rowActionsテンプレート</td></tr>
+    <tr><td>proquip-frontend/.../status.utils.ts</td><td>ORDER_STATUS_LABELS</td><td>ステータスラベルマッピング</td></tr>
+    <tr><td>proquip-web/.../RequisitionResource.java</td><td>GET /requisitions:84</td><td>JPQL + ページング実装</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 全17件のテーブル表示を確認、各列のデータ内容を確認</li>
+    <li>Network通信: GET /api/requisitions?page=0&amp;size=20 → 200、レスポンスJSONの全フィールドを確認</li>
+    <li>ソースコード: requisition-list.component.ts:76-83, status.utils.ts:1-18</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="feature" id="F-05-01-008">
+  <h2>F-05-01-008: テーブルソート</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-05-01-008</li>
+    <li>大分類: F-05 調達管理</li>
+    <li>中分類: F-05-01 購買依頼一覧画面</li>
+    <li>小分類: テーブルソート</li>
+    <li>画面名: 購買依頼一覧</li>
+    <li>URL: /procurement/requisitions</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: （06-usecase-extractionで記載）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>テーブルのカラムヘッダをクリックしてソート順序を切り替える。全6データ列（依頼番号・依頼者・部門・金額・ステータス・作成日）がソート可能。</p>
+
+  <h3>WHY</h3>
+  <p>購買依頼を任意の基準で並べ替え、金額順や作成日順で効率的に確認するため。</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>カラムソート</td>
+      <td>カラムヘッダクリック</td>
+      <td>sortColumn/sortDirectionを更新 → loadRequisitions()呼出。ただしソートパラメータはAPIに送信されず、app-data-tableコンポーネント内でクライアントサイドソートが実行される</td>
+      <td>テーブルデータが指定カラムの昇順/降順でソートされる。ソート方向インジケータ（▲/▼）が表示される</td>
+      <td>-</td>
+      <td>sortColumn、sortDirection更新</td>
+    </tr>
+  </table>
+
+  <h3>状態変化</h3>
+  <ul>
+    <li>初期状態: sortColumn='createdAt', sortDirection='desc'（作成日降順、▼表示）</li>
+    <li>同一カラムクリック: asc ↔ desc トグル</li>
+    <li>別カラムクリック: そのカラムの asc にリセット（▲表示）</li>
+  </ul>
+
+  <div class="tech-debt">
+    技術的負債: ソートパラメータがAPIに送信されていない。loadRequisitions()は呼出されるが、sortColumnとsortDirectionはクエリパラメータに含まれない。app-data-tableが内部でクライアントサイドソートを実行している模様。BE側のJPQLは requiredDate DESC 固定。
+  </div>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>sortColumn/sortDirection:36-39</td><td>初期ソート: createdAt desc</td></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>onSortChange():158-162</td><td>ソート変更ハンドラ</td></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>columns:76-83</td><td>全カラムに sortable: true</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: 「依頼番号」ヘッダクリックで昇順ソート（▲表示）に切り替わることを確認</li>
+    <li>ソースコード: requisition-list.component.ts:36-39, 158-162</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="feature" id="F-05-01-009">
+  <h2>F-05-01-009: 申請ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-05-01-009</li>
+    <li>大分類: F-05 調達管理</li>
+    <li>中分類: F-05-01 購買依頼一覧画面</li>
+    <li>小分類: 申請ボタン</li>
+    <li>画面名: 購買依頼一覧</li>
+    <li>URL: /procurement/requisitions</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: （06-usecase-extractionで記載）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>テーブル行の操作列に表示される「申請」ボタン。ステータスが「下書き（DRAFT）」の依頼のみに表示され、クリックすると承認申請（SUBMITTED状態への遷移）を実行する。</p>
+
+  <h3>WHY</h3>
+  <p>一覧画面から直接、下書き状態の購買依頼を承認フローに提出するためのクイックアクション。詳細画面を開く手間を省く。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>申請ボタン</td><td>row.status === 'DRAFT' の場合のみ表示</td><td>固定テキスト「申請」</td><td>btn btn-sm btn-success、title="申請提出"</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>申請提出</td>
+      <td>ボタンクリック（event.stopPropagation()で行クリック遷移を防止）</td>
+      <td>POST /api/requisitions/{id}/submit を呼出</td>
+      <td>ステータスがDRAFT→SUBMITTEDに変更。テーブルリロードされ、ボタンが「取消」のみに変更。承認通知が送信される</td>
+      <td>コンソールに「申請の提出に失敗しました」エラー出力。ユーザー通知なし</td>
+      <td>依頼ステータス: DRAFT → SUBMITTED</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <ul>
+    <li>DRAFT状態の依頼行に「申請」ボタンが表示される</li>
+    <li>クリック後、APIが成功するとテーブルが自動リロードされ、ステータスが「申請中」に更新される</li>
+    <li>申請ボタンが消え、「取消」ボタンのみ残る</li>
+  </ul>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>品目が0件の依頼を申請: BE側バリデーション「items must exist」で400エラー（推測、FE側の確認ダイアログなし）</li>
+    <li>API失敗: コンソールエラーのみ、ユーザー通知なし</li>
+  </ul>
+
+  <h3>BEバリデーション（submitForApproval）</h3>
+  <ul>
+    <li>ステータスがDRAFTであること</li>
+    <li>品目（items）が1件以上存在すること</li>
+    <li>承認権限の判定（金額による）: &lt;100万→APPROVER, 100万-500万→DIRECTOR, ≥500万→ADMIN</li>
+  </ul>
+
+  <div class="tech-debt">
+    技術的負債 #1: 確認ダイアログなしで即座にAPIを呼出。誤クリックによる意図しない申請提出のリスクがある。<br>
+    技術的負債 #2: API失敗時のユーザー通知がない（品目0件エラー等）。<br>
+    技術的負債 #3: 承認金額閾値がハードコード（100万、500万）。
+  </div>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr>
+      <td>-</td>
+      <td>POST</td>
+      <td>/api/requisitions/{id}/submit</td>
+      <td>なし（body不要）</td>
+      <td>200 OK（更新後Requisition）</td>
+      <td>400 Bad Request（DRAFT以外/品目なし）, 404 Not Found</td>
+      <td>ソースコード</td>
+    </tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.html</td><td>行87-93</td><td>ボタン表示条件（status === 'DRAFT'）</td></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>submitRequisition():191-205</td><td>申請提出ロジック + event.stopPropagation()</td></tr>
+    <tr><td>proquip-frontend/.../requisition.service.ts</td><td>submitForApproval()</td><td>POST /requisitions/{id}/submit API呼出</td></tr>
+    <tr><td>proquip-web/.../RequisitionResource.java</td><td>POST /requisitions/{id}/submit:311</td><td>BEエンドポイント</td></tr>
+    <tr><td>proquip-ejb/.../RequisitionServiceBean.java</td><td>submitForApproval():230</td><td>DRAFT→SUBMITTED遷移 + バリデーション + 通知</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: DRAFT行に「申請」ボタンが表示、SUBMITTED/APPROVED/ORDERED等には表示されないことを確認</li>
+    <li>ソースコード: requisition-list.component.html:88, RequisitionServiceBean.java:230-280</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>品目0件の依頼で申請ボタンをクリックした場合のFE/BE動作（エラーレスポンスの形式）</li>
+    <li>確認ダイアログの追加要否</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<div class="feature" id="F-05-01-010">
+  <h2>F-05-01-010: 取消ボタン</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-05-01-010</li>
+    <li>大分類: F-05 調達管理</li>
+    <li>中分類: F-05-01 購買依頼一覧画面</li>
+    <li>小分類: 取消ボタン</li>
+    <li>画面名: 購買依頼一覧</li>
+    <li>URL: /procurement/requisitions</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: （06-usecase-extractionで記載）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>テーブル行の操作列に表示される「取消」ボタン。ステータスが「下書き（DRAFT）」または「申請中（SUBMITTED）」の依頼に表示され、クリックするとキャンセル（CANCELLED状態への遷移）を実行する。</p>
+
+  <h3>WHY</h3>
+  <p>不要になった購買依頼を一覧画面から直接キャンセルするためのクイックアクション。</p>
+
+  <h3>表示項目</h3>
+  <table>
+    <tr><th>項目名</th><th>表示条件</th><th>値の取得元</th><th>備考</th></tr>
+    <tr><td>取消ボタン</td><td>row.status === 'DRAFT' || row.status === 'SUBMITTED' の場合のみ表示</td><td>固定テキスト「取消」</td><td>btn btn-sm btn-danger、title="キャンセル"</td></tr>
+  </table>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>取消実行</td>
+      <td>ボタンクリック（event.stopPropagation()で行クリック遷移を防止）</td>
+      <td>DELETE /api/requisitions/{id} を呼出</td>
+      <td>ステータスがCANCELLEDに変更。テーブルリロードされ、操作ボタンが消える</td>
+      <td>コンソールに「キャンセルに失敗しました」エラー出力。ユーザー通知なし</td>
+      <td>依頼ステータス: DRAFT/SUBMITTED → CANCELLED</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <ul>
+    <li>DRAFT状態: 「申請」+「取消」の2ボタンが表示される</li>
+    <li>SUBMITTED状態: 「取消」ボタンのみ表示される</li>
+    <li>取消クリック後、テーブルリロードされ、ステータスが「キャンセル」になり、操作ボタンが消える</li>
+  </ul>
+
+  <h3>異常系</h3>
+  <ul>
+    <li>API失敗: コンソールエラーのみ、ユーザー通知なし</li>
+  </ul>
+
+  <h3>FE vs BE の挙動差異</h3>
+  <p>FE側はDRAFT/SUBMITTEDの2ステータスでのみボタン表示。BE側のcancelRequisition()はDRAFT/SUBMITTED/APPROVED/REJECTEDの4ステータスでキャンセル可能（CONVERTED/CANCELLED以外）。FE側が表示を絞っている。</p>
+
+  <div class="tech-debt">
+    技術的負債 #1: 確認ダイアログなしで即座にDELETE APIを呼出。誤クリックによるキャンセルのリスクがある。<br>
+    技術的負債 #2: FEはDRAFT/SUBMITTEDのみだが、BEはAPPROVED/REJECTEDもキャンセル可能。FE/BEのステータス制御が不一致。<br>
+    技術的負債 #3: DELETE APIだが実際はステータス変更（論理削除的）。HTTP methodのセマンティクスに不一致。
+  </div>
+
+  <h3>関連API</h3>
+  <table>
+    <tr><th>API ID</th><th>method</th><th>path</th><th>request</th><th>response</th><th>error response</th><th>根拠</th></tr>
+    <tr>
+      <td>-</td>
+      <td>DELETE</td>
+      <td>/api/requisitions/{id}</td>
+      <td>なし</td>
+      <td>200 OK / 204 No Content</td>
+      <td>400 Bad Request（CONVERTED/CANCELLED）, 404 Not Found</td>
+      <td>ソースコード</td>
+    </tr>
+  </table>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.html</td><td>行94-100</td><td>ボタン表示条件（DRAFT || SUBMITTED）</td></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>cancelRequisition():208-222</td><td>キャンセルロジック + event.stopPropagation()</td></tr>
+    <tr><td>proquip-frontend/.../requisition.service.ts</td><td>deleteRequisition()</td><td>DELETE /requisitions/{id} API呼出</td></tr>
+    <tr><td>proquip-web/.../RequisitionResource.java</td><td>DELETE /requisitions/{id}:288</td><td>cancelRequisition()サービス呼出</td></tr>
+    <tr><td>proquip-ejb/.../RequisitionServiceBean.java</td><td>cancelRequisition():376</td><td>DRAFT/SUBMITTED/APPROVED/REJECTED → CANCELLED</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: DRAFT行に「申請」+「取消」、SUBMITTED行に「取消」のみ表示を確認。APPROVED/ORDERED行にはボタンなしを確認</li>
+    <li>ソースコード: requisition-list.component.html:94-100, RequisitionServiceBean.java:376-412</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+
+  <h3>未確認事項</h3>
+  <ul>
+    <li>確認ダイアログの追加要否</li>
+    <li>APPROVED/REJECTEDステータスでもFE側で取消ボタンを表示すべきか</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<div class="feature" id="F-05-01-011">
+  <h2>F-05-01-011: 依頼行クリック</h2>
+
+  <h3>基本情報</h3>
+  <ul>
+    <li>機能ID: F-05-01-011</li>
+    <li>大分類: F-05 調達管理</li>
+    <li>中分類: F-05-01 購買依頼一覧画面</li>
+    <li>小分類: 依頼行クリック</li>
+    <li>画面名: 購買依頼一覧</li>
+    <li>URL: /procurement/requisitions</li>
+    <li>対象ロール: 全認証ユーザー</li>
+    <li>関連ユースケース: （06-usecase-extractionで記載）</li>
+    <li>ステータス: specified</li>
+  </ul>
+
+  <h3>WHAT</h3>
+  <p>テーブル行をクリックすると、該当する購買依頼の詳細画面（/procurement/requisitions/:id）へ遷移する。app-data-tableコンポーネントのrowClickイベントを使用。</p>
+
+  <h3>WHY</h3>
+  <p>一覧から購買依頼の詳細情報（基本情報・品目一覧）を確認するための画面遷移。</p>
+
+  <h3>操作</h3>
+  <table>
+    <tr><th>操作名</th><th>トリガー</th><th>実行内容</th><th>正常時の結果</th><th>異常時の結果</th><th>状態変化</th></tr>
+    <tr>
+      <td>詳細画面遷移</td>
+      <td>テーブル行クリック（rowClickイベント）</td>
+      <td>Router.navigate(['/procurement/requisitions', requisition.id])</td>
+      <td>/procurement/requisitions/{id} へ遷移</td>
+      <td>-</td>
+      <td>ページ遷移</td>
+    </tr>
+  </table>
+
+  <h3>正常系</h3>
+  <p>行クリック → /procurement/requisitions/1 等の詳細画面に遷移。申請/取消ボタンクリック時はevent.stopPropagation()により行クリック遷移が抑制される。</p>
+
+  <h3>関連ソース</h3>
+  <table>
+    <tr><th>ファイルパス</th><th>関数/クラス/メソッド名</th><th>確認内容</th></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.html</td><td>行83</td><td>(rowClick)="onRowClick($event)"</td></tr>
+    <tr><td>proquip-frontend/.../requisition-list.component.ts</td><td>onRowClick():165-167</td><td>Router.navigate遷移先パス</td></tr>
+  </table>
+
+  <h3>根拠</h3>
+  <ul>
+    <li>画面操作: PR-2024-000001行クリック → /procurement/requisitions/1 への遷移を確認</li>
+    <li>ソースコード: requisition-list.component.ts:165-167</li>
+  </ul>
+
+  <h3>confidence</h3>
+  <p>High</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>技術的負債サマリー</h2>
+<table>
+  <tr><th>#</th><th>分類</th><th>内容</th><th>影響</th></tr>
+  <tr><td>1</td><td>フィルタ</td><td>部門・日付フィルタがクライアントサイド実行</td><td>ページサイズ超過時にフィルタ漏れ</td></tr>
+  <tr><td>2</td><td>フィルタ</td><td>部門選択肢がハードコード（7部門）、DBの部門マスタと不一致</td><td>情報システム部等の依頼が部門フィルタで絞り込めない</td></tr>
+  <tr><td>3</td><td>フィルタ</td><td>ステータスフィルタにPARTIALLY_ORDERED/ORDERED/CONVERTEDが欠落</td><td>発注済み等のステータスで絞り込めない</td></tr>
+  <tr><td>4</td><td>ソート</td><td>ソートパラメータがAPIに送信されない（クライアントサイドソート）</td><td>ページサイズ超過時に正確なソートができない</td></tr>
+  <tr><td>5</td><td>エラー処理</td><td>API失敗時のユーザー通知がない（コンソールログのみ）</td><td>ユーザーが操作失敗を認識できない</td></tr>
+  <tr><td>6</td><td>UX</td><td>申請・取消ボタンに確認ダイアログがない</td><td>誤操作リスク</td></tr>
+  <tr><td>7</td><td>権限</td><td>RequisitionResource に @RolesAllowed 未設定</td><td>全認証ユーザーがCRUD可能</td></tr>
+  <tr><td>8</td><td>API設計</td><td>DELETEメソッドでキャンセル（論理削除）を実装</td><td>HTTPセマンティクス不一致</td></tr>
+  <tr><td>9</td><td>状態管理</td><td>FE取消ボタンはDRAFT/SUBMITTEDのみだが、BEはAPPROVED/REJECTEDもキャンセル可能</td><td>FE/BE不一致</td></tr>
+  <tr><td>10</td><td>BE</td><td>承認金額閾値ハードコード（100万/500万）</td><td>閾値変更時にコード修正必要</td></tr>
+</table>
+
+</body>
+</html>

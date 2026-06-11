@@ -1,5 +1,237 @@
 # Work Log
 
+## 2026-06-03: Phase 3/5 - UI仕様記載（F-05-01 購買依頼一覧画面）
+
+### 実施内容
+- F-05-01（購買依頼一覧画面）全11機能ID（F-05-01-001〜011）のUI仕様記載
+- Phase 3（画面操作）: Chrome DevTools MCPで /procurement/requisitions にアクセスし、フィルタ4種・ソート・申請/取消ボタン・行クリック遷移を確認
+- Phase 5（ソースコード補完）: requisition-list.component.ts/html, requisition.service.ts, status.utils.ts, RequisitionResource.java, RequisitionServiceBean.java, RequisitionValidator.java を調査
+- スクリーンショット1枚撮影
+- spec/ui/F-05-01.html を新規作成
+- 技術的負債10件を特定・記録（フィルタ不一致、クライアントサイド処理、確認ダイアログ欠如、権限未設定等）
+
+### 更新ファイル
+- spec: 5件（ui/F-05-01.html新規、features.md更新、traceability/F-05.md更新、traceability/index.md更新、worklog/F-05.md更新、worklog/index.md更新）
+- screenshots/F-05/（1枚追加）
+
+### 次に実行すべきskill
+- `05-api-specification`（F-05-01のAPI仕様確認）
+- next target feature ID: F-05-01-001
+- current 中分類: F-05-01
+- 中分類進捗: 11/11 機能ID specified
+- reason: UI仕様記載完了、次は関連APIの仕様確認
+
+---
+
+## 2026-06-03: Phase 14 - リグレッション比較（F-04-02 サプライヤー詳細画面）
+
+### 実施内容
+- F-04-02（サプライヤー詳細画面）全10機能ID（F-04-02-001〜010）のリグレッション比較
+- 現行: 59 pass / 0 fail、移行後: 58 pass / 1 fail
+- 差分1件: 意図的変更（ヘッダ評価値 0.0→4.5、DTOマッピング漏れ修正）
+- 全10機能IDのステータスを `done` に更新
+- **F-04-02（サプライヤー詳細画面）全10機能ID完了**
+- **F-04（サプライヤー）大分類全18機能ID完了**
+
+### 更新ファイル
+- spec: 5件（regression-report/F-04-02.md新規作成、traceability/F-04.md更新、traceability/index.md更新、worklog/F-04.md更新、worklog/index.md更新）
+
+### 次に実行すべきskill
+- `04-ui-specification`（F-05 調達管理のUI仕様記載）
+- next target feature ID: F-05-01-001
+- current 中分類: F-04-02（完了）→ F-05
+- 中分類進捗: 10/10 機能ID done（F-04-02全完了）
+- reason: リグレッション比較完了（意図的変更1件のみ、done）。F-04大分類全18機能ID完了。次の大分類F-05に進む
+
+---
+
+## 2026-06-03: Phase 13 - 視覚照合（F-04-02 サプライヤー詳細画面）
+
+### 実施内容
+- F-04-02（サプライヤー詳細画面）全10機能ID（F-04-02-001〜010）の視覚照合
+- 視覚差異1件修正（info-table/cert-details th背景色 #1a5276 追加）、意図的差異3件記録
+- E2Eテスト59/59 pass（リグレッションなし）
+
+### 更新ファイル
+- FE: 1件（supplier-detail.component.scss — th背景色追加）
+- spec: 4件（traceability/F-04.md更新、traceability/index.md更新、worklog/F-04.md更新、worklog/index.md更新）
+
+### 次に実行すべきskill
+- `13-regression-comparison`（F-04-02のリグレッション比較）
+- next target feature ID: F-04-02-001
+- current 中分類: F-04-02
+- 中分類進捗: 10/10 機能ID visual-checked
+- reason: 視覚照合完了（1件修正、3件意図的差異）、E2Eテスト全pass、次はリグレッション比較
+
+---
+
+## 2026-06-03: Phase 12 - 移行後実装（F-04-02 サプライヤー詳細画面）
+
+### 実施内容
+- F-04-02（サプライヤー詳細画面）全10機能ID（F-04-02-001〜010）の移行後実装（BE + FE + adapter）
+- BE: SupplierProduct/SupplierCertificationエンティティ新規、SupplierContract title/terms追加、16 APIエンドポイント追加
+- FE: SupplierDetailComponent新規作成（5タブUI）、ConfirmDialogComponent新規、supplier.model.ts/service.ts拡充
+- 58テストpass / 1テストfail（DTOマッピング改善: rating 0.0→4.5の意図的変更）
+
+### 更新ファイル
+- migrated/migrated-backend/: 6ファイル（SupplierResource, SupplierService更新、SupplierContract, SupplierRating更新、SupplierProduct, SupplierCertification新規）
+- migrated/migrated-frontend/: 8ファイル（SupplierDetailComponent 3件新規、ConfirmDialogComponent新規、model, service, routing, module更新）
+- spec: 4件（traceability/F-04.md更新、traceability/index.md更新、worklog/F-04.md更新、worklog/index.md更新）
+
+### 次に実行すべきskill
+- `12-visual-comparison`（F-04-02の視覚照合）
+- next target feature ID: F-04-02-001
+- current 中分類: F-04-02
+- 中分類進捗: 10/10 機能ID migrated-e2e-passed
+- reason: 移行後実装完了（58 pass / 1 fail = DTOマッピング改善による意図的差分）、次は視覚照合
+
+---
+
+## 2026-06-02: Phase 10 - 現行E2Eテスト作成（F-04-02 サプライヤー詳細画面）
+
+### 実施内容
+- F-04-02（サプライヤー詳細画面）全10機能ID（F-04-02-001〜010）のPlaywright E2Eテスト作成（59テスト全pass、0 skip）
+- SupplierDetailPageAdapterインターフェース定義、current/migratedアダプタ実装
+- 7 featureファイル、1 step定義ファイル作成
+- 認証CRUDのUIバグ（ステータス値不一致）を発見・検証テスト化
+
+### 更新ファイル
+- tests/e2e: 7件（adapter 3件、feature 7件、steps 1件、types更新 1件、factory更新 1件）
+- spec: 4件（traceability/F-04.md更新、traceability/index.md更新、worklog/F-04.md更新、worklog/index.md更新）
+
+### 次に実行すべきskill
+- `11-migrated-implementation`（F-04-02の移行後実装）
+- next target feature ID: F-04-02-001
+- current 中分類: F-04-02
+- 中分類進捗: 10/10 機能ID current-e2e-passed
+- reason: 現行E2Eテスト作成・全59テストpass完了、次は移行後実装
+
+---
+
+## 2026-06-02: Phase 9 - Gherkinシナリオ作成（F-04-02 サプライヤー詳細画面）
+
+### 実施内容
+- F-04-02（サプライヤー詳細画面）全10機能ID（F-04-02-001〜010）のGherkinシナリオを作成（49シナリオ）
+- 7つのfeatureファイルに分割: ヘッダ+基本情報+連絡先、ナビゲーション、削除、製品タブ、契約タブ、評価履歴タブ、認証タブ
+- カバー観点: 正常系33、データ状態5、権限3（×5ロール）
+
+### 更新ファイル
+- spec: 7件（gherkin/F-04/ 7ファイル新規作成、traceability/F-04.md更新、traceability/index.md更新、worklog/F-04.md更新、worklog/index.md更新）
+
+### 次に実行すべきskill
+- `10-current-e2e-generation`（F-04-02の現行E2Eテスト実装）
+- next target feature ID: F-04-02-001
+- current 中分類: F-04-02
+- 中分類進捗: 10/10 機能ID gherkin-created
+- reason: Gherkin作成完了、次は現行E2Eテスト実装
+
+---
+
+## 2026-06-02: Phase 8 - テストデータ設計（9回目: F-04-02 差分更新）
+
+### 実施内容
+- F-04-02（サプライヤー詳細画面）全10機能IDのテストデータ設計（差分更新）
+- V022シードデータの契約6件・認証15件・評価24件の詳細構造精査
+- UC-022（詳細情報確認）22シナリオ、UC-023（取引関係管理）16シナリオ、UC-024（定期評価）5シナリオ、UC-025（削除）6シナリオのテストデータバリエーションを定義
+- 代表サプライヤー4件選定（ID=1全タブデータあり, ID=12空状態テスト, ID=2 EXPIRED/PENDING_RENEWAL, ID=7認証最多）
+- CRUD用テスト専用データ戦略定義（TEST-CNT-001, TEST-CERT-001, TEST-SUP-DEL）
+- 未確認事項5件追加（#38〜#42）
+
+### 更新ファイル
+- spec: 5件（test-data.md差分更新、traceability/F-04.md更新、traceability/index.md更新、worklog/F-04.md更新、worklog/index.md更新）
+
+### 次に実行すべきskill
+- `09-gherkin-generation`（F-04-02のGherkinシナリオ生成）
+- next target feature ID: F-04-02-001
+- current 中分類: F-04-02
+- 中分類進捗: 10/10 機能ID test-data-designed
+- reason: テストデータ設計完了。F-04-02の全10機能IDが `test-data-designed` ステータス。Gherkinシナリオ作成に進む
+
+---
+
+## 2026-06-02: Phase 7 - アーキテクチャ基本設計（9回目: F-04-02 差分更新）
+
+### 実施内容
+- F-04-02（サプライヤー詳細画面）のUI仕様・API仕様・ユースケースを既存アーキテクチャ設計と照合し差分更新
+- 新パターン3件検出: タブ内CRUD操作パターン、スコアリング入力（レンジスライダー）、スコア可視化（水平バー）
+- spec/architecture.md に1セクション追加、2セクション更新、5設計判断追加、共通コンポーネント2件追加
+
+### 更新ファイル
+- spec: 4件（architecture.md差分更新、traceability/index.md更新、worklog/cross-cutting.md更新、worklog/index.md更新）
+
+### 次に実行すべきskill
+- `08-test-data-design`（F-04-02のテストデータ設計差分更新）
+- next target feature ID: F-04-02-001
+- current 中分類: F-04-02
+- 中分類進捗: 10/10 機能ID usecase-linked（アーキテクチャ設計完了）
+- reason: アーキテクチャ設計差分更新完了、次はテストデータ設計
+
+---
+
+## 2026-06-02: Phase 6 - ユースケース抽出（F-04-02 サプライヤー詳細画面）
+
+### 実施内容
+- F-04-02（サプライヤー詳細画面）全10機能ID（F-04-02-001〜010）からユースケースを抽出
+- UC-022: サプライヤーの詳細情報を確認して取引判断の材料を得る（F-04-02-001, 002, 003, 005, 006, 007, 008, 009, 010）
+- UC-023: サプライヤーの取引関係を管理して契約・製品紐付け・認証を整備する（F-04-02-007, 008, 010）
+- UC-024: サプライヤーを定期評価してパフォーマンスを経時的に記録する（F-04-02-009）
+- UC-025: 不要になったサプライヤーを取引先から除外する（F-04-02-004）
+
+### 更新ファイル
+- spec: 6件（usecases/F-04-02.md新規、ui/F-04-02.html、traceability/F-04.md、traceability/index.md、worklog/F-04.md、worklog/index.md）
+
+### 次に実行すべきskill
+- `07-architecture-design`（F-04-02のアーキテクチャ設計差分更新）
+- next target feature ID: F-04-02-001
+- current 中分類: F-04-02
+- 中分類進捗: 10/10 機能ID usecase-linked
+- reason: ユースケース抽出完了、次はアーキテクチャ設計の差分更新
+
+---
+
+## 2026-06-02: Phase 4 - API仕様作成（F-04-02 サプライヤー詳細画面）
+
+### 実施内容
+- F-04-02（サプライヤー詳細画面）全10機能ID（F-04-02-001〜010）のAPI仕様をOpenAPI形式で作成
+- Network通信観測（curl）: GET /api/suppliers/1, /contacts, /contracts, /ratings, /certifications, /products（全6 GET）、GET /api/suppliers/12（SUSPENDED）、DELETE /api/suppliers/9999（500エラー）
+- ソースコード確認: SupplierResource.java（16エンドポイント）、SupplierServiceBean.java、DTO/Entity 6ファイル
+- 16 APIエンドポイント定義（GET×6, POST×4, PUT×2, DELETE×4）、クライアントサイド機能2件、技術的負債10件記録
+
+### 更新ファイル
+- spec: 5件（api/F-04-02.yml新規、traceability/F-04.md、traceability/index.md、worklog/F-04.md、worklog/index.md）
+
+### 次に実行すべきskill
+- `06-usecase-extraction`（F-04-02のユースケース抽出）
+- next target feature ID: F-04-02-001
+- current 中分類: F-04-02
+- 中分類進捗: 10/10 機能ID api-confirmed
+- reason: API仕様作成完了、次は関連ユースケースの抽出
+
+---
+
+## 2026-06-02: Phase 3/5 - UI仕様記載（F-04-02 サプライヤー詳細画面）
+
+### 実施内容
+- F-04-02（サプライヤー詳細画面）全10機能ID（F-04-02-001〜010）のUI仕様記載
+- Phase 3（画面操作）: Chrome DevTools MCPで /suppliers/1, /suppliers/12 にアクセスし、5タブ・削除確認ダイアログ・空状態を確認
+- Phase 5（ソースコード補完）: supplier-detail.component.ts/html, supplier.model.ts, SupplierResource.java を調査
+- スクリーンショット6枚撮影
+- spec/ui/F-04-02.html を新規作成
+- 技術的負債: ヘッダrating=0.0（DTOマッピング漏れ）、基本情報フィールドAPI未返却、全タブ同時ロード、@RolesAllowed未設定
+
+### 更新ファイル
+- spec: 6件（ui/F-04-02.html新規、features.md、traceability/F-04.md、traceability/index.md、worklog/F-04.md、worklog/index.md）
+- screenshots/F-04/（6枚追加）
+
+### 次に実行すべきskill
+- `05-api-specification`（F-04-02のAPI仕様確認）
+- next target feature ID: F-04-02-001
+- current 中分類: F-04-02
+- 中分類進捗: 10/10 機能ID specified
+- reason: UI仕様記載完了、次は関連APIの仕様確認
+
+---
+
 ## 2026-06-02: Phase 15 - 移行後実装（F-04-01-005/006 比較画面UI実装）
 
 ### 実施内容

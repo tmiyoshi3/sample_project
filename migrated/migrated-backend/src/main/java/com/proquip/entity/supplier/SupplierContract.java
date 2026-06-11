@@ -2,6 +2,8 @@ package com.proquip.entity.supplier;
 
 import com.proquip.entity.base.AuditableEntity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -18,6 +20,9 @@ public class SupplierContract extends AuditableEntity {
 	@Column(name = "contract_number", length = 50)
 	private String contractNumber;
 
+	@Column(name = "title", length = 200)
+	private String title;
+
 	@Column(name = "start_date")
 	private LocalDate startDate;
 
@@ -27,6 +32,10 @@ public class SupplierContract extends AuditableEntity {
 	@Column(name = "status", length = 30)
 	private String status;
 
+	@Column(name = "terms_and_conditions", columnDefinition = "TEXT")
+	private String terms;
+
+	@JsonIgnore
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "supplier_id", nullable = false)
 	private Supplier supplier;
@@ -61,6 +70,22 @@ public class SupplierContract extends AuditableEntity {
 
 	public void setStatus(String status) {
 		this.status = status;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getTerms() {
+		return terms;
+	}
+
+	public void setTerms(String terms) {
+		this.terms = terms;
 	}
 
 	public Supplier getSupplier() {

@@ -10,6 +10,7 @@ import { CategoryManagementComponent } from './features/products/category-manage
 import { BundleManagementComponent } from './features/products/bundle-management/bundle-management.component';
 import { SupplierListComponent } from './features/suppliers/supplier-list/supplier-list.component';
 import { SupplierCompareComponent } from './features/suppliers/supplier-compare/supplier-compare.component';
+import { SupplierDetailComponent } from './features/suppliers/supplier-detail/supplier-detail.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
@@ -23,7 +24,8 @@ const routes: Routes = [
   { path: 'products/:id', component: ProductDetailComponent, canActivate: [AuthGuard] },
   { path: 'suppliers/compare', component: SupplierCompareComponent, canActivate: [AuthGuard] },
   { path: 'suppliers/new', component: DashboardComponent, canActivate: [AuthGuard] },
-  { path: 'suppliers/:id', component: DashboardComponent, canActivate: [AuthGuard] },
+  { path: 'suppliers/:id/edit', component: DashboardComponent, canActivate: [AuthGuard] },
+  { path: 'suppliers/:id', component: SupplierDetailComponent, canActivate: [AuthGuard] },
   { path: 'suppliers', component: SupplierListComponent, canActivate: [AuthGuard] },
   { path: 'procurement', component: DashboardComponent, canActivate: [AuthGuard] },
   { path: 'procurement/requisitions', component: DashboardComponent, canActivate: [AuthGuard] },
