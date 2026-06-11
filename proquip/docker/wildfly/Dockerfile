@@ -5,7 +5,7 @@
 # ============================================================
 
 # ----- Stage 1: Maven Build -----
-FROM maven:3.9.9-eclipse-temurin-17 AS builder
+FROM docker.io/library/maven:3.9.9-eclipse-temurin-17 AS builder
 
 WORKDIR /build
 

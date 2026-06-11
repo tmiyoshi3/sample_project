@@ -9,7 +9,7 @@ services:
   # PostgreSQL データベース
   # -------------------------------------------------
   postgres:
-    image: postgres:15.7-alpine
+    image: docker.io/library/postgres:15.7-alpine
     container_name: proquip-postgres
     ports:
       - "5432:5432"
@@ -65,7 +65,7 @@ services:
   # postgres 起動後にスキーマ作成・シードデータ投入
   # -------------------------------------------------
   migration:
-    image: flyway/flyway:10.15.0
+    image: docker.io/flyway/flyway:10.15.0
     container_name: proquip-migration
     command: migrate
     environment:
